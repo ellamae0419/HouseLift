@@ -1,0 +1,130 @@
+.gauge {
+  --gauge-track: #16161a;
+  --gauge-fill: linear-gradient(180deg, var(--main-hover) 0%, var(--main) 100%);
+  --gauge-label: var(--text-low);
+  --gauge-value: var(--heading);
+  --gauge-muted: #8290a1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  justify-self: start;
+  align-self: start;
+}
+
+.gauge__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gauge-label);
+  line-height: 1;
+}
+
+.gauge__tube-wrapper {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto min-content;
+  grid-template-rows: 1fr 1fr;
+  column-gap: 4px;
+  align-items: center;
+  padding: 0;
+  margin-left: 0;
+}
+
+.gauge__tube {
+  grid-row: 1 / span 2;
+  width: 52px;
+  height: 180px;
+  border-radius: 999px;
+  border: 1px solid rgba(130, 144, 161, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
+    var(--gauge-track);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.gauge__fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--gauge-fill);
+  border-radius: 0 0 999px 999px;
+  transition: height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 -8px 22px rgba(127, 90, 240, 0.18);
+}
+
+.gauge__fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 35%);
+}
+
+.gauge__value-badge {
+  position: absolute;
+  left: calc(100% + 6px);
+  transform: translateY(50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gauge-value);
+  background: rgba(22, 22, 26, 0.86);
+  border: 1px solid rgba(130, 144, 161, 0.18);
+  border-radius: 999px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  transition: bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+.gauge__tick {
+  position: static;
+  font-size: 11px;
+  color: var(--gauge-muted);
+  white-space: nowrap;
+  justify-self: start;
+}
+
+.gauge__tick--max {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.gauge__tick--min {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.gauge__pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--heading);
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .gauge {
+    min-width: min(100%, 190px);
+    padding: 16px 16px 14px;
+    gap: 12px;
+  }
+
+  .gauge__tube {
+    width: 46px;
+    height: 160px;
+  }
+
+  .gauge__value-badge {
+    font-size: 10px;
+  }
+}

@@ -1,0 +1,23 @@
+# Dependencies
+**/node_modules/
+
+# Environment / secrets (JWT keys, DB credentials)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build output
+client/dist/
+client/build/
+
+# Logs
+**/*.log
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Internal review notes, not part of the app
+HouseLift-System-Review.docx
