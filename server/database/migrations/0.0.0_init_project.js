@@ -8,7 +8,7 @@ db.query(`
         password varchar(200) NOT NULL,
         roles varchar(150) DEFAULT 'user',
         refreshToken text DEFAULT NULL,
-        createdAt date NOT NULL DEFAULT current_timestamp()
+        createdAt date NOT NULL DEFAULT (CURRENT_DATE)
     );
 `, (err) => {
     if(err) {

@@ -11,6 +11,9 @@ const db = mariadb.createPool({
     // server's RSA public key over an unencrypted local connection; without this
     // the driver refuses the handshake with ER_CANNOT_RETRIEVE_RSA_KEY.
     allowPublicKeyRetrieval: true,
+    // The driver's 1s default is too short once the DB is a network hop away
+    // (e.g. a hosted database) rather than on localhost.
+    connectTimeout: 10000,
 })
 
 db.getConnection()
