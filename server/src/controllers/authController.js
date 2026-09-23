@@ -30,6 +30,15 @@ const register = async (req, res) => {
             [generateUserID(15), username, email, hashedPassword, fullName, address, mobileNumber, 0]
         );
 
+        try {
+            await global.db.query(
+                'INSERT INTO notifications (title, description, isRead) VALUES (?, ?, 0)',
+                ['New user registration', `${username} just signed up and is pending admin approval.`]
+            );
+        } catch (notifyErr) {
+            console.error('[register] Failed to create signup notification:', notifyErr.message);
+        }
+
         res.status(201).json({ 'success': `Account created! An administrator will review and approve your account before you can log in.` });
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') {
