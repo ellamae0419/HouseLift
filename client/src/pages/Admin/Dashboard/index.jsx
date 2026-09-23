@@ -6,11 +6,6 @@ import { DataCard } from '../../../components/Datacard/index';
 import useServerSocket from '../../../hooks/useServerSocket';
 import useAxiosPrivate from '../../../hooks/auth/useAxiosPrivate';
 
-const monitoredHouses = [
-    { id: 'H-001', location: 'Backyard', waterLevel: 1.2, liftStatus: 'normal' },
-    { id: 'H-002', location: 'Garage', waterLevel: 3.6, liftStatus: 'lifted' },
-    { id: 'H-003', location: 'Front yard', waterLevel: 0.4, liftStatus: 'normal' },
-];
 const MAX_LEVEL_CM = 4;
 
 export const AdminDashboard = () => {
@@ -88,42 +83,6 @@ export const AdminDashboard = () => {
                             </div>
                         </div>
                         <div className="hl-gauge-card__pct">{fillPercent}%</div>
-                    </div>
-                </div>
-
-                <div className="hl-card-shell hl-glance-card">
-                    <div className="hl-glance-title">Monitored houses at a glance</div>
-                    <div className="hl-glance-list">
-                        {monitoredHouses.map((h) => {
-                            const pct = Math.min(100, Math.round((h.waterLevel / MAX_LEVEL_CM) * 100));
-                            const lifted = h.liftStatus === 'lifted';
-                            return (
-                                <div className="hl-glance-item" key={h.id}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '15px', color: 'var(--hl-ink)' }}>{h.id}</span>
-                                        <span style={{
-                                            fontSize: '11.5px',
-                                            fontWeight: 600,
-                                            padding: '3px 10px',
-                                            borderRadius: '999px',
-                                            color: lifted ? 'var(--hl-warning-ink)' : 'var(--hl-success-ink)',
-                                            background: lifted ? 'var(--hl-warning-bg)' : 'var(--hl-success-bg)',
-                                        }}>{h.liftStatus}</span>
-                                    </div>
-                                    <span style={{ fontSize: '13px', color: 'var(--hl-ink-secondary)' }}>{h.location}</span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: '#E7ECEB', overflow: 'hidden' }}>
-                                            <div style={{
-                                                width: `${pct}%`,
-                                                height: '100%',
-                                                background: lifted ? 'var(--hl-warning)' : 'var(--hl-accent)',
-                                            }} />
-                                        </div>
-                                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--hl-ink-secondary)', whiteSpace: 'nowrap' }}>{h.waterLevel} cm</span>
-                                    </div>
-                                </div>
-                            );
-                        })}
                     </div>
                 </div>
             </div>
