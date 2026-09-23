@@ -44,7 +44,7 @@ function App() {
                     {/* Routes that show the sidebar/layout (most of the app) */}
                     <Route element={<Layout />}> 
                         {/* Routes requiring the user to be logged in */}
-                        <Route element={<RequireAuth allowedRoles={['user', 'admin']} />}>
+                        <Route element={<RequireAuth allowedRoles={['user', 'app', 'admin']} />}>
                             <Route path="/home" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/dashboard" element={<Home />} />
                             <Route path="/history" element={<History />} />

@@ -1,0 +1,66 @@
+.app-topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: var(--hl-sidebar-bg, #0B4F4F);
+}
+
+.app-topbar__logo {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.app-topbar__name {
+    font-family: var(--font-heading, inherit);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+}
+
+.app-topbar__status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body, inherit);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Light, readable green on the dark bar — the page's usual --green is too
+   dark to read against --hl-sidebar-bg. */
+.app-topbar__status.is-online { color: #6FE0A0; }
+.app-topbar__status.is-offline { color: #A9BEC0; }
+
+.app-topbar__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.app-topbar__logout {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #A9BEC0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.app-topbar__logout:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}

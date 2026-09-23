@@ -1,19 +1,35 @@
 .container {
-    max-width: 400px; margin-top: 100px;
+    max-width: 420px; margin: 48px auto;
     background: var(--background-card);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 20px 45px -20px rgba(20, 30, 25, 0.25);
+    border-radius: 28px; overflow: hidden;
+    border: 1px solid var(--lines);
 }
 
 .form_container {
     display: flex; align-items: center;
-    padding: 25px; transition: height 0.2s ease;
+    padding: 30px 26px; transition: height 0.2s ease;
 }
-.form { width: 150% }
+.form { width: 100% }
+
+.badge {
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 16px;
+    box-shadow: 0 6px 16px -6px rgba(20, 30, 25, 0.25);
+}
+
+.brand_logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
 .form .title {
     position: relative;
-    font-size: 30px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--heading);
     text-align: center;
@@ -22,53 +38,120 @@
 
 .form .description {
     position: relative;
-    margin-top: 10px;
-    font-size: 16px;
-    line-height: 1.4;
+    margin-top: 6px;
+    margin-bottom: 22px;
+    font-size: 13px;
+    line-height: 1.45;
     color: var(--text-low);
     text-align: center;
 }
 
-
-.form .input_field {
-    position: relative; margin-top: 20px;
-    height: 50px; width: 100%;
+.field_group {
+    margin-top: 16px;
 }
+
+.field_label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-low);
+    margin-bottom: 6px;
+}
+
+.field_pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: var(--background);
+    border: 1.5px solid var(--lines);
+    border-radius: 16px;
+    padding: 12px 14px;
+    transition: border-color 0.2s ease;
+}
+.field_pill:focus-within { border-color: var(--main); }
+.field_pill.error { border-color: var(--red); }
+
+.field_icon {
+    color: var(--text-low);
+    flex-shrink: 0;
+    font-size: 14px;
+    display: flex;
+}
+
+.field_pill input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--heading);
+    padding: 0;
+}
+
+.field_pill select {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--heading);
+    padding: 0;
+    cursor: pointer;
+}
+.field_pill select:disabled {
+    color: var(--text-low);
+    cursor: not-allowed;
+}
+
+.field_toggle {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: var(--text-low);
+    display: flex;
+    flex-shrink: 0;
+}
+.field_toggle:hover { color: var(--main); }
+
 .form a:hover { text-decoration: underline; }
 
-.form .input_field input {
-    height: 100%; width: 100%;
-    padding-right: 5px; padding-left: 35px;
-    border: none; outline: none;
-    background-color: var(--background-card); font-size: 16px;
-    border-bottom: 2px solid var(--lines);
-    border-top: 2px solid transparent; transition: all 0.2s ease;
-}
-.form .input_field input:is(:focus, :valid) { border-bottom-color: var(--main); }
-
-.input_field svg.input_icon {
-    position: absolute; top: 50%;
-    transform: translateY(-50%); font-size: 23px;
-    color: var(--text-low); transition: all 0.2s ease;
-}
-
-.form .button { border-radius: 10px!important; font-size: 20px; height: 40px; }
-.form .button:disabled { cursor: not-allowed }
-.form .button:disabled:hover { border-color: var(--main); background-color: var(--main); }
-
 .instructions {
-    font-size: 15.5px; border-radius: 8px;
-    background: var(--text); padding: 10px;
-    color: var(--white); width: 100%;
-    position: absolute; z-index: 100;
+    font-size: 12.5px; border-radius: 10px;
+    background: var(--background); border: 1px solid var(--lines);
+    padding: 8px 10px; margin-top: 6px;
+    color: var(--text-low); width: 100%;
+    line-height: 1.4;
 }
 
 .err_message {
     color: var(--button-text); background-color: var(--red);
-    font-weight: bold; margin-bottom: .5rem; padding: .5rem; border-radius: 10px;
+    font-weight: 600; margin-bottom: .75rem; padding: .6rem .75rem; border-radius: 12px;
+    font-size: 13px;
 }
 
 .checkBox {
     height: 16px; width: 16px;
     cursor: pointer; margin: 0 5px 2px 2px;
+    accent-color: var(--main);
+}
+
+.submit_btn {
+    width: 100%;
+    border-radius: 16px !important;
+    padding: 14px !important;
+    font-size: 14px !important;
+    font-weight: 700;
+    margin-top: 22px;
+    border: none !important;
+}
+
+.footer_link {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-low);
 }

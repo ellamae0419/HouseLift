@@ -22,8 +22,8 @@ const int ESP32_ID = 1;
 #define WL_DRY 0
 #define WL_WET 1500
 
-String wifi_ssid = "Niervs";
-String wifi_pass = "12345678";
+String wifi_ssid = "RaisedLab";
+String wifi_pass = "DyciRaise2026#";
 
 WebSocketsClient webSocket;
 bool wsConnected = false;

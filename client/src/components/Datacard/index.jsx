@@ -28,11 +28,7 @@ function DataCard({
       )}
 
       
-      <div className="data-card__divider" />
-
-      
       <div className="data-card__footer">
-        {showDot && <span className="data-card__footer-dot" />}
         <span>{footer}</span>
       </div>
     </div>

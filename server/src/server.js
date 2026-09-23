@@ -1,6 +1,12 @@
 global.db = require('../database/db');
 require('dotenv').config()
 
+// A single unhandled DB (or other async) rejection should not take the whole
+// server down. Log it and keep serving other requests instead of crashing.
+process.on('unhandledRejection', (err) => {
+    console.log("\x1b[31m%s\x1b[0m", `[server] Unhandled rejection: ${err?.message || err}`);
+});
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -93,8 +99,31 @@ const interval = setInterval(() => {
 
 global.wss.on('close', () => clearInterval(interval));
 
+// Accept the configured origin plus any device on the local network (so a
+// phone on the same Wi-Fi, hitting this computer's LAN IP instead of
+// "localhost", isn't blocked by CORS during local development/demos).
+const isLocalNetworkOrigin = (origin) => {
+    try {
+        const { hostname } = new URL(origin);
+        return (
+            hostname === 'localhost' ||
+            hostname === '127.0.0.1' ||
+            /^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
+            /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
+            /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(hostname)
+        );
+    } catch {
+        return false;
+    }
+};
+
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGIN,
+    origin: (origin, callback) => {
+        if (!origin || origin === process.env.ALLOWED_ORIGIN || isLocalNetworkOrigin(origin)) {
+            return callback(null, true);
+        }
+        callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     optionsSuccessStatus: 200
 }));

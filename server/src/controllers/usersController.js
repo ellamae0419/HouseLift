@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 const getAllUsers = async (req, res) => {
-    const users = await global.db.query(`SELECT id, username, email, roles, createdAt FROM users;`);
+    const users = await global.db.query(`SELECT id, username, email, roles, isVerified, createdAt FROM users;`);
     if (!users[0]) return res.status(204).json({ 'message': 'No users found' });
 
     res.json(users);
@@ -9,6 +9,85 @@ const getAllUsers = async (req, res) => {
 
 const bcrypt = require('bcrypt');
 const { generateUserID } = require('../utils/functions');
+const { sendApprovalEmail } = require('../utils/mailer');
+
+const approveUser = async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const rows = await global.db.query('SELECT id, username, email, isVerified FROM users WHERE id = ?', [id]);
+        if (!rows[0]) return res.status(404).json({ message: 'User not found' });
+
+        const user = rows[0];
+        if (user.isVerified) return res.json({ message: 'This user is already approved.' });
+
+        await global.db.query('UPDATE users SET isVerified = 1 WHERE id = ?', [id]);
+
+        try {
+            await sendApprovalEmail({ to: user.email, username: user.username });
+        } catch (mailErr) {
+            console.error('[approveUser] Failed to send approval email:', mailErr.message);
+        }
+
+        res.json({ message: `${user.username} has been approved.` });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getOwnProfile = async (req, res) => {
+    try {
+        const rows = await global.db.query(
+            'SELECT id, username, email, fullName, address, mobileNumber, roles, createdAt FROM users WHERE username = ?',
+            [req.username]
+        );
+        if (!rows[0]) return res.status(404).json({ message: 'User not found' });
+        res.json(rows[0]);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updateOwnProfile = async (req, res) => {
+    const { username, email, fullName, address, mobileNumber, password } = req.body;
+
+    try {
+        const rows = await global.db.query('SELECT * FROM users WHERE username = ?', [req.username]);
+        if (!rows[0]) return res.status(404).json({ message: 'User not found' });
+        const current = rows[0];
+
+        if (username && username !== current.username) {
+            const existing = await global.db.query('SELECT id FROM users WHERE username = ? AND id != ?', [username, current.id]);
+            if (existing[0]) return res.status(409).json({ message: 'This username is already taken.' });
+        }
+        if (email && email !== current.email) {
+            const existing = await global.db.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, current.id]);
+            if (existing[0]) return res.status(409).json({ message: 'This email is already taken.' });
+        }
+
+        const nextPasswordHash = password ? await bcrypt.hash(password, 10) : current.password;
+
+        await global.db.query(
+            'UPDATE users SET username = ?, email = ?, fullName = ?, address = ?, mobileNumber = ?, password = ? WHERE id = ?',
+            [
+                username || current.username,
+                email || current.email,
+                fullName ?? current.fullName,
+                address ?? current.address,
+                mobileNumber ?? current.mobileNumber,
+                nextPasswordHash,
+                current.id,
+            ]
+        );
+
+        res.json({ message: 'Profile updated', username: username || current.username, email: email || current.email });
+    } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ message: 'This username or email is already taken.' });
+        }
+        res.status(500).json({ message: err.message });
+    }
+};
 
 const createUser = async (req, res) => {
     const { username, email, password, roles } = req.body;
@@ -25,7 +104,8 @@ const createUser = async (req, res) => {
         const id = generateUserID(15);
         const roleStr = roles && Array.isArray(roles) ? roles.join(',') : (roles || 'user');
 
-        await global.db.query('INSERT INTO users (id, username, email, password, roles) VALUES (?,?,?,?,?)', [id, username, email, hashed, roleStr]);
+        // Accounts an admin creates directly are already vouched for — no separate approval step needed.
+        await global.db.query('INSERT INTO users (id, username, email, password, roles, isVerified) VALUES (?,?,?,?,?,1)', [id, username, email, hashed, roleStr]);
 
         console.log(`[usersController] inserted user id=${id}`);
 
@@ -67,4 +147,4 @@ const deleteUser = async (req, res) => {
     }
 };
 
-module.exports = { getAllUsers, createUser, updateUser, deleteUser };
+module.exports = { getAllUsers, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser };

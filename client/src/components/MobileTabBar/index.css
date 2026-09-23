@@ -1,0 +1,77 @@
+.mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    z-index: 1200;
+    background: var(--background-card);
+    border: 1px solid var(--lines);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -10px 28px rgba(20, 30, 25, 0.12);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    gap: 2px;
+}
+
+.mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 4px 6px;
+    border-radius: 14px;
+    text-decoration: none !important;
+    color: var(--hl-ink-tertiary, #8B9A9C);
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.mobile-tab:active {
+    background: color-mix(in srgb, var(--hl-accent, #2C9C93) 10%, transparent);
+}
+
+/* A distinct light-teal tint for "this tab is selected" — deliberately not the
+   same green used for success/connected status pills, to avoid the two
+   meanings looking identical. */
+.mobile-tab.is-active {
+    color: var(--hl-accent, #2C9C93);
+    background: color-mix(in srgb, var(--hl-accent, #2C9C93) 12%, transparent);
+}
+
+.mobile-tab-icon {
+    position: relative;
+    display: flex;
+    line-height: 0;
+}
+
+.mobile-tab-label {
+    font-family: var(--font-body, inherit);
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.mobile-tab-badge {
+    position: absolute;
+    top: -6px;
+    right: -9px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: var(--red);
+    color: #fffffe;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 15px;
+    text-align: center;
+}
+
+@media screen and (max-width: 480px) {
+    .mobile-tab-bar {
+        border-radius: 18px 18px 0 0;
+    }
+}

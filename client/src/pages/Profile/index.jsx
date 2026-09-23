@@ -21,8 +21,37 @@ export const Profile = () => {
     const logout = useLogout();
     const [open, setOpen] = React.useState(false);
     const [saving, setSaving] = React.useState(false);
+    const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState('');
-    const [form, setForm] = React.useState({ username: auth?.username || '', email: auth?.email || '', password: '' });
+    const [profile, setProfile] = React.useState(null);
+    const [form, setForm] = React.useState({ username: '', email: '', fullName: '', address: '', mobileNumber: '', password: '' });
+
+    const loadProfile = React.useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await axiosPrivate.get('/users/me');
+            setProfile(res.data);
+        } catch (err) {
+            console.error('Error loading profile:', err?.response?.data?.message || err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [axiosPrivate]);
+
+    React.useEffect(() => { loadProfile(); }, [loadProfile]);
+
+    const openEdit = () => {
+        setForm({
+            username: profile?.username || auth?.username || '',
+            email: profile?.email || auth?.email || '',
+            fullName: profile?.fullName || '',
+            address: profile?.address || '',
+            mobileNumber: profile?.mobileNumber || '',
+            password: '',
+        });
+        setError('');
+        setOpen(true);
+    };
 
     const submitProfile = async () => {
         setError('');
@@ -33,43 +62,82 @@ export const Profile = () => {
 
         setSaving(true);
         try {
-            try {
-                await axiosPrivate.put('/users/me', { username: form.username, email: form.email, password: form.password });
-            } catch (err) {
-                console.debug('Profile server update skipped or failed:', err?.response?.status);
-            }
-
-            setAuth((prev) => ({ ...prev, username: form.username, email: form.email }));
+            const res = await axiosPrivate.put('/users/me', form);
+            setAuth((prev) => ({ ...prev, username: res.data?.username || form.username, email: res.data?.email || form.email }));
+            await loadProfile();
             setOpen(false);
         } catch (err) {
-            setError('Failed to update profile');
+            setError(err?.response?.data?.message || 'Failed to update profile');
         } finally {
             setSaving(false);
         }
     };
 
+    const fieldSx = { '& .MuiInputBase-input': { color: 'var(--heading)' }, '& .MuiInputLabel-root': { color: 'var(--text)' }, '& .MuiOutlinedInput-root': { backgroundColor: 'var(--background)' } };
+
+    const rows = [
+        { label: 'Full name', value: profile?.fullName },
+        { label: 'Username', value: profile?.username },
+        { label: 'Email', value: profile?.email },
+        { label: 'Address', value: profile?.address },
+        { label: 'Mobile number', value: profile?.mobileNumber },
+    ];
+
     return (
         <>
             <h1 className="page-title">Profile</h1>
-            <Card sx={{ backgroundColor: '#242629', border: 'none' }}>
+            <p className="page-subtitle">Manage your personal account information.</p>
+            <Card sx={{ backgroundColor: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', boxShadow: 'none' }}>
                 <CardContent>
-                    <Typography variant="h6" sx={{ color: '#fffffe', fontWeight: 700, mb: 1 }}>Account details</Typography>
-                    <Typography variant="body2" sx={{ color: '#94a1b2', mb: 2 }}>Manage your personal account information.</Typography>
-                    <Button variant="outlined" sx={{ mr: 2 }} onClick={() => setOpen(true)}>Edit Profile</Button>
-                    <Button variant="contained" color="secondary" onClick={logout}>Log out</Button>
+                    <Typography variant="h6" sx={{ color: 'var(--hl-ink)', fontFamily: 'var(--font-heading)', fontWeight: 600, mb: 1 }}>Account details</Typography>
+
+                    {loading ? (
+                        <Typography variant="body2" sx={{ color: 'var(--hl-ink-tertiary)' }}>Loading…</Typography>
+                    ) : (
+                        <Card variant="outlined" sx={{ mb: 2, backgroundColor: 'var(--hl-page-bg)', borderColor: 'var(--hl-border)', borderRadius: '12px', boxShadow: 'none' }}>
+                            <CardContent>
+                                {rows.map((row) => (
+                                    <Typography key={row.label} variant="body2" sx={{ color: 'var(--hl-ink-secondary)', mb: 0.75 }}>
+                                        <strong style={{ color: 'var(--hl-ink)' }}>{row.label}:</strong> {row.value || '—'}
+                                    </Typography>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Button
+                        onClick={openEdit}
+                        sx={{ mr: 2, color: 'var(--hl-accent)', borderColor: 'var(--hl-accent)', border: '1px solid', backgroundColor: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none' }}
+                    >
+                        Edit profile
+                    </Button>
+                    <Button
+                        onClick={logout}
+                        sx={{ color: 'var(--hl-danger)', borderColor: 'var(--hl-danger)', border: '1px solid', backgroundColor: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none' }}
+                    >
+                        Log out
+                    </Button>
                 </CardContent>
             </Card>
 
-            <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" sx={{ '& .MuiPaper-root': { backgroundColor: '#242629', color: '#fffffe' } }}>
-                <DialogTitle>Edit Profile</DialogTitle>
+            <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" sx={{ '& .MuiPaper-root': { backgroundColor: 'var(--background-card)', color: 'var(--heading)' } }}>
+                <DialogTitle sx={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>Edit profile</DialogTitle>
                 <DialogContent>
+                    <TextField
+                        label="Full name"
+                        fullWidth
+                        margin="normal"
+                        value={form.fullName}
+                        onChange={(e) => setForm((state) => ({ ...state, fullName: e.target.value }))}
+                        sx={fieldSx}
+                    />
                     <TextField
                         label="Username"
                         fullWidth
                         margin="normal"
                         value={form.username}
                         onChange={(e) => setForm((state) => ({ ...state, username: e.target.value }))}
-                        sx={{ '& .MuiInputBase-input': { color: '#fffffe' }, '& .MuiInputLabel-root': { color: '#94a1b2' }, '& .MuiOutlinedInput-root': { backgroundColor: '#16161a' } }}
+                        sx={fieldSx}
                     />
                     <TextField
                         label="Email"
@@ -77,7 +145,23 @@ export const Profile = () => {
                         margin="normal"
                         value={form.email}
                         onChange={(e) => setForm((state) => ({ ...state, email: e.target.value }))}
-                        sx={{ '& .MuiInputBase-input': { color: '#fffffe' }, '& .MuiInputLabel-root': { color: '#94a1b2' }, '& .MuiOutlinedInput-root': { backgroundColor: '#16161a' } }}
+                        sx={fieldSx}
+                    />
+                    <TextField
+                        label="Address"
+                        fullWidth
+                        margin="normal"
+                        value={form.address}
+                        onChange={(e) => setForm((state) => ({ ...state, address: e.target.value }))}
+                        sx={fieldSx}
+                    />
+                    <TextField
+                        label="Mobile number"
+                        fullWidth
+                        margin="normal"
+                        value={form.mobileNumber}
+                        onChange={(e) => setForm((state) => ({ ...state, mobileNumber: e.target.value }))}
+                        sx={fieldSx}
                     />
                     <TextField
                         label="Password (leave blank to keep current)"
@@ -86,13 +170,28 @@ export const Profile = () => {
                         margin="normal"
                         value={form.password}
                         onChange={(e) => setForm((state) => ({ ...state, password: e.target.value }))}
-                        sx={{ '& .MuiInputBase-input': { color: '#fffffe' }, '& .MuiInputLabel-root': { color: '#94a1b2' }, '& .MuiOutlinedInput-root': { backgroundColor: '#16161a' } }}
+                        sx={fieldSx}
                     />
                     {error && <Typography sx={{ color: 'var(--red)', mt: 1 }}>{error}</Typography>}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpen(false)} className="button">Cancel</Button>
-                    <Button onClick={submitProfile} variant="contained" className="button button-full" disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+                    <Button
+                        onClick={() => setOpen(false)}
+                        sx={{ color: 'var(--hl-accent)', borderColor: 'var(--hl-accent)', border: '1px solid', backgroundColor: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={submitProfile}
+                        disabled={saving}
+                        sx={{
+                            backgroundColor: 'var(--hl-accent)', color: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none',
+                            '&:hover': { backgroundColor: 'var(--hl-secondary-dark)' },
+                            '&.Mui-disabled': { backgroundColor: 'var(--hl-accent)', color: '#fff', opacity: 0.6 },
+                        }}
+                    >
+                        {saving ? 'Saving...' : 'Save'}
+                    </Button>
                 </DialogActions>
             </Dialog>
         </>

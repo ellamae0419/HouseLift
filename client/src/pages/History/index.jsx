@@ -13,20 +13,22 @@ export const History = () => {
 
     return (
         <>
-            <h1 className='page-title'>Event History</h1>
+            <h1 className='page-title'>Event history</h1>
+            <p className="page-subtitle">A timeline of flood, lift and maintenance events for your pet house.</p>
 
-            <div className="container" style={{ background: 'var(--background-card)', padding: '1rem' }}>
-                <div className="stacked-list">
-                    {events.map((item) => (
-                        <article key={`${item.time}-${item.event}`} className="history-card" style={{ padding: '1rem', borderBottom: '1px solid var(--lines)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                                <strong style={{ color: 'var(--text)' }}>{item.event}</strong>
-                                <span style={{ color: 'var(--text-muted)' }}>{item.time}</span>
-                            </div>
-                            <p style={{ margin: '0.5rem 0 0', color: 'var(--text-muted)' }}>{item.detail}</p>
-                        </article>
-                    ))}
-                </div>
+            <div style={{ background: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', overflow: 'hidden' }}>
+                {events.map((item, i) => (
+                    <article
+                        key={`${item.time}-${item.event}`}
+                        style={{ padding: '16px 20px', borderTop: i === 0 ? 'none' : '1px solid var(--hl-border)' }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                            <strong style={{ color: 'var(--hl-ink)', fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{item.event}</strong>
+                            <span style={{ color: 'var(--hl-ink-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>{item.time}</span>
+                        </div>
+                        <p style={{ margin: '6px 0 0', color: 'var(--hl-ink-secondary)' }}>{item.detail}</p>
+                    </article>
+                ))}
             </div>
         </>
     );

@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function useServerSocket() {
   const [wlValue, setWlValue] = useState(null);
+  const [connected, setConnected] = useState(false);
   const wsRef = useRef(null);
 
   useEffect(() => {
-    const api = import.meta.env.VITE_API_URL;
-    const fallbackOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
-    const baseUrl = api || fallbackOrigin;
-    const parsed = new URL(baseUrl, fallbackOrigin);
-    const wsUrl = `${parsed.protocol === 'https:' ? 'wss:' : 'ws:'}//${parsed.host}`;
+    // Same host the page was loaded from (localhost on this computer, or this
+    // computer's LAN IP when opened from a phone), not a hardcoded env var —
+    // otherwise a phone would try to open a WebSocket to its own "localhost".
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${hostname}:3001`;
 
     try {
       const ws = new WebSocket(wsUrl);
@@ -17,6 +19,7 @@ export default function useServerSocket() {
 
       ws.addEventListener('open', () => {
         console.log('WS connected to', wsUrl);
+        setConnected(true);
       });
 
       ws.addEventListener('message', (ev) => {
@@ -33,7 +36,10 @@ export default function useServerSocket() {
         }
       });
 
-      ws.addEventListener('close', () => console.log('WS disconnected'));
+      ws.addEventListener('close', () => {
+        console.log('WS disconnected');
+        setConnected(false);
+      });
       ws.addEventListener('error', (e) => console.error('WS error', e));
 
       return () => {
@@ -44,5 +50,5 @@ export default function useServerSocket() {
     }
   }, []);
 
-  return { wlValue };
+  return { wlValue, connected };
 }

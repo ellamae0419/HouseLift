@@ -1,26 +1,88 @@
-@import url('https://fonts.cdnfonts.com/css/whitney-2');
+﻿:root {
+    /* ===== HydroLift Deep Teal design tokens (fixed brand palette) ===== */
+    --hl-sidebar-bg: #0B4F4F;
+    --hl-accent: #2C9C93;
+    --hl-active-nav: #1E6F68;
+    --hl-secondary-dark: #0A3F3D;
 
-:root {
-    --background: #16161a;
-    --background-card: #242629;
-    --background-transparent: #16161ae1;
-    --background-second: #242629;
-    --background-card-second: #16161a;
-    --text: #94a1b2;
-    --heading: #fffffe;
-    --text-low: #8290a1;
-    --main: #7f5af0;
-    --main-hover: #9177e0;
-    --button-text: #fffffe;
-    --scrollbar: #d1d3da;
-    --lines: #8290a1;
-    --red: #bb3e3a;
-    --green: #36b480;
-    --white: #fffffe;
+    --hl-page-bg: #EFF6F5;
+    --hl-card-bg: #FFFFFF;
+    --hl-border: #DCEAE7;
+
+    --hl-ink: #16232A;
+    --hl-ink-secondary: #5B6B70;
+    --hl-ink-tertiary: #8B9A9C;
+
+    --hl-success: #3E8F6B;
+    --hl-success-bg: #E7F3ED;
+    --hl-success-ink: #276B4E;
+    --hl-warning: #E08A3C;
+    --hl-warning-bg: #FCEEDF;
+    --hl-warning-ink: #9A5A1E;
+    --hl-danger: #C4573F;
+    --hl-danger-bg: #FBE9E5;
+
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'IBM Plex Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+
+    /* Generic aliases consumed throughout the app — light mode (default) */
+    --background: var(--hl-page-bg);
+    --background-card: var(--hl-card-bg);
+    --background-transparent: #eff6f5e1;
+    --background-second: var(--hl-card-bg);
+    --background-card-second: var(--hl-page-bg);
+    --text: var(--hl-ink-secondary);
+    --heading: var(--hl-ink);
+    --text-low: var(--hl-ink-tertiary);
+    --main: var(--hl-accent);
+    --main-hover: var(--hl-secondary-dark);
+    --button-text: #ffffff;
+    --scrollbar: var(--hl-border);
+    --lines: var(--hl-border);
+    --red: var(--hl-danger);
+    --green: var(--hl-success);
+    --white: #ffffff;
+}
+
+:root[data-theme="light"] {
+    --background: var(--hl-page-bg);
+    --background-card: var(--hl-card-bg);
+    --background-transparent: #eff6f5e1;
+    --background-second: var(--hl-card-bg);
+    --background-card-second: var(--hl-page-bg);
+    --text: var(--hl-ink-secondary);
+    --heading: var(--hl-ink);
+    --text-low: var(--hl-ink-tertiary);
+    --main: var(--hl-accent);
+    --main-hover: var(--hl-secondary-dark);
+    --lines: var(--hl-border);
+    --scrollbar: var(--hl-border);
+    --red: var(--hl-danger);
+    --green: var(--hl-success);
+}
+
+:root[data-theme="dark"] {
+    --background: #0f1e1b;
+    --background-card: #16302b;
+    --background-transparent: #0f1e1be1;
+    --background-second: #16302b;
+    --background-card-second: #0f1e1b;
+    --text: #a9beb9;
+    --heading: #eef5f3;
+    --text-low: #7f9791;
+    --main: var(--hl-accent);
+    --main-hover: #45b3a8;
+    --lines: #274139;
+    --scrollbar: #2e4a42;
+    --red: #e0745a;
+    --green: #4caf7d;
 }
 
 * {
-    font-family: Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
     font-size: 17.5px;
     box-sizing: border-box;
     color: var(--text);
@@ -74,13 +136,50 @@ a:hover { color: var(--main-hover); }
 .app-main {
     flex: 1;
     min-width: 0;
-    padding: 32px 24px;
+    padding: 40px 44px;
     overflow-y: auto;
+}
+
+/* Admin layout: the sidebar is position:fixed (see Sidebar/index.css) and
+   taken out of normal flow, so the main content area is offset with
+   margin-left instead of relying on flexbox — this keeps the sidebar
+   pinned to the viewport while only .app-main scrolls with long content. */
+.has-sidebar {
+    display: block;
+}
+
+.has-sidebar .app-main {
+    flex: none;
+    margin-left: var(--sidebar-width, 240px);
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* User/App layout: stack the top brand bar above the scrolling content
+   (the default .layout-shell is a row flex, meant for the admin sidebar). */
+.app-shell {
+    flex-direction: column;
+    max-width: 460px;
+    margin: 0 auto;
+    border-left: 1px solid var(--lines);
+    border-right: 1px solid var(--lines);
+}
+
+.app-shell .app-main {
+    padding: 16px 20px;
+}
+
+.has-mobile-tab-bar .app-main {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 }
 
 @media screen and (max-width: 768px) {
     .layout-shell {
         display: block;
+    }
+
+    .has-sidebar .app-main {
+        margin-left: 0;
     }
 
     .mobile-menu-btn {
@@ -95,8 +194,8 @@ a:hover { color: var(--main-hover); }
         height: 44px;
         border: none;
         border-radius: 12px;
-        background: rgba(36, 38, 41, 0.96);
-        color: var(--heading);
+        background: var(--hl-sidebar-bg);
+        color: #ffffff;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
         cursor: pointer;
     }
@@ -113,6 +212,10 @@ a:hover { color: var(--main-hover); }
     .app-main {
         padding: 72px 12px 12px;
     }
+
+    .app-shell .app-main {
+        padding-top: 20px;
+    }
 }
 
 .container { width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
@@ -122,24 +225,49 @@ a:hover { color: var(--main-hover); }
 @media (min-width: 1200px) { .container { max-width: 1145px; } }
 
 .button {
-    border: 2px solid var(--main);
-    border-radius: 1rem;
+    border: 1px solid var(--hl-accent);
+    border-radius: 9px;
     cursor: pointer;
-    padding: 8px 20px;
-    color: var(--main);
-    transition: all 0.2s ease;
-    background-color: var(--background);
+    padding: 8px 18px;
+    color: var(--hl-accent);
+    font-weight: 600;
+    background-color: var(--hl-card-bg);
+    transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
-.button:hover { color: var(--main-hover); border-color: var(--main-hover); }
-.button-full { background-color: var(--main); color: var(--button-text) !important; }
-.button-full:hover { background-color: var(--main-hover); }
+.button:hover { background-color: color-mix(in srgb, var(--hl-accent) 8%, transparent); transform: translateY(-1px); }
+.button:active { transform: translateY(0); }
+.button-full {
+    background-color: var(--hl-accent);
+    color: #ffffff !important;
+    border-color: var(--hl-accent);
+}
+.button-full:hover {
+    background-color: var(--hl-secondary-dark);
+    border-color: var(--hl-secondary-dark);
+}
+
+.button-danger {
+    border: 1px solid var(--hl-danger);
+    border-radius: 9px;
+    cursor: pointer;
+    padding: 8px 18px;
+    color: var(--hl-danger);
+    font-weight: 600;
+    background-color: var(--hl-card-bg);
+    transition: background-color 0.2s ease;
+}
+.button-danger:hover { background-color: var(--hl-danger-bg); }
+
+h1, h2, h3, .page-title {
+    font-family: var(--font-heading);
+}
 
 h1 {
     color: var(--heading);
     margin-bottom: 16px;
     font-size: 55px;
     line-height: 1.10;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 h2 {
@@ -147,7 +275,7 @@ h2 {
     margin-bottom: 10px;
     font-size: 48px;
     line-height: 1.10;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 h3 {
@@ -155,29 +283,23 @@ h3 {
     margin-bottom: 0;
     font-size: 32px;
     line-height: 30px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .page-title {
     position: relative;
     font-size: 2rem;
-    font-weight: bold;
-    color: var(--primary-color);
+    font-weight: 600;
+    color: var(--heading);
     margin-top: 0;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
+    margin-bottom: 0;
 }
 
-.page-title::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 2px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--main), rgba(127, 90, 240, 0.15), transparent);
-    box-shadow: 0 0 14px rgba(127, 90, 240, 0.28);
+.page-subtitle {
+    font-family: var(--font-body);
+    margin: 8px 0 24px;
+    color: var(--text-low);
+    font-size: 0.95rem;
 }
 
 /* Responsive helpers */
@@ -291,27 +413,16 @@ h3 {
     }
 }
 
-/* Metrics layout: desktop row; mobile wraps naturally */
+/* Maintenance: 3 equal stat cards spanning the full width. */
 .metrics-grid {
-    display: flex;
-    flex-direction: row;
-    gap: 16px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
-.metric-card { flex: 0 0 auto; }
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 700px) {
     .metrics-grid {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: stretch;
-    }
-
-    .metric-card {
-        flex: 1 1 calc(50% - 16px);
-        min-width: 0;
-        max-width: none;
+        grid-template-columns: 1fr;
     }
 }
 
@@ -349,7 +460,18 @@ h3 {
     align-items: center;
     gap: 12px;
     width: 100%;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+}
+
+.logs-header > *:first-child {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logs-header > *:last-child {
+    flex-shrink: 0;
 }
 
 /* Local page helper to force vertical stacking for pages that need strict top-to-bottom flow */
@@ -380,7 +502,7 @@ h3 {
 
 .home-card-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 16px;
 }
 
@@ -404,7 +526,7 @@ h3 {
     }
 
     .home-card-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 
     .settings-stats-grid {
@@ -416,4 +538,136 @@ h3 {
     .home-card-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Admin Dashboard: a plain vertical stack, NOT the Container component
+   (Container is an auto-fit grid — using it here let the KPI row and the
+   houses panel get packed side by side as two of its auto-fit columns
+   whenever there was enough width, which is what caused the layout bug). */
+.hl-page-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* 4 equal KPI cards in one row. "Monitored houses" is a separate sibling
+   block below it (see .hl-page-stack), never a grid/flex item alongside it. */
+.hl-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    align-items: stretch;
+}
+
+@media screen and (max-width: 1100px) {
+    .hl-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media screen and (max-width: 700px) {
+    .hl-kpi-grid { grid-template-columns: 1fr; }
+}
+
+.hl-card-shell {
+    background: var(--hl-card-bg);
+    border: 1px solid var(--hl-border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-sizing: border-box;
+}
+
+.hl-glance-card {
+    width: 100%;
+    padding: 24px;
+}
+
+.hl-glance-title {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--hl-ink);
+    margin-bottom: 14px;
+}
+
+.hl-glance-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.hl-glance-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--hl-card-bg);
+    border: 1px solid #E3E9E8;
+    border-radius: 12px;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+@media screen and (max-width: 700px) {
+    .hl-glance-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* "Flood water level" KPI card: title, then tube+labels side by side, then percent. */
+.hl-gauge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.hl-gauge-card__title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--hl-ink-secondary);
+}
+
+.hl-gauge-card__row {
+    position: relative;
+    width: 100%;
+    height: 118px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+
+.hl-gauge-card__tube {
+    position: relative;
+    width: 52px;
+    height: 110px;
+    border: 2px solid #C8D6D4;
+    border-radius: 26px;
+    background: #F7FAF9;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.hl-gauge-card__fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, #4FC2CE, #2C9C93);
+    transition: height 700ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hl-gauge-card__ticks {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 110px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--hl-ink-tertiary);
+}
+
+.hl-gauge-card__pct {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--hl-secondary-dark);
 }

@@ -11,21 +11,30 @@ const refreshCookieOptions = {
 };
 
 const register = async (req, res) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) return res.status(400).json({ 'message': 'All the fields are required.' });
-
-    const searchUsername = await global.db.query('SELECT id,username FROM users WHERE username = ?', [username]);
-    const searchEmail = await global.db.query('SELECT id,email FROM users WHERE email = ?', [email]);
-
-    if (searchUsername[0]) return res.status(409).json({ 'message': "This username is already taken." });
-    if (searchEmail[0]) return res.status(409).json({ 'message': "This email is already taken." });
+    const { username, email, password, fullName, address, mobileNumber } = req.body;
+    if (!username || !email || !password || !fullName || !address || !mobileNumber) {
+        return res.status(400).json({ 'message': 'All the fields are required.' });
+    }
 
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await global.db.query('INSERT INTO users (id,username,email,password) VALUES (?,?,?,?)', [generateUserID(15), username, email, hashedPassword]);
+        const searchUsername = await global.db.query('SELECT id,username FROM users WHERE username = ?', [username]);
+        if (searchUsername[0]) return res.status(409).json({ 'message': "This username is already taken." });
 
-        res.status(201).json({ 'success': `New user ${username} created !` });
+        const searchEmail = await global.db.query('SELECT id,email FROM users WHERE email = ?', [email]);
+        if (searchEmail[0]) return res.status(409).json({ 'message': "This email is already taken." });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await global.db.query(
+            'INSERT INTO users (id,username,email,password,fullName,address,mobileNumber,isVerified) VALUES (?,?,?,?,?,?,?,?)',
+            [generateUserID(15), username, email, hashedPassword, fullName, address, mobileNumber, 0]
+        );
+
+        res.status(201).json({ 'success': `Account created! An administrator will review and approve your account before you can log in.` });
     } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ 'message': 'This username or email is already taken.' });
+        }
         res.status(500).json({ 'message': err.message });
     }
 };
@@ -39,6 +48,10 @@ const login = async (req, res) => {
 
     const match = await bcrypt.compare(password, searchUser[0].password);
     if (match) {
+        if (!searchUser[0].isVerified) {
+            return res.status(403).json({ 'message': 'Your account is pending admin approval. Please wait for an administrator to confirm your registration before logging in.' });
+        }
+
         const roles = searchUser[0].roles.split(',');
 
         const accessToken = jwt.sign(

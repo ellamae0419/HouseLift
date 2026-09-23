@@ -1,72 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
 /* ── Tokens ── */
 :root {
   --card-radius: 16px;
   --card-padding: 20px 22px;
 
-  --c-bg:      #23242b;
-  --c-border:  #343540;
-  --c-title:   #9ca3af;
-  --c-main:    #f3f4f6;
-  --c-footer:  #8b93a7;
-  --c-divider: #343540;
-  --c-accent:  #f3f4f6;
-
-  --font-ui:   'Syne', sans-serif;
-  --font-mono: 'DM Mono', monospace;
+  --c-accent: var(--hl-accent);
 }
 
-/* ── Colour variants ── */
-.data-card--blue   { --c-bg: #172033; --c-border: #2e406b; --c-title: #9fb7ff; --c-main: #f3f7ff; --c-footer: #93a7cd; --c-divider: #23324f; --c-accent: #8fb2ff; }
-.data-card--green  { --c-bg: #16261f; --c-border: #2a4a3a; --c-title: #95d7b1; --c-main: #f4fff8; --c-footer: #8bad9b; --c-divider: #22382f; --c-accent: #8fd1a9; }
-.data-card--amber  { --c-bg: #2a2115; --c-border: #5a4520; --c-title: #f0be74; --c-main: #fff9ef; --c-footer: #c7ab7c; --c-divider: #43331d; --c-accent: #f0be74; }
-.data-card--red    { --c-bg: #2a1719; --c-border: #5d3135; --c-title: #f08e95; --c-main: #fff4f5; --c-footer: #c27d84; --c-divider: #412224; --c-accent: #f08e95; }
-.data-card--purple { --c-bg: #1d1833; --c-border: #3a2c6f; --c-title: #c9baf7; --c-main: #f7f4ff; --c-footer: #a697d4; --c-divider: #34295f; --c-accent: #7f5af0; }
+/* ── Colour variants (accent only — card shell stays on-theme) ── */
+.data-card--green  { --c-accent: var(--hl-success); }
+.data-card--amber  { --c-accent: var(--hl-warning); }
+.data-card--red    { --c-accent: var(--hl-danger); }
+.data-card--purple { --c-accent: var(--hl-secondary-dark); }
+.data-card--blue   { --c-accent: var(--hl-accent); }
 
-/* ── Shell ── */
+/* ── Shell ──
+   width:100% (not fit-content) so the card fills its grid/flex track instead
+   of shrinking to its content — that mismatch was why cards weren't lining
+   up with their column in a grid row. */
 .data-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: fit-content;
-  max-width: 320px;
+  width: 100%;
   min-width: 0;
-  padding: clamp(16px, 2.5vw, 22px);
-  border-radius: clamp(12px, 2vw, var(--card-radius));
-  background: var(--c-bg);
-  border: 1px solid var(--c-border);
-  font-family: var(--font-ui);
+  height: 100%;
+  padding: var(--card-padding);
+  border-radius: var(--card-radius);
+  background: #FFFFFF;
+  border: 1px solid #DFE9E7;
+  font-family: var(--font-body);
   overflow: hidden;
-  transition: transform .22s ease, box-shadow .22s ease;
+  transition: transform .18s ease;
   box-sizing: border-box;
 }
 
 .data-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
-.data-card::after {
-  content: '';
-  position: absolute;
-  top: -40px; right: -40px;
-  width: 120px; height: 120px;
-  border-radius: 50%;
-  background: none;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ── Title ── */
+/* ── Title row (small accent dot + label) ── */
 .data-card__title {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--c-title);
+  color: var(--hl-ink-secondary);
   margin: 0 0 14px;
-  line-height: 1;
+  line-height: 1.2;
+}
+
+.data-card__title::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  flex-shrink: 0;
 }
 
 /* ── Main display ── */
@@ -74,96 +64,75 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .data-card__value {
   font-family: var(--font-mono);
-  font-size: clamp(32px, 6vw, 44px);
-  font-weight: 500;
-  letter-spacing: -.03em;
-  color: var(--c-main);
-  line-height: 1;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--hl-ink);
+  line-height: 1.1;
 }
 
 .data-card__unit {
   font-family: var(--font-mono);
-  font-size: clamp(14px, 2.8vw, 17px);
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 500;
   color: var(--c-accent);
   align-self: flex-end;
   margin-bottom: 4px;
 }
 
+.data-card__main-custom {
+  margin-bottom: 10px;
+  color: var(--hl-ink);
+}
+
+/* ── Footer / hint text — sits directly under the value, not pinned to the
+   bottom of the card (equal card heights come from the grid row stretch,
+   not from pushing this down with margin-top:auto). ── */
+.data-card__footer {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: var(--font-body);
+  color: #8A9A97;
+  line-height: 1.4;
+}
+
+.data-card__footer strong {
+  color: var(--hl-ink);
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .data-card {
-    width: fit-content;
-    min-width: min(100%, 190px);
-    max-width: 100%;
-    min-height: 0;
-    padding: 14px 15px;
-    border-radius: 12px;
+    padding: 16px 18px;
+    border-radius: 14px;
   }
 
   .data-card__title {
-    font-size: 10px;
+    font-size: 12.5px;
     margin-bottom: 12px;
   }
 
   .data-card__main {
     gap: 5px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
 
   .data-card__value {
-    font-size: clamp(26px, 7.2vw, 34px);
+    font-size: 28px;
   }
 
   .data-card__unit {
-    font-size: 14px;
+    font-size: 13px;
     margin-bottom: 2px;
   }
 
   .data-card__footer {
-    font-size: 11px;
-    line-height: 1.4;
-    gap: 5px;
+    font-size: 12px;
   }
-}
-
-.data-card__main-custom {
-  margin-bottom: 16px;
-  color: var(--c-main);
-}
-
-/* ── Divider ── */
-.data-card__divider {
-  height: 1px;
-  background: var(--c-divider);
-  margin-bottom: 12px;
-}
-
-/* ── Footer ── */
-.data-card__footer {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--c-footer);
-  line-height: 1.5;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.data-card__footer-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--c-accent);
-  flex-shrink: 0;
-  opacity: 1;
-}
-
-.data-card__footer strong {
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: 500;
 }

@@ -23,13 +23,17 @@ import TextField from '@mui/material/TextField';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Link from '@mui/material/Link';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import useAuth from '../../hooks/auth/useAuth';
 import useLogout from '../../hooks/auth/useLogout';
 import { hasAnyRole } from '../../utils/roles';
+import { getStoredTheme, setTheme as persistTheme } from '../../utils/theme';
 
 export const Settings = () => {
   setTitle("Settings");
   const axiosPrivate = useAxiosPrivate();
+  const [theme, setThemeState] = React.useState(getStoredTheme());
   const [value, setValue] = React.useState(2);
   const [persistedValue, setPersistedValue] = React.useState(2);
   const [loading, setLoading] = React.useState(false);
@@ -85,6 +89,12 @@ export const Settings = () => {
     } finally {
       setUsersLoading(false);
     }
+  };
+
+  const handleThemeToggle = (event) => {
+    const nextTheme = event.target.checked ? 'light' : 'dark';
+    setThemeState(nextTheme);
+    persistTheme(nextTheme);
   };
 
   const handleSliderChange = (_event, newValue) => {
@@ -231,9 +241,63 @@ export const Settings = () => {
   return (
     <>
       <h1 className="page-title">Settings</h1>
+      <p className="page-subtitle">Configure how HydroLift behaves for your household.</p>
       <Container>
         <Stack spacing={3}>
-          <Card sx={{ backgroundColor: '#242629', border: 'none' }}>
+          <Card sx={{ backgroundColor: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', boxShadow: 'none' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ color: 'var(--hl-ink)', fontFamily: 'var(--font-heading)', fontWeight: 600, mb: 1 }}>Appearance</Typography>
+              <Typography variant="body2" sx={{ color: 'var(--hl-ink-secondary)', mb: 2 }}>
+                Choose how HydroLift looks on this device.
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={theme === 'light'}
+                    onChange={handleThemeToggle}
+                    disableRipple
+                    sx={{
+                      width: 44,
+                      height: 24,
+                      padding: 0,
+                      overflow: 'visible',
+                      '& .MuiSwitch-switchBase': {
+                        padding: 0,
+                        margin: '3px',
+                        transitionDuration: '200ms',
+                        color: '#ffffff',
+                        '&.Mui-checked': {
+                          transform: 'translateX(20px)',
+                          color: '#ffffff',
+                          '& + .MuiSwitch-track': {
+                            backgroundColor: 'var(--hl-accent)',
+                            opacity: 1,
+                          },
+                        },
+                      },
+                      '& .MuiSwitch-thumb': {
+                        boxSizing: 'border-box',
+                        width: 18,
+                        height: 18,
+                        backgroundColor: '#ffffff',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      },
+                      '& .MuiSwitch-track': {
+                        borderRadius: 999,
+                        backgroundColor: '#CBD6D4',
+                        opacity: 1,
+                        transition: 'background-color 200ms',
+                      },
+                    }}
+                  />
+                }
+                label={theme === 'light' ? 'Light mode' : 'Dark mode'}
+                sx={{ color: 'var(--hl-ink)', m: 0 }}
+              />
+            </CardContent>
+          </Card>
+
+          <Card sx={{ backgroundColor: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', boxShadow: 'none' }}>
             <CardContent>
               <Typography
                 variant="h6"
@@ -241,15 +305,15 @@ export const Settings = () => {
                 sx={{
                   display: 'block',
                   mb: 2,
-                  color: '#fffffe',
-                  fontFamily: 'inherit',
+                  color: 'var(--hl-ink)',
+                  fontFamily: 'var(--font-heading)',
                   fontSize: '1.125rem',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   letterSpacing: '0',
                   lineHeight: 1.2,
                 }}
               >
-                Flood Threshold: {value}
+                Flood threshold: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--hl-accent)' }}>{value}</span>
               </Typography>
               <Box sx={{ width: 300 }}>
                 <Slider
@@ -263,15 +327,39 @@ export const Settings = () => {
                   min={0}
                   max={4}
                   sx={{
-                    color: '#7f5af0',
+                    color: 'var(--hl-accent)',
+                    height: 6,
                     '& .MuiSlider-thumb': {
-                      backgroundColor: '#7f5af0',
+                      width: 16,
+                      height: 16,
+                      backgroundColor: '#ffffff',
+                      border: '2px solid var(--hl-accent)',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      '&:hover, &.Mui-focusVisible': { boxShadow: '0 0 0 6px color-mix(in srgb, var(--hl-accent) 16%, transparent)' },
                     },
                     '& .MuiSlider-track': {
-                      backgroundColor: '#7f5af0',
+                      backgroundColor: 'var(--hl-accent)',
+                      border: 'none',
                     },
                     '& .MuiSlider-rail': {
-                      backgroundColor: '#8290a1',
+                      backgroundColor: '#DCEAE7',
+                      opacity: 1,
+                    },
+                    '& .MuiSlider-mark': {
+                      backgroundColor: '#DCEAE7',
+                      opacity: 1,
+                      width: 4,
+                      height: 4,
+                      borderRadius: '50%',
+                    },
+                    '& .MuiSlider-mark.MuiSlider-markActive': {
+                      backgroundColor: 'var(--hl-accent)',
+                      opacity: 1,
+                    },
+                    '&.Mui-disabled': {
+                      '& .MuiSlider-track': { backgroundColor: 'var(--hl-accent)' },
+                      '& .MuiSlider-rail': { backgroundColor: '#DCEAE7' },
+                      '& .MuiSlider-thumb': { backgroundColor: '#ffffff', border: '2px solid var(--hl-accent)' },
                     },
                     opacity: loading ? 0.6 : 1,
                   }}
@@ -280,13 +368,13 @@ export const Settings = () => {
             </CardContent>
           </Card>
 
-          <Card sx={{ backgroundColor: '#242629', border: 'none' }}>
+          <Card sx={{ backgroundColor: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', boxShadow: 'none' }}>
             <CardContent>
-              <Typography variant="h6" sx={{ color: '#fffffe', fontWeight: 700, mb: 1 }}>User settings</Typography>
-              <Typography variant="body2" sx={{ color: '#94a1b2', mb: 2 }}>
-                Flood threshold and other shared settings live here. Account details are now in Profile.
+              <Typography variant="h6" sx={{ color: 'var(--hl-ink)', fontFamily: 'var(--font-heading)', fontWeight: 600, mb: 1 }}>Pet house settings</Typography>
+              <Typography variant="body2" sx={{ color: 'var(--hl-ink-secondary)', mb: 2 }}>
+                Set the water level that triggers automatic elevation of the pet house. Account details are now in Profile.
               </Typography>
-              <Link href="/profile" underline="hover" sx={{ color: '#7f5af0' }}>Open Profile</Link>
+              <Link href="/profile" underline="hover" sx={{ color: 'var(--hl-accent)', fontWeight: 600 }}>Open profile</Link>
             </CardContent>
           </Card>
         </Stack>

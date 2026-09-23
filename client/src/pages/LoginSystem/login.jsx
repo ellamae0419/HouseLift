@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from '../../lib/axios';
 import useAuth from '../../hooks/auth/useAuth';
 import { faUser } from "@fortawesome/free-regular-svg-icons";
-import { faUnlockKeyhole } from "@fortawesome/free-solid-svg-icons";
+import { faUnlockKeyhole, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const Login = () => {
@@ -24,6 +24,7 @@ export const Login = () => {
     const [usernameOrEmail, setUsernameOrEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errMsg, setErrMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => { usernameOrEmailRef.current.focus(); }, [])
     useEffect(() => { setErrMsg(''); }, [usernameOrEmail, password])
@@ -51,7 +52,7 @@ export const Login = () => {
             if(!err?.response) {
                 setErrMsg("The server didn't respond.");
                 setTimeout(() => { setErrMsg(''); }, 4000)
-            } else if([400, 401].includes(err.response?.status)) {
+            } else if([400, 401, 403].includes(err.response?.status)) {
                 setErrMsg(err.response?.data?.message);
                 setTimeout(() => { setErrMsg(''); }, 4000)
             } else {
@@ -72,38 +73,50 @@ export const Login = () => {
         <div className={`${styles.container} container`}>
             <div className={styles.form_container}>
                 <div className={styles.form}>
-                    <form onSubmit={handleSubmit} style={{marginBottom: "20px"}}>
-                        <h1 className={styles.title}>Login</h1>
-                        <h2 className={styles.description}>Welcome to House Lift Control Panel</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className={styles.badge}>
+                            <img src="/logo.png" alt="HydroLift" className={styles.brand_logo} />
+                        </div>
+                        <h1 className={styles.title}>Welcome back</h1>
+                        <p className={styles.description}>Log in to your HydroLift control panel.</p>
                         <p ref={errRef} className={errMsg ? styles.err_message : 'hide'} aria-live="assertive">{errMsg}</p>
 
-                        <div className={styles.input_field} style={{marginTop: '30px'}}>
-                            <FontAwesomeIcon icon={faUser} className={styles.input_icon} />
-                            <input
-                                type="text" id="usernameOrEmail" ref={usernameOrEmailRef} autoComplete="off" placeholder='Your username or email'
-                                onChange={(e) => setUsernameOrEmail(e.target.value)} value={usernameOrEmail} required
-                            />
+                        <div className={styles.field_group}>
+                            <label className={styles.field_label} htmlFor="usernameOrEmail">Username or email</label>
+                            <div className={styles.field_pill}>
+                                <FontAwesomeIcon icon={faUser} className={styles.field_icon} />
+                                <input
+                                    type="text" id="usernameOrEmail" ref={usernameOrEmailRef} autoComplete="off" placeholder='Your username or email'
+                                    onChange={(e) => setUsernameOrEmail(e.target.value)} value={usernameOrEmail} required
+                                />
+                            </div>
                         </div>
 
-                        <div className={styles.input_field}>
-                            <FontAwesomeIcon icon={faUnlockKeyhole} className={styles.input_icon} />
-                            <input
-                                type="password" id="password" placeholder='Your password'
-                                onChange={(e) => setPassword(e.target.value)} value={password} required
-                            />
+                        <div className={styles.field_group}>
+                            <label className={styles.field_label} htmlFor="password">Password</label>
+                            <div className={styles.field_pill}>
+                                <FontAwesomeIcon icon={faUnlockKeyhole} className={styles.field_icon} />
+                                <input
+                                    type={showPassword ? "text" : "password"} id="password" placeholder='Your password'
+                                    onChange={(e) => setPassword(e.target.value)} value={password} required
+                                />
+                                <button type="button" className={styles.field_toggle} onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                </button>
+                            </div>
                         </div>
-                        
-                        <div style={{marginTop: '35px'}}>
+
+                        <div style={{marginTop: '18px', display: 'flex', alignItems: 'center'}}>
                             <input type="checkbox" id="persist_checkBox" className={styles.checkBox} onChange={togglePersist} checked={JSON.parse(persist)} />
-                            <label htmlFor='persist_checkBox'>Remember me</label>
+                            <label htmlFor='persist_checkBox' style={{fontSize: '13px', color: 'var(--text-low)'}}>Remember me</label>
                         </div>
 
-                        <button className={`${styles.input_field} ${styles.button} button button-full`} disabled={(!usernameOrEmail || !password) ? true : false}>
+                        <button className={`${styles.submit_btn} button button-full`} disabled={(!usernameOrEmail || !password) ? true : false}>
                             Sign in
                         </button>
                     </form>
 
-                    <div>You don't have an account ? <a href="/register">Register</a></div>
+                    <div className={styles.footer_link}>You don't have an account? <a href="/register">Register</a></div>
                 </div>
             </div>
         </div>

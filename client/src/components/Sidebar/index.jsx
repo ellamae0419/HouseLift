@@ -1,6 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import useAuth from "../../hooks/auth/useAuth";
 import useNotifications from "../../hooks/useNotifications";
+import useLogout from "../../hooks/auth/useLogout";
 import { hasAnyRole, getRolesFromAuth } from "../../utils/roles";
 import "./index.css";
 
@@ -38,7 +39,7 @@ const userNavItems = [
     },
     {
         to: "/notifications",
-        label: "Notifications and Alerts",
+        label: "Notifications and alerts",
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -51,7 +52,7 @@ const userNavItems = [
 const adminNavItems = [
     {
         to: "/admin/dashboard",
-        label: "Dashboard / System Overview",
+        label: "Dashboard / System overview",
         end: true,
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -61,10 +62,10 @@ const adminNavItems = [
     },
     {
         to: "/admin/house-monitoring",
-        label: "House Monitoring",
+        label: "Flood monitoring",
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="M12 2s7 8.5 7 13a7 7 0 0 1-14 0c0-4.5 7-13 7-13z" />
             </svg>
         ),
     },
@@ -81,7 +82,7 @@ const adminNavItems = [
     },
     {
         to: "/admin/users",
-        label: "User Management",
+        label: "User management",
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -103,7 +104,7 @@ const adminNavItems = [
     },
     {
         to: "/notifications",
-        label: "Notifications and Alerts",
+        label: "Notifications and alerts",
         icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -116,6 +117,7 @@ const adminNavItems = [
 export const Sidebar = ({ open = false, onClose = () => {} }) => {
     const { auth } = useAuth();
     const { unreadCount } = useNotifications();
+    const logout = useLogout();
     const username = auth?.username || '';
     const isAdmin = hasAnyRole(auth, ["admin"]);
     const roleText = getRolesFromAuth(auth).join(', ') || 'user';
@@ -127,11 +129,9 @@ export const Sidebar = ({ open = false, onClose = () => {} }) => {
                 <div className="sidebar-header">
                     <Link className="sidebar-brand" to={isAdmin ? "/admin/dashboard" : "/dashboard"} aria-label="Go to dashboard">
                         <div className="sidebar-brand-icon">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                            </svg>
+                            <img src="/logo.png" alt="" className="sidebar-brand-logo" />
                         </div>
-                        <span className="sidebar-brand-name">House Lift</span>
+                        <span className="sidebar-brand-name">HydroLift</span>
                     </Link>
                     <button
                         type="button"
@@ -167,13 +167,28 @@ export const Sidebar = ({ open = false, onClose = () => {} }) => {
 
                 <div className="sidebar-profile">
                         {auth?.username ? (
-                            <Link className="profile-link" to={isAdmin ? "/admin/dashboard" : "/profile"} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-                                <div className="profile-avatar">{(username || 'U').slice(0,1).toUpperCase()}</div>
-                                <div className="profile-info">
-                                    <div className="profile-name">{username || 'Guest'}</div>
-                                    <div className="profile-role">{roleText || 'User'}</div>
-                                </div>
-                            </Link>
+                            <>
+                                <Link className="profile-link" to={isAdmin ? "/admin/dashboard" : "/profile"} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', flex: 1, minWidth: 0 }}>
+                                    <div className="profile-avatar">{(username || 'U').slice(0,1).toUpperCase()}</div>
+                                    <div className="profile-info">
+                                        <div className="profile-name">{username || 'Guest'}</div>
+                                        <div className="profile-role">{roleText || 'User'}</div>
+                                    </div>
+                                </Link>
+                                <button
+                                    type="button"
+                                    className="sidebar-logout-btn"
+                                    onClick={logout}
+                                    aria-label="Log out"
+                                    title="Log out"
+                                >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                        <polyline points="16 17 21 12 16 7" />
+                                        <line x1="21" y1="12" x2="9" y2="12" />
+                                    </svg>
+                                </button>
+                            </>
                         ) : (
                             <Link className="sidebar-login" to="/login">
                                 Log in

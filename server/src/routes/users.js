@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const checkRoles = require('../middlewares/checkRoles');
-const { getAllUsers, createUser, updateUser, deleteUser } = require('../controllers/usersController');
+const { getAllUsers, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser } = require('../controllers/usersController');
+
+// Own-profile routes must be declared before "/:id" so "me" is never matched as an :id param.
+router.get("/me", getOwnProfile);
+router.put("/me", updateOwnProfile);
 
 router.get("/", checkRoles("admin"), getAllUsers);
 router.post("/", checkRoles("admin"), createUser);
+router.put("/:id/approve", checkRoles("admin"), approveUser);
 router.put("/:id", checkRoles("admin"), updateUser);
 router.delete("/:id", checkRoles("admin"), deleteUser);
 
