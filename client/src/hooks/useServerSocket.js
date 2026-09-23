@@ -6,12 +6,21 @@ export default function useServerSocket() {
   const wsRef = useRef(null);
 
   useEffect(() => {
-    // Same host the page was loaded from (localhost on this computer, or this
-    // computer's LAN IP when opened from a phone), not a hardcoded env var —
-    // otherwise a phone would try to open a WebSocket to its own "localhost".
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${hostname}:3001`;
+    // In production (Vercel), the backend lives on a different domain, so
+    // VITE_API_URL (set at build time) is required and used as-is, just
+    // swapped to a ws(s):// URL. In local/LAN dev, VITE_API_URL is normally
+    // unset, so we fall back to whatever host the page itself was loaded
+    // from (localhost on this computer, or this computer's LAN IP when
+    // opened from a phone) — otherwise a phone would try to open a
+    // WebSocket to its own "localhost".
+    let wsUrl;
+    if (import.meta.env.VITE_API_URL) {
+      wsUrl = import.meta.env.VITE_API_URL.replace(/^http/, 'ws');
+    } else {
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+      const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${hostname}:3001`;
+    }
 
     try {
       const ws = new WebSocket(wsUrl);
