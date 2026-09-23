@@ -1,7 +1,6 @@
 import '../../assets/main.css'
 import { useEffect, useState } from 'react';
 import { setTitle } from '../../utils/generalFunctions';
-import { DataCard } from '../../components/Datacard/index';
 import useServerSocket from '../../hooks/useServerSocket';
 import useAxiosPrivate from '../../hooks/auth/useAxiosPrivate';
 
@@ -9,66 +8,77 @@ const MAX_LEVEL_CM = 4;
 
 export const HouseMonitoring = () => {
     setTitle("Flood Monitoring");
-    const { wlValue, connected } = useServerSocket();
+    const { readingsById, connected } = useServerSocket();
     const axiosPrivate = useAxiosPrivate();
-    const [threshold, setThreshold] = useState(null);
+    const [houses, setHouses] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                const res = await axiosPrivate.post('/esp32/config', { esp32_id: 'esp32-default' });
-                const t = Number(res?.data?.threshold);
-                if (mounted && !Number.isNaN(t)) setThreshold(t);
+                const res = await axiosPrivate.get('/users/houses');
+                if (mounted) setHouses(res.data || []);
             } catch (err) {
-                console.error('Error loading flood threshold:', err?.response?.data?.message || err.message);
+                console.error('Error loading houses:', err?.response?.data?.message || err.message);
+            } finally {
+                if (mounted) setLoading(false);
             }
         })();
         return () => { mounted = false; };
     }, [axiosPrivate]);
 
-    const waterLevel = wlValue ?? 0;
-    const lifted = threshold != null && waterLevel >= threshold;
-    const fillPercent = Math.max(0, Math.min(100, Math.round((waterLevel / MAX_LEVEL_CM) * 100)));
-
     return (
         <>
             <h1 className='page-title'>Flood monitoring</h1>
-            <p className="page-subtitle">Live water level and lift status for the connected pet house.</p>
+            <p className="page-subtitle">Live water level and lift status for every registered pet house.</p>
 
-            <div className="hl-page-stack">
-                <div className="hl-kpi-grid">
-                    <div className="hl-card-shell hl-gauge-card">
-                        <div className="hl-gauge-card__title">Water level</div>
-                        <div className="hl-gauge-card__row">
-                            <div className="hl-gauge-card__tube">
-                                <div className="hl-gauge-card__fill" style={{ height: `${fillPercent}%` }} />
+            <div className="hl-card-shell hl-glance-card">
+                <div className="hl-glance-title">Monitored houses</div>
+                <div className="hl-glance-list">
+                    {houses.map((h) => {
+                        const waterLevel = h.esp32_id ? readingsById[h.esp32_id] : undefined;
+                        const hasReading = waterLevel != null;
+                        const threshold = h.threshold != null ? Number(h.threshold) : null;
+                        const lifted = hasReading && threshold != null && waterLevel >= threshold;
+                        const pct = hasReading ? Math.min(100, Math.round((waterLevel / MAX_LEVEL_CM) * 100)) : 0;
+
+                        return (
+                            <div className="hl-glance-item" key={h.userId}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '15px', color: 'var(--hl-ink)' }}>{h.username}</span>
+                                    <span style={{
+                                        fontSize: '11.5px',
+                                        fontWeight: 600,
+                                        padding: '3px 10px',
+                                        borderRadius: '999px',
+                                        color: !hasReading ? 'var(--hl-ink-tertiary)' : lifted ? 'var(--hl-warning-ink)' : 'var(--hl-success-ink)',
+                                        background: !hasReading ? 'var(--hl-page-bg)' : lifted ? 'var(--hl-warning-bg)' : 'var(--hl-success-bg)',
+                                    }}>{!hasReading ? 'no data' : lifted ? 'lifted' : 'normal'}</span>
+                                </div>
+                                <span style={{ fontSize: '13px', color: 'var(--hl-ink-secondary)' }}>
+                                    {threshold != null ? `Triggers at ${threshold} cm` : 'Threshold not set'}
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: '#E7ECEB', overflow: 'hidden' }}>
+                                        <div style={{
+                                            width: `${pct}%`,
+                                            height: '100%',
+                                            background: lifted ? 'var(--hl-warning)' : 'var(--hl-accent)',
+                                        }} />
+                                    </div>
+                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--hl-ink-secondary)', whiteSpace: 'nowrap' }}>
+                                        {hasReading ? `${waterLevel} cm` : '— cm'}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="hl-gauge-card__ticks">
-                                <span>{MAX_LEVEL_CM} cm</span>
-                                <span>0 cm</span>
-                            </div>
+                        );
+                    })}
+                    {!loading && houses.length === 0 && (
+                        <div style={{ color: 'var(--hl-ink-tertiary)', textAlign: 'center', padding: '24px', gridColumn: '1 / -1' }}>
+                            No registered users yet.
                         </div>
-                        <div className="hl-gauge-card__pct">{waterLevel} cm</div>
-                    </div>
-
-                    <DataCard
-                        title="Lift status"
-                        value={lifted ? 'Lifted' : 'Normal'}
-                        footer={threshold != null ? `Triggers at ${threshold} cm` : 'Threshold not set — adjust in Settings'}
-                        variant={lifted ? 'amber' : 'green'}
-                    />
-
-                    <DataCard
-                        title="Live monitoring"
-                        footer={connected ? 'Sensor feed connected' : 'Waiting for device'}
-                        variant="blue"
-                        main={
-                            <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '28px', color: connected ? 'var(--hl-accent)' : 'var(--hl-danger)' }}>
-                                {connected ? 'Online' : 'Offline'}
-                            </div>
-                        }
-                    />
+                    )}
                 </div>
             </div>
         </>

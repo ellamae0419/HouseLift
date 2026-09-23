@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 export default function useServerSocket() {
   const [wlValue, setWlValue] = useState(null);
   const [connected, setConnected] = useState(false);
+  const [readingsById, setReadingsById] = useState({});
   const wsRef = useRef(null);
 
   useEffect(() => {
@@ -38,7 +39,12 @@ export default function useServerSocket() {
             const rawValue = msg.wl_value ?? msg.wlValue ?? msg.value;
             const v = Number(rawValue);
             console.debug('WS sensor-reading received', msg.esp32_id, v);
-            if (!Number.isNaN(v)) setWlValue(v);
+            if (!Number.isNaN(v)) {
+              setWlValue(v);
+              if (msg.esp32_id) {
+                setReadingsById((prev) => ({ ...prev, [msg.esp32_id]: v }));
+              }
+            }
           }
         } catch (err) {
           console.warn('Invalid WS message', err);
@@ -59,5 +65,5 @@ export default function useServerSocket() {
     }
   }, []);
 
-  return { wlValue, connected };
+  return { wlValue, connected, readingsById };
 }

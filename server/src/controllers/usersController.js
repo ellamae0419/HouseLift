@@ -7,6 +7,21 @@ const getAllUsers = async (req, res) => {
     res.json(users);
 };
 
+const getAllHouses = async (req, res) => {
+    try {
+        const rows = await global.db.query(`
+            SELECT u.id AS userId, u.username, u.isVerified, e.esp32_id, e.threshold
+            FROM users u
+            LEFT JOIN esp32 e ON e.userId = u.id
+            WHERE u.roles NOT LIKE '%admin%'
+            ORDER BY u.createdAt DESC
+        `);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 const bcrypt = require('bcrypt');
 const { generateUserID } = require('../utils/functions');
 const { sendApprovalEmail } = require('../utils/mailer');
@@ -147,4 +162,4 @@ const deleteUser = async (req, res) => {
     }
 };
 
-module.exports = { getAllUsers, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser };
+module.exports = { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser };

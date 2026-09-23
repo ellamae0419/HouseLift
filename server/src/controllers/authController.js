@@ -24,10 +24,11 @@ const register = async (req, res) => {
         if (searchEmail[0]) return res.status(409).json({ 'message': "This email is already taken." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const userId = generateUserID(15);
 
         await global.db.query(
             'INSERT INTO users (id,username,email,password,fullName,address,mobileNumber,isVerified) VALUES (?,?,?,?,?,?,?,?)',
-            [generateUserID(15), username, email, hashedPassword, fullName, address, mobileNumber, 0]
+            [userId, username, email, hashedPassword, fullName, address, mobileNumber, 0]
         );
 
         try {
@@ -37,6 +38,18 @@ const register = async (req, res) => {
             );
         } catch (notifyErr) {
             console.error('[register] Failed to create signup notification:', notifyErr.message);
+        }
+
+        // Every user gets their own pet-house device slot right away, so
+        // Flood Monitoring can list them immediately (shows "no data yet"
+        // until a real ESP32 provisioned with this ID actually connects).
+        try {
+            await global.db.query(
+                'INSERT INTO esp32 (esp32_id, threshold, wifi_ssid, wifi_pass, userId) VALUES (?, ?, ?, ?, ?)',
+                [`esp32-${userId}`, 2, '', '', userId]
+            );
+        } catch (deviceErr) {
+            console.error('[register] Failed to create placeholder device:', deviceErr.message);
         }
 
         res.status(201).json({ 'success': `Account created! An administrator will review and approve your account before you can log in.` });
