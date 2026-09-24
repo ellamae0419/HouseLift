@@ -5,7 +5,7 @@ const { generateUserID } = require('../utils/functions');
 const { sendOtpSms } = require('../utils/sms');
 const { sendOtpEmail } = require('../utils/mailer');
 
-const OTP_TTL_MS = 10 * 60 * 1000;
+const OTP_TTL_MS = 20 * 60 * 1000;
 
 const maskMobileNumber = (mobileNumber) => mobileNumber.replace(/^(\d{4})\d{5}(\d{2})$/, '$1•••••$2');
 

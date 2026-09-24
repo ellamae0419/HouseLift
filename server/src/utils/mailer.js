@@ -88,7 +88,7 @@ const sendOtpEmail = async ({ to, otp }) => {
         html: `
             <p>Your HydroLift password reset code is:</p>
             <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px;">${otp}</p>
-            <p>It expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
+            <p>It expires in 20 minutes. If you didn't request this, you can safely ignore this email.</p>
         `,
     });
 

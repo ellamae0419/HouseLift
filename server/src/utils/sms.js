@@ -12,7 +12,7 @@ const sendOtpSms = async ({ to, otp }) => {
     const body = new URLSearchParams({
         apikey: process.env.SEMAPHORE_API_KEY,
         number: to,
-        message: `Your HydroLift password reset code is ${otp}. It expires in 10 minutes. If you didn't request this, ignore this message.`,
+        message: `Your HydroLift password reset code is ${otp}. It expires in 20 minutes. If you didn't request this, ignore this message.`,
     });
     if (process.env.SEMAPHORE_SENDER_NAME) {
         body.set('sendername', process.env.SEMAPHORE_SENDER_NAME);
