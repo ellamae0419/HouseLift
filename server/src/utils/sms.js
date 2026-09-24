@@ -24,10 +24,16 @@ const sendOtpSms = async ({ to, otp }) => {
         body,
     });
 
-    const data = await response.json().catch(() => null);
+    // Semaphore returns JSON on success but plain text/HTML for some error
+    // cases (e.g. an unapproved account) — read as text first so those
+    // messages are never silently lost as "null".
+    const rawText = await response.text();
+    let data;
+    try { data = JSON.parse(rawText); } catch { data = rawText; }
 
     if (!response.ok) {
-        throw new Error(`Semaphore SMS failed (${response.status}): ${JSON.stringify(data)}`);
+        const detail = typeof data === 'string' ? data.trim() : JSON.stringify(data);
+        throw new Error(`Semaphore SMS failed (${response.status}): ${detail}`);
     }
 
     console.log('\x1b[32m%s\x1b[0m', `[sms] OTP sent to ${to}.`);
