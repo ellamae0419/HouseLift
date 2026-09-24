@@ -2,7 +2,7 @@ import styles from './style.module.css';
 import { setTitle } from '../../utils/generalFunctions';
 
 import { useRef, useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from '../../lib/axios';
 import useAuth from '../../hooks/auth/useAuth';
 import { faUser } from "@fortawesome/free-regular-svg-icons";
@@ -111,7 +111,7 @@ export const Login = () => {
                                 <input type="checkbox" id="persist_checkBox" className={styles.checkBox} onChange={togglePersist} checked={JSON.parse(persist)} />
                                 <label htmlFor='persist_checkBox' style={{fontSize: '13px', color: 'var(--text-low)'}}>Remember me</label>
                             </div>
-                            <a href="/forgot-password" style={{fontSize: '13px'}}>Forgot password?</a>
+                            <Link to="/forgot-password" style={{fontSize: '13px'}}>Forgot password?</Link>
                         </div>
 
                         <button className={`${styles.submit_btn} button button-full`} disabled={(!usernameOrEmail || !password) ? true : false}>
@@ -119,7 +119,7 @@ export const Login = () => {
                         </button>
                     </form>
 
-                    <div className={styles.footer_link}>You don't have an account? <a href="/register">Register</a></div>
+                    <div className={styles.footer_link}>You don't have an account? <Link to="/register">Register</Link></div>
                 </div>
             </div>
         </div>

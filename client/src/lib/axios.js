@@ -39,11 +39,16 @@ const attachConnectivityInterceptor = (instance) => {
     );
 };
 
-const publicInstance = axios.create({ baseURL });
+// Without a timeout, a slow/restrictive network (e.g. some in-app browser
+// WebViews) can hang a request forever — most visibly the silent
+// login-check every page does on load, which would otherwise get stuck on
+// "Loading..." with no way out.
+const publicInstance = axios.create({ baseURL, timeout: 10000 });
 export const axiosPrivate = axios.create({
     baseURL,
     headers: { 'Content-Type': 'application/json' },
-    withCredentials: true
+    withCredentials: true,
+    timeout: 10000,
 });
 
 attachConnectivityInterceptor(publicInstance);

@@ -1,7 +1,7 @@
 import styles from './style.module.css';
 import { setTitle } from '../../utils/generalFunctions';
 import { useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from '../../lib/axios';
 import { faUser } from "@fortawesome/free-regular-svg-icons";
 import { faUnlockKeyhole, faEye, faEyeSlash, faKey } from "@fortawesome/free-solid-svg-icons";
@@ -193,7 +193,7 @@ export const ForgotPassword = () => {
                     )}
 
                     {!success && (
-                        <div className={styles.footer_link}>Remembered your password? <a href="/login">Log in</a></div>
+                        <div className={styles.footer_link}>Remembered your password? <Link to="/login">Log in</Link></div>
                     )}
                 </div>
             </div>

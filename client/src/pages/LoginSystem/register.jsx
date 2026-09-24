@@ -1,6 +1,6 @@
 import styles from './style.module.css';
 import { setTitle } from '../../utils/generalFunctions';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useRef, useState, useEffect, useMemo } from "react";
 import axios from '../../lib/axios';
@@ -349,7 +349,7 @@ export const Register = () => {
                             </button>
                         </form>
 
-                        <div className={styles.footer_link}>Already have an account? <a href="/login">Log in</a></div>
+                        <div className={styles.footer_link}>Already have an account? <Link to="/login">Log in</Link></div>
                     </div>
                 </div>
             }
