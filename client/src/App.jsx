@@ -16,6 +16,7 @@ import { Notifications } from "./pages/Notifications/index";
 import { Maintenance } from "./pages/Maintenance/index";
 import { Register } from "./pages/LoginSystem/register";
 import { Login } from "./pages/LoginSystem/login";
+import { ForgotPassword } from "./pages/LoginSystem/forgotPassword";
 import { AdminDashboard } from "./pages/Admin/Dashboard/index";
 import { UserManagement } from "./pages/Admin/UserManagement/index";
 
@@ -39,6 +40,7 @@ function App() {
                     <Route element={<RequireNotAuth />}>
                         <Route path="/register" element={<Register/>} />
                         <Route path="/login" element={<Login/>} />
+                        <Route path="/forgot-password" element={<ForgotPassword/>} />
                     </Route>
 
                     {/* Routes that show the sidebar/layout (most of the app) */}

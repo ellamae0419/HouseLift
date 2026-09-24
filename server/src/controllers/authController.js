@@ -2,6 +2,11 @@ require('dotenv').config()
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { generateUserID } = require('../utils/functions');
+const { sendOtpSms } = require('../utils/sms');
+
+const OTP_TTL_MS = 10 * 60 * 1000;
+
+const maskMobileNumber = (mobileNumber) => mobileNumber.replace(/^(\d{4})\d{5}(\d{2})$/, '$1•••••$2');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const refreshCookieOptions = {
@@ -147,4 +152,64 @@ const refreshToken = async (req, res) => {
     );
 }
 
-module.exports = { register, login, logout, refreshToken };
+const forgotPassword = async (req, res) => {
+    const { usernameOrEmail } = req.body;
+    if (!usernameOrEmail) return res.status(400).json({ 'message': 'Username or email is required.' });
+
+    try {
+        const rows = await global.db.query('SELECT id, username, mobileNumber, resetOtpExpires FROM users WHERE username = ? OR email = ?', [usernameOrEmail, usernameOrEmail]);
+        const user = rows[0];
+        if (!user) return res.status(404).json({ 'message': 'No account found with that username or email.' });
+        if (!user.mobileNumber) return res.status(400).json({ 'message': 'This account has no registered mobile number.' });
+
+        // An unexpired OTP already went out — resend the same one instead of
+        // burning another SMS credit on every click.
+        if (user.resetOtpExpires && new Date(user.resetOtpExpires) > new Date()) {
+            return res.json({ 'message': `A code was already sent to ${maskMobileNumber(user.mobileNumber)}. Check your phone, or wait for it to expire to request a new one.` });
+        }
+
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        const expires = new Date(Date.now() + OTP_TTL_MS);
+
+        await global.db.query('UPDATE users SET resetOtp = ?, resetOtpExpires = ? WHERE id = ?', [otp, expires, user.id]);
+
+        await sendOtpSms({ to: user.mobileNumber, otp });
+
+        res.json({ 'message': `A verification code was sent to ${maskMobileNumber(user.mobileNumber)}.` });
+    } catch (err) {
+        res.status(500).json({ 'message': err.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { usernameOrEmail, otp, newPassword } = req.body;
+    if (!usernameOrEmail || !otp || !newPassword) {
+        return res.status(400).json({ 'message': 'Username/email, code, and new password are required.' });
+    }
+    if (newPassword.length < 8) {
+        return res.status(400).json({ 'message': 'New password must be at least 8 characters.' });
+    }
+
+    try {
+        const rows = await global.db.query('SELECT id, resetOtp, resetOtpExpires FROM users WHERE username = ? OR email = ?', [usernameOrEmail, usernameOrEmail]);
+        const user = rows[0];
+        if (!user) return res.status(404).json({ 'message': 'No account found with that username or email.' });
+
+        const isExpired = !user.resetOtpExpires || new Date(user.resetOtpExpires) < new Date();
+        if (!user.resetOtp || user.resetOtp !== otp || isExpired) {
+            return res.status(400).json({ 'message': 'Invalid or expired code.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await global.db.query(
+            'UPDATE users SET password = ?, resetOtp = NULL, resetOtpExpires = NULL, refreshToken = NULL WHERE id = ?',
+            [hashedPassword, user.id]
+        );
+
+        res.json({ 'message': 'Password reset. You can now log in with your new password.' });
+    } catch (err) {
+        res.status(500).json({ 'message': err.message });
+    }
+};
+
+module.exports = { register, login, logout, refreshToken, forgotPassword, resetPassword };

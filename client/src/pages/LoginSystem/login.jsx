@@ -106,9 +106,12 @@ export const Login = () => {
                             </div>
                         </div>
 
-                        <div style={{marginTop: '18px', display: 'flex', alignItems: 'center'}}>
-                            <input type="checkbox" id="persist_checkBox" className={styles.checkBox} onChange={togglePersist} checked={JSON.parse(persist)} />
-                            <label htmlFor='persist_checkBox' style={{fontSize: '13px', color: 'var(--text-low)'}}>Remember me</label>
+                        <div style={{marginTop: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                            <div style={{display: 'flex', alignItems: 'center'}}>
+                                <input type="checkbox" id="persist_checkBox" className={styles.checkBox} onChange={togglePersist} checked={JSON.parse(persist)} />
+                                <label htmlFor='persist_checkBox' style={{fontSize: '13px', color: 'var(--text-low)'}}>Remember me</label>
+                            </div>
+                            <a href="/forgot-password" style={{fontSize: '13px'}}>Forgot password?</a>
                         </div>
 
                         <button className={`${styles.submit_btn} button button-full`} disabled={(!usernameOrEmail || !password) ? true : false}>
