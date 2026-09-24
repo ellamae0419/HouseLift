@@ -1,23 +1,34 @@
-// Sends via Resend's HTTP API instead of raw SMTP — Railway's network
+// Sends via Mailjet's HTTP API instead of raw SMTP — Railway's network
 // blocks outbound SMTP (port 587/465) silently, which made nodemailer hang
-// or time out. HTTPS is not affected by that block.
-const RESEND_URL = 'https://api.resend.com/emails';
-const DEFAULT_FROM = 'HydroLift <onboarding@resend.dev>';
+// or time out. HTTPS is not affected by that block. Mailjet only requires
+// verifying a single sender address (not a whole domain), and once
+// verified can send to any recipient — unlike some providers that restrict
+// unverified accounts to only emailing the account owner.
+const MAILJET_URL = 'https://api.mailjet.com/v3.1/send';
+const DEFAULT_FROM_EMAIL = 'houselift18@gmail.com';
+const DEFAULT_FROM_NAME = 'HydroLift';
 
-const isConfigured = () => Boolean(process.env.RESEND_API_KEY);
+const isConfigured = () => Boolean(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY);
 
 const sendEmail = async ({ to, subject, html }) => {
-    const response = await fetch(RESEND_URL, {
+    const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString('base64');
+
+    const response = await fetch(MAILJET_URL, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Authorization': `Basic ${auth}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            from: process.env.EMAIL_FROM || DEFAULT_FROM,
-            to: [to],
-            subject,
-            html,
+            Messages: [{
+                From: {
+                    Email: process.env.EMAIL_FROM || DEFAULT_FROM_EMAIL,
+                    Name: DEFAULT_FROM_NAME,
+                },
+                To: [{ Email: to }],
+                Subject: subject,
+                HTMLPart: html,
+            }],
         }),
         signal: AbortSignal.timeout(10000),
     });
@@ -28,7 +39,14 @@ const sendEmail = async ({ to, subject, html }) => {
 
     if (!response.ok) {
         const detail = typeof data === 'string' ? data.trim() : JSON.stringify(data);
-        throw new Error(`Resend email failed (${response.status}): ${detail}`);
+        throw new Error(`Mailjet email failed (${response.status}): ${detail}`);
+    }
+
+    // Mailjet returns 200 with a per-message Status even on some failures
+    // (e.g. invalid recipient), so check that too, not just the HTTP status.
+    const messageStatus = data?.Messages?.[0]?.Status;
+    if (messageStatus && messageStatus !== 'success') {
+        throw new Error(`Mailjet email failed: ${JSON.stringify(data.Messages[0])}`);
     }
 
     return data;
@@ -39,7 +57,7 @@ const sendApprovalEmail = async ({ to, username }) => {
     const loginLink = `${clientUrl}/login`;
 
     if (!isConfigured()) {
-        console.log('\x1b[33m%s\x1b[0m', `[mailer] RESEND_API_KEY not configured — skipping approval email.`);
+        console.log('\x1b[33m%s\x1b[0m', `[mailer] MAILJET_API_KEY/MAILJET_SECRET_KEY not configured — skipping approval email.`);
         console.log('\x1b[36m%s\x1b[0m', `[mailer] ${username} <${to}> has been approved and can now log in.`);
         return;
     }
@@ -54,12 +72,12 @@ const sendApprovalEmail = async ({ to, username }) => {
         `,
     });
 
-    console.log('\x1b[32m%s\x1b[0m', `[mailer] Approval email accepted for ${to}. id=${data?.id}`);
+    console.log('\x1b[32m%s\x1b[0m', `[mailer] Approval email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
 };
 
 const sendOtpEmail = async ({ to, otp }) => {
     if (!isConfigured()) {
-        console.log('\x1b[33m%s\x1b[0m', `[mailer] RESEND_API_KEY not configured — skipping OTP email.`);
+        console.log('\x1b[33m%s\x1b[0m', `[mailer] MAILJET_API_KEY/MAILJET_SECRET_KEY not configured — skipping OTP email.`);
         console.log('\x1b[36m%s\x1b[0m', `[mailer] OTP for ${to} is ${otp} (printed here since email isn't configured).`);
         return;
     }
@@ -74,7 +92,7 @@ const sendOtpEmail = async ({ to, otp }) => {
         `,
     });
 
-    console.log('\x1b[32m%s\x1b[0m', `[mailer] OTP email accepted for ${to}. id=${data?.id}`);
+    console.log('\x1b[32m%s\x1b[0m', `[mailer] OTP email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
 };
 
 module.exports = { sendApprovalEmail, sendOtpEmail };
