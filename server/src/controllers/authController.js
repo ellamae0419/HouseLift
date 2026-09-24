@@ -154,12 +154,15 @@ const refreshToken = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
     const { usernameOrEmail } = req.body;
-    if (!usernameOrEmail) return res.status(400).json({ 'message': 'Username or email is required.' });
+    if (!usernameOrEmail) return res.status(400).json({ 'message': 'Username, email, or mobile number is required.' });
 
     try {
-        const rows = await global.db.query('SELECT id, username, mobileNumber, resetOtpExpires FROM users WHERE username = ? OR email = ?', [usernameOrEmail, usernameOrEmail]);
+        const rows = await global.db.query(
+            'SELECT id, username, mobileNumber, resetOtpExpires FROM users WHERE username = ? OR email = ? OR mobileNumber = ?',
+            [usernameOrEmail, usernameOrEmail, usernameOrEmail]
+        );
         const user = rows[0];
-        if (!user) return res.status(404).json({ 'message': 'No account found with that username or email.' });
+        if (!user) return res.status(404).json({ 'message': 'No account found with that username, email, or mobile number.' });
         if (!user.mobileNumber) return res.status(400).json({ 'message': 'This account has no registered mobile number.' });
 
         // An unexpired OTP already went out — resend the same one instead of
@@ -184,16 +187,19 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
     const { usernameOrEmail, otp, newPassword } = req.body;
     if (!usernameOrEmail || !otp || !newPassword) {
-        return res.status(400).json({ 'message': 'Username/email, code, and new password are required.' });
+        return res.status(400).json({ 'message': 'Username/email/mobile number, code, and new password are required.' });
     }
     if (newPassword.length < 8) {
         return res.status(400).json({ 'message': 'New password must be at least 8 characters.' });
     }
 
     try {
-        const rows = await global.db.query('SELECT id, resetOtp, resetOtpExpires FROM users WHERE username = ? OR email = ?', [usernameOrEmail, usernameOrEmail]);
+        const rows = await global.db.query(
+            'SELECT id, resetOtp, resetOtpExpires FROM users WHERE username = ? OR email = ? OR mobileNumber = ?',
+            [usernameOrEmail, usernameOrEmail, usernameOrEmail]
+        );
         const user = rows[0];
-        if (!user) return res.status(404).json({ 'message': 'No account found with that username or email.' });
+        if (!user) return res.status(404).json({ 'message': 'No account found with that username, email, or mobile number.' });
 
         const isExpired = !user.resetOtpExpires || new Date(user.resetOtpExpires) < new Date();
         if (!user.resetOtp || user.resetOtp !== otp || isExpired) {
