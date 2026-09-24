@@ -21,8 +21,13 @@ export const Login = () => {
     const usernameOrEmailRef = useRef();
     const errRef = useRef();
 
-    const [usernameOrEmail, setUsernameOrEmail] = useState('');
-    const [password, setPassword] = useState('');
+    // "Remember me" pre-fills these from localStorage on the next visit —
+    // note this stores the password in plaintext client-side storage (the
+    // user explicitly asked for both fields remembered, not just the
+    // username, after being told the risk on a shared/public device).
+    const remembered = JSON.parse(persist) ? JSON.parse(localStorage.getItem('rememberedCredentials') || 'null') : null;
+    const [usernameOrEmail, setUsernameOrEmail] = useState(remembered?.usernameOrEmail || '');
+    const [password, setPassword] = useState(remembered?.password || '');
     const [errMsg, setErrMsg] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
@@ -44,6 +49,12 @@ export const Login = () => {
             const username = response?.data?.username;
             const email = response?.data?.email;
             setAuth({ username, email, accessToken });
+
+            if (JSON.parse(persist)) {
+                localStorage.setItem('rememberedCredentials', JSON.stringify({ usernameOrEmail, password }));
+            } else {
+                localStorage.removeItem('rememberedCredentials');
+            }
 
             setUsernameOrEmail('');
             setPassword('');
