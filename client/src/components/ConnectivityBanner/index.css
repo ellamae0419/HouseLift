@@ -1,0 +1,12 @@
+.connectivity-banner {
+    position: sticky;
+    top: 0;
+    z-index: 300;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hl-warning-ink, #9A5A1E);
+    background: var(--hl-warning-bg, #FCEEDF);
+    border-bottom: 1px solid var(--hl-warning, #E08A3C);
+}

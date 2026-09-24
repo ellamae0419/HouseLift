@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar/index";
 import { MobileTabBar } from "./MobileTabBar/index";
 import { AppTopBar } from "./AppTopBar/index";
+import { ConnectivityBanner } from "./ConnectivityBanner/index";
 import useAuth from "../hooks/auth/useAuth";
 import { hasAnyRole } from "../utils/roles";
 
@@ -20,6 +21,7 @@ const Layout = () => {
         return (
             <div className="layout-shell has-mobile-tab-bar app-shell">
                 <AppTopBar />
+                <ConnectivityBanner />
                 <main className="app-main">
                     <Outlet />
                 </main>
@@ -42,6 +44,7 @@ const Layout = () => {
             </button>
             {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} aria-hidden="true" />}
             <main className="app-main">
+                <ConnectivityBanner />
                 <Outlet />
             </main>
         </div>

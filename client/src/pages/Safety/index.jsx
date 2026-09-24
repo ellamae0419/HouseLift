@@ -12,15 +12,17 @@ export const HouseMonitoring = () => {
     const axiosPrivate = useAxiosPrivate();
     const [houses, setHouses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
 
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
                 const res = await axiosPrivate.get('/users/houses');
-                if (mounted) setHouses(res.data || []);
+                if (mounted) { setHouses(res.data || []); setLoadError(''); }
             } catch (err) {
                 console.error('Error loading houses:', err?.response?.data?.message || err.message);
+                if (mounted) setLoadError("Couldn't load the house list. Check your connection and try refreshing the page.");
             } finally {
                 if (mounted) setLoading(false);
             }
@@ -32,6 +34,24 @@ export const HouseMonitoring = () => {
         <>
             <h1 className='page-title'>Flood monitoring</h1>
             <p className="page-subtitle">Live water level and lift status for every registered pet house.</p>
+
+            <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px',
+                fontSize: '13px', fontWeight: 600,
+                color: connected ? 'var(--hl-success-ink)' : 'var(--hl-danger)',
+            }}>
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'currentColor' }} />
+                {connected ? 'Live sensor feed connected' : 'Live sensor feed offline — reconnecting…'}
+            </div>
+
+            {loadError && (
+                <div style={{
+                    marginBottom: '16px', padding: '10px 14px', borderRadius: '9px',
+                    background: 'var(--hl-danger-bg)', color: 'var(--hl-danger)', fontSize: '13px', fontWeight: 600,
+                }}>
+                    {loadError}
+                </div>
+            )}
 
             <div className="hl-card-shell hl-glance-card">
                 <div className="hl-glance-title">Monitored houses</div>
