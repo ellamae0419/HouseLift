@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { generateUserID } = require('../utils/functions');
 const { sendOtpSms } = require('../utils/sms');
+const { sendOtpEmail } = require('../utils/mailer');
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 
@@ -158,17 +159,16 @@ const forgotPassword = async (req, res) => {
 
     try {
         const rows = await global.db.query(
-            'SELECT id, username, mobileNumber, resetOtpExpires FROM users WHERE username = ? OR email = ? OR mobileNumber = ?',
+            'SELECT id, username, email, mobileNumber, resetOtpExpires FROM users WHERE username = ? OR email = ? OR mobileNumber = ?',
             [usernameOrEmail, usernameOrEmail, usernameOrEmail]
         );
         const user = rows[0];
         if (!user) return res.status(404).json({ 'message': 'No account found with that username, email, or mobile number.' });
-        if (!user.mobileNumber) return res.status(400).json({ 'message': 'This account has no registered mobile number.' });
 
         // An unexpired OTP already went out — resend the same one instead of
-        // burning another SMS credit on every click.
+        // burning another SMS credit / sending another email on every click.
         if (user.resetOtpExpires && new Date(user.resetOtpExpires) > new Date()) {
-            return res.json({ 'message': `A code was already sent to ${maskMobileNumber(user.mobileNumber)}. Check your phone, or wait for it to expire to request a new one.` });
+            return res.json({ 'message': 'A code was already sent. Check your phone or email, or wait for it to expire to request a new one.' });
         }
 
         const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -176,9 +176,20 @@ const forgotPassword = async (req, res) => {
 
         await global.db.query('UPDATE users SET resetOtp = ?, resetOtpExpires = ? WHERE id = ?', [otp, expires, user.id]);
 
-        await sendOtpSms({ to: user.mobileNumber, otp });
+        // Prefer SMS when a number is on file, but never leave the user
+        // stuck if the SMS provider fails (e.g. not yet approved) — email
+        // is always available since it's required at registration.
+        if (user.mobileNumber) {
+            try {
+                await sendOtpSms({ to: user.mobileNumber, otp });
+                return res.json({ 'message': `A verification code was sent to ${maskMobileNumber(user.mobileNumber)}.` });
+            } catch (smsErr) {
+                console.error('[forgotPassword] SMS failed, falling back to email:', smsErr.message);
+            }
+        }
 
-        res.json({ 'message': `A verification code was sent to ${maskMobileNumber(user.mobileNumber)}.` });
+        await sendOtpEmail({ to: user.email, otp });
+        res.json({ 'message': `A verification code was sent to your registered email address.` });
     } catch (err) {
         res.status(500).json({ 'message': err.message });
     }

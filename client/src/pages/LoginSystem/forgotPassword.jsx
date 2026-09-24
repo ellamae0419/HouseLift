@@ -96,7 +96,7 @@ export const ForgotPassword = () => {
                                 <img src="/logo.png" alt="HydroLift" className={styles.brand_logo} />
                             </div>
                             <h1 className={styles.title}>Forgot password</h1>
-                            <p className={styles.description}>Enter your username, email, or mobile number — we'll text a verification code to your registered mobile number.</p>
+                            <p className={styles.description}>Enter your username, email, or mobile number — we'll send a verification code to your registered mobile number or email.</p>
                             <p ref={errRef} className={errMsg ? styles.err_message : 'hide'} aria-live="assertive">{errMsg}</p>
 
                             <div className={styles.field_group}>
