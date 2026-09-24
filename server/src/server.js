@@ -1,6 +1,12 @@
 global.db = require('../database/db');
 require('dotenv').config()
 
+// Some hosts (e.g. Railway containers) resolve outbound hosts to an IPv6
+// address but have no working IPv6 route, causing ENETUNREACH — hangs (or,
+// once timeouts are set, fast failures) on any host that publishes AAAA
+// records, such as Gmail's SMTP server. Preferring IPv4 avoids that.
+require('dns').setDefaultResultOrder('ipv4first');
+
 // A single unhandled DB (or other async) rejection should not take the whole
 // server down. Log it and keep serving other requests instead of crashing.
 process.on('unhandledRejection', (err) => {
