@@ -22,6 +22,9 @@ const sendOtpSms = async ({ to, otp }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
+        // Without this, a slow/unreachable Semaphore endpoint hangs the
+        // whole request indefinitely instead of failing over to email.
+        signal: AbortSignal.timeout(10000),
     });
 
     // Semaphore returns JSON on success but plain text/HTML for some error

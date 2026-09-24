@@ -14,6 +14,12 @@ const getTransporter = () => {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
             },
+            // Some hosts silently drop outbound SMTP instead of refusing it
+            // outright — without these, a blocked connection hangs instead
+            // of failing fast.
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
         });
     } else {
         transporter = null;
