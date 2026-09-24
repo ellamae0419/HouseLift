@@ -26,6 +26,7 @@ export const ForgotPassword = () => {
     const [errMsg, setErrMsg] = useState('');
     const [success, setSuccess] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [resending, setResending] = useState(false);
 
     useEffect(() => { usernameRef.current?.focus(); }, []);
     useEffect(() => { setErrMsg(''); }, [usernameOrEmail, otp, newPassword, confirmPassword]);
@@ -59,6 +60,19 @@ export const ForgotPassword = () => {
             handleError(err);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const resendOtp = async () => {
+        setResending(true);
+        setOtp('');
+        try {
+            const res = await axios.post('/user/forgot-password', { usernameOrEmail });
+            setInfoMsg(res?.data?.message || 'A new code was sent.');
+        } catch (err) {
+            handleError(err);
+        } finally {
+            setResending(false);
         }
     };
 
@@ -166,7 +180,11 @@ export const ForgotPassword = () => {
                                 {submitting ? 'Resetting…' : 'Reset password'}
                             </button>
 
-                            <div className={styles.footer_link} style={{ marginTop: '12px' }}>
+                            <div className={styles.footer_link} style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                                <button type="button" onClick={resendOtp} disabled={resending} style={{ background: 'none', border: 'none', color: 'var(--main)', cursor: 'pointer', fontSize: 'inherit', padding: 0 }}>
+                                    {resending ? 'Resending…' : 'Resend code'}
+                                </button>
+                                <span>·</span>
                                 <button type="button" onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: 'var(--main)', cursor: 'pointer', fontSize: 'inherit', padding: 0 }}>
                                     Use a different account
                                 </button>

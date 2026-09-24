@@ -1,46 +1,50 @@
-const nodemailer = require('nodemailer');
+// Sends via Resend's HTTP API instead of raw SMTP — Railway's network
+// blocks outbound SMTP (port 587/465) silently, which made nodemailer hang
+// or time out. HTTPS is not affected by that block.
+const RESEND_URL = 'https://api.resend.com/emails';
+const DEFAULT_FROM = 'HydroLift <onboarding@resend.dev>';
 
-let transporter;
+const isConfigured = () => Boolean(process.env.RESEND_API_KEY);
 
-const getTransporter = () => {
-    if (transporter !== undefined) return transporter;
+const sendEmail = async ({ to, subject, html }) => {
+    const response = await fetch(RESEND_URL, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            from: process.env.EMAIL_FROM || DEFAULT_FROM,
+            to: [to],
+            subject,
+            html,
+        }),
+        signal: AbortSignal.timeout(10000),
+    });
 
-    if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: Number(process.env.EMAIL_PORT) || 587,
-            secure: Number(process.env.EMAIL_PORT) === 465,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-            // Some hosts silently drop outbound SMTP instead of refusing it
-            // outright — without these, a blocked connection hangs instead
-            // of failing fast.
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 10000,
-        });
-    } else {
-        transporter = null;
+    const rawText = await response.text();
+    let data;
+    try { data = JSON.parse(rawText); } catch { data = rawText; }
+
+    if (!response.ok) {
+        const detail = typeof data === 'string' ? data.trim() : JSON.stringify(data);
+        throw new Error(`Resend email failed (${response.status}): ${detail}`);
     }
 
-    return transporter;
+    return data;
 };
 
 const sendApprovalEmail = async ({ to, username }) => {
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:1234';
     const loginLink = `${clientUrl}/login`;
-    const activeTransporter = getTransporter();
 
-    if (!activeTransporter) {
-        console.log('\x1b[33m%s\x1b[0m', `[mailer] EMAIL_HOST not configured — skipping approval email.`);
+    if (!isConfigured()) {
+        console.log('\x1b[33m%s\x1b[0m', `[mailer] RESEND_API_KEY not configured — skipping approval email.`);
         console.log('\x1b[36m%s\x1b[0m', `[mailer] ${username} <${to}> has been approved and can now log in.`);
         return;
     }
 
-    const info = await activeTransporter.sendMail({
-        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    const data = await sendEmail({
         to,
         subject: 'Your HydroLift account has been approved',
         html: `
@@ -50,20 +54,17 @@ const sendApprovalEmail = async ({ to, username }) => {
         `,
     });
 
-    console.log('\x1b[32m%s\x1b[0m', `[mailer] Approval email accepted for ${to}. messageId=${info.messageId} response="${info.response}"`);
+    console.log('\x1b[32m%s\x1b[0m', `[mailer] Approval email accepted for ${to}. id=${data?.id}`);
 };
 
 const sendOtpEmail = async ({ to, otp }) => {
-    const activeTransporter = getTransporter();
-
-    if (!activeTransporter) {
-        console.log('\x1b[33m%s\x1b[0m', `[mailer] EMAIL_HOST not configured — skipping OTP email.`);
+    if (!isConfigured()) {
+        console.log('\x1b[33m%s\x1b[0m', `[mailer] RESEND_API_KEY not configured — skipping OTP email.`);
         console.log('\x1b[36m%s\x1b[0m', `[mailer] OTP for ${to} is ${otp} (printed here since email isn't configured).`);
         return;
     }
 
-    const info = await activeTransporter.sendMail({
-        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    const data = await sendEmail({
         to,
         subject: 'Your HydroLift password reset code',
         html: `
@@ -73,7 +74,7 @@ const sendOtpEmail = async ({ to, otp }) => {
         `,
     });
 
-    console.log('\x1b[32m%s\x1b[0m', `[mailer] OTP email accepted for ${to}. messageId=${info.messageId} response="${info.response}"`);
+    console.log('\x1b[32m%s\x1b[0m', `[mailer] OTP email accepted for ${to}. id=${data?.id}`);
 };
 
 module.exports = { sendApprovalEmail, sendOtpEmail };
