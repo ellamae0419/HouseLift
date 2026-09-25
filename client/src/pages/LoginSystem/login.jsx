@@ -88,7 +88,7 @@ export const Login = () => {
                         <div className={styles.badge}>
                             <img src="/logo.png" alt="HydroLift" className={styles.brand_logo} />
                         </div>
-                        <h1 className={styles.title}>Welcome back</h1>
+                        <h1 className={styles.title}>Welcome</h1>
                         <p className={styles.description}>Log in to your HydroLift control panel.</p>
                         <p ref={errRef} className={errMsg ? styles.err_message : 'hide'} aria-live="assertive">{errMsg}</p>
 
