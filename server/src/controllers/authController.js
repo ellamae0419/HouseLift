@@ -2,12 +2,9 @@ require('dotenv').config()
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { generateUserID } = require('../utils/functions');
-const { sendOtpSms } = require('../utils/sms');
 const { sendOtpEmail } = require('../utils/mailer');
 
 const OTP_TTL_MS = 20 * 60 * 1000;
-
-const maskMobileNumber = (mobileNumber) => mobileNumber.replace(/^(\d{4})\d{5}(\d{2})$/, '$1•••••$2');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const refreshCookieOptions = {
@@ -155,38 +152,26 @@ const refreshToken = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
     const { usernameOrEmail } = req.body;
-    if (!usernameOrEmail) return res.status(400).json({ 'message': 'Username, email, or mobile number is required.' });
+    if (!usernameOrEmail) return res.status(400).json({ 'message': 'Username or email is required.' });
 
     try {
         const rows = await global.db.query(
-            'SELECT id, username, email, mobileNumber, resetOtpExpires FROM users WHERE username = ? OR email = ? OR mobileNumber = ?',
-            [usernameOrEmail, usernameOrEmail, usernameOrEmail]
+            'SELECT id, username, email, resetOtpExpires FROM users WHERE username = ? OR email = ?',
+            [usernameOrEmail, usernameOrEmail]
         );
         const user = rows[0];
-        if (!user) return res.status(404).json({ 'message': 'No account found with that username, email, or mobile number.' });
+        if (!user) return res.status(404).json({ 'message': 'No account found with that username or email.' });
 
         // An unexpired OTP already went out — resend the same one instead of
-        // burning another SMS credit / sending another email on every click.
+        // sending another email on every click.
         if (user.resetOtpExpires && new Date(user.resetOtpExpires) > new Date()) {
-            return res.json({ 'message': 'A code was already sent. Check your phone or email, or wait for it to expire to request a new one.' });
+            return res.json({ 'message': 'A code was already sent to your email. Check your inbox, or wait for it to expire to request a new one.' });
         }
 
         const otp = String(Math.floor(100000 + Math.random() * 900000));
         const expires = new Date(Date.now() + OTP_TTL_MS);
 
         await global.db.query('UPDATE users SET resetOtp = ?, resetOtpExpires = ? WHERE id = ?', [otp, expires, user.id]);
-
-        // Prefer SMS when a number is on file, but never leave the user
-        // stuck if the SMS provider fails (e.g. not yet approved) — email
-        // is always available since it's required at registration.
-        if (user.mobileNumber) {
-            try {
-                await sendOtpSms({ to: user.mobileNumber, otp });
-                return res.json({ 'message': `A verification code was sent to ${maskMobileNumber(user.mobileNumber)}.` });
-            } catch (smsErr) {
-                console.error('[forgotPassword] SMS failed, falling back to email:', smsErr.message);
-            }
-        }
 
         await sendOtpEmail({ to: user.email, otp });
         res.json({ 'message': `A verification code was sent to your registered email address.` });
@@ -198,7 +183,7 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
     const { usernameOrEmail, otp, newPassword } = req.body;
     if (!usernameOrEmail || !otp || !newPassword) {
-        return res.status(400).json({ 'message': 'Username/email/mobile number, code, and new password are required.' });
+        return res.status(400).json({ 'message': 'Username/email, code, and new password are required.' });
     }
     if (newPassword.length < 8) {
         return res.status(400).json({ 'message': 'New password must be at least 8 characters.' });
@@ -206,11 +191,11 @@ const resetPassword = async (req, res) => {
 
     try {
         const rows = await global.db.query(
-            'SELECT id, resetOtp, resetOtpExpires FROM users WHERE username = ? OR email = ? OR mobileNumber = ?',
-            [usernameOrEmail, usernameOrEmail, usernameOrEmail]
+            'SELECT id, resetOtp, resetOtpExpires FROM users WHERE username = ? OR email = ?',
+            [usernameOrEmail, usernameOrEmail]
         );
         const user = rows[0];
-        if (!user) return res.status(404).json({ 'message': 'No account found with that username, email, or mobile number.' });
+        if (!user) return res.status(404).json({ 'message': 'No account found with that username or email.' });
 
         const isExpired = !user.resetOtpExpires || new Date(user.resetOtpExpires) < new Date();
         if (!user.resetOtp || user.resetOtp !== otp || isExpired) {

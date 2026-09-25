@@ -110,15 +110,15 @@ export const ForgotPassword = () => {
                                 <img src="/logo.png" alt="HydroLift" className={styles.brand_logo} />
                             </div>
                             <h1 className={styles.title}>Forgot password</h1>
-                            <p className={styles.description}>Enter your username, email, or mobile number — we'll send a verification code to your registered mobile number or email.</p>
+                            <p className={styles.description}>Enter your username or email — we'll send a verification code to your registered email address.</p>
                             <p ref={errRef} className={errMsg ? styles.err_message : 'hide'} aria-live="assertive">{errMsg}</p>
 
                             <div className={styles.field_group}>
-                                <label className={styles.field_label} htmlFor="usernameOrEmail">Username, email, or mobile number</label>
+                                <label className={styles.field_label} htmlFor="usernameOrEmail">Username or email</label>
                                 <div className={styles.field_pill}>
                                     <FontAwesomeIcon icon={faUser} className={styles.field_icon} />
                                     <input
-                                        type="text" id="usernameOrEmail" ref={usernameRef} autoComplete="off" placeholder='Username, email, or mobile number'
+                                        type="text" id="usernameOrEmail" ref={usernameRef} autoComplete="off" placeholder='Username or email'
                                         onChange={(e) => setUsernameOrEmail(e.target.value)} value={usernameOrEmail} required
                                     />
                                 </div>
