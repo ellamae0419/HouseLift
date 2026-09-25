@@ -1,24 +1,26 @@
 import axios from 'axios';
 import { setServerUnreachable } from './connectivityStore';
 
-// In production (Vercel), the frontend and backend live on different
-// domains. Calling the backend directly would make the login cookie a
-// third-party cookie, which browsers increasingly block/drop outright —
-// "Remember me" would then silently fail. Instead, requests go to /api on
-// this same domain, and vercel.json rewrites/proxies that to the Railway
-// backend server-side, so the cookie is set on this domain and stored as a
-// normal first-party cookie. (VITE_API_URL just acts as the on/off flag for
-// "are we in a split-domain production build" here — its literal value is
-// what vercel.json's rewrite destination points at.)
-// In local/LAN dev, VITE_API_URL is normally unset, so we fall back to
-// whatever host the page itself was loaded from (localhost on this computer,
-// or this computer's LAN IP when opened from a phone) — otherwise a phone
-// would try to reach its own "localhost", where nothing is running.
-const baseURL = import.meta.env.VITE_API_URL
+// Three cases:
+// 1. Deployed on Vercel (PROD build + VITE_API_URL set) — calling the
+//    backend directly would make the login cookie a third-party cookie,
+//    which browsers increasingly block/drop outright. Instead, requests go
+//    to /api on this same domain, and vercel.json rewrites/proxies that to
+//    the Railway backend server-side, so the cookie is stored as first-party.
+// 2. Local dev with VITE_API_URL set (e.g. pointing at Railway) — there's no
+//    proxy in dev mode, so use the URL directly instead of a relative /api
+//    path (which would just 404 against the Vite dev server).
+// 3. Local/LAN dev with VITE_API_URL unset — fall back to whatever host the
+//    page itself was loaded from (localhost on this computer, or this
+//    computer's LAN IP when opened from a phone), talking to the local
+//    backend on port 3001.
+const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_URL
     ? '/api'
-    : typeof window !== 'undefined'
-        ? `${window.location.protocol}//${window.location.hostname}:3001`
-        : undefined;
+    : import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL
+        : typeof window !== 'undefined'
+            ? `${window.location.protocol}//${window.location.hostname}:3001`
+            : undefined;
 
 // Flags the shared "server unreachable" banner on a true network failure
 // (request never got a response) or a 5xx, and clears it the moment any
