@@ -5,6 +5,7 @@ const { generateUserID } = require('../utils/functions');
 const { sendOtpEmail } = require('../utils/mailer');
 
 const OTP_TTL_MS = 20 * 60 * 1000;
+const MAX_OTP_ATTEMPTS = 5;
 
 const isProduction = process.env.NODE_ENV === 'production';
 const refreshCookieOptions = {
@@ -171,7 +172,7 @@ const forgotPassword = async (req, res) => {
         const otp = String(Math.floor(100000 + Math.random() * 900000));
         const expires = new Date(Date.now() + OTP_TTL_MS);
 
-        await global.db.query('UPDATE users SET resetOtp = ?, resetOtpExpires = ? WHERE id = ?', [otp, expires, user.id]);
+        await global.db.query('UPDATE users SET resetOtp = ?, resetOtpExpires = ?, resetOtpAttempts = 0 WHERE id = ?', [otp, expires, user.id]);
 
         await sendOtpEmail({ to: user.email, otp });
         res.json({ 'message': `A verification code was sent to your registered email address.` });
@@ -191,20 +192,34 @@ const resetPassword = async (req, res) => {
 
     try {
         const rows = await global.db.query(
-            'SELECT id, resetOtp, resetOtpExpires FROM users WHERE username = ? OR email = ?',
+            'SELECT id, resetOtp, resetOtpExpires, resetOtpAttempts FROM users WHERE username = ? OR email = ?',
             [usernameOrEmail, usernameOrEmail]
         );
         const user = rows[0];
         if (!user) return res.status(404).json({ 'message': 'No account found with that username or email.' });
 
         const isExpired = !user.resetOtpExpires || new Date(user.resetOtpExpires) < new Date();
+
+        // Too many wrong guesses burns the code, closing the brute-force
+        // window instead of leaving it guessable for the rest of the 20 min.
+        if (!isExpired && user.resetOtpAttempts >= MAX_OTP_ATTEMPTS) {
+            await global.db.query(
+                'UPDATE users SET resetOtp = NULL, resetOtpExpires = NULL, resetOtpAttempts = 0 WHERE id = ?',
+                [user.id]
+            );
+            return res.status(400).json({ 'message': 'Too many incorrect attempts. Please request a new code.' });
+        }
+
         if (!user.resetOtp || user.resetOtp !== otp || isExpired) {
+            if (!isExpired) {
+                await global.db.query('UPDATE users SET resetOtpAttempts = resetOtpAttempts + 1 WHERE id = ?', [user.id]);
+            }
             return res.status(400).json({ 'message': 'Invalid or expired code.' });
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await global.db.query(
-            'UPDATE users SET password = ?, resetOtp = NULL, resetOtpExpires = NULL, refreshToken = NULL WHERE id = ?',
+            'UPDATE users SET password = ?, resetOtp = NULL, resetOtpExpires = NULL, resetOtpAttempts = 0, refreshToken = NULL WHERE id = ?',
             [hashedPassword, user.id]
         );
 
