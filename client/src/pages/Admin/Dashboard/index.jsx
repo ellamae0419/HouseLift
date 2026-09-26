@@ -6,11 +6,9 @@ import { DataCard } from '../../../components/Datacard/index';
 import useServerSocket from '../../../hooks/useServerSocket';
 import useAxiosPrivate from '../../../hooks/auth/useAxiosPrivate';
 
-const MAX_LEVEL_CM = 4;
-
 export const AdminDashboard = () => {
     setTitle('Admin Dashboard');
-    const { wlValue, connected } = useServerSocket();
+    const { connected } = useServerSocket();
     const axiosPrivate = useAxiosPrivate();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,9 +30,6 @@ export const AdminDashboard = () => {
 
     const totalUsers = users.length;
     const pendingCount = users.filter((u) => !u.isVerified).length;
-
-    const hasReading = wlValue !== null && wlValue !== undefined;
-    const fillPercent = hasReading ? Math.max(0, Math.min(100, Math.round((wlValue / MAX_LEVEL_CM) * 100))) : 0;
 
     return (
         <>
@@ -68,20 +63,6 @@ export const AdminDashboard = () => {
                             </div>
                         }
                     />
-
-                    <div className="hl-card-shell hl-gauge-card">
-                        <div className="hl-gauge-card__title">Flood water level</div>
-                        <div className="hl-gauge-card__row">
-                            <div className="hl-gauge-card__tube">
-                                <div className="hl-gauge-card__fill" style={{ height: `${fillPercent}%` }} />
-                            </div>
-                            <div className="hl-gauge-card__ticks">
-                                <span>{MAX_LEVEL_CM} cm</span>
-                                <span>0 cm</span>
-                            </div>
-                        </div>
-                        <div className="hl-gauge-card__pct">{hasReading ? `${fillPercent}%` : 'No reading'}</div>
-                    </div>
                 </div>
             </div>
         </>
