@@ -33,10 +33,8 @@ export const AdminDashboard = () => {
     const totalUsers = users.length;
     const pendingCount = users.filter((u) => !u.isVerified).length;
 
-    // Fall back to a representative demo reading until the device sends a live value,
-    // so the gauge never sits at a meaningless flat 0% before the first sensor reading.
-    const currentLevelCm = wlValue ?? 1.6;
-    const fillPercent = Math.max(0, Math.min(100, Math.round((currentLevelCm / MAX_LEVEL_CM) * 100)));
+    const hasReading = wlValue !== null && wlValue !== undefined;
+    const fillPercent = hasReading ? Math.max(0, Math.min(100, Math.round((wlValue / MAX_LEVEL_CM) * 100))) : 0;
 
     return (
         <>
@@ -82,7 +80,7 @@ export const AdminDashboard = () => {
                                 <span>0 cm</span>
                             </div>
                         </div>
-                        <div className="hl-gauge-card__pct">{fillPercent}%</div>
+                        <div className="hl-gauge-card__pct">{hasReading ? `${fillPercent}%` : 'No reading'}</div>
                     </div>
                 </div>
             </div>
