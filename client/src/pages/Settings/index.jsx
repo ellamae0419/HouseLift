@@ -56,9 +56,7 @@ export const Settings = () => {
   React.useEffect(() => {
     const loadThreshold = async () => {
       try {
-        const response = await axiosPrivate.post('/esp32/config', {
-          esp32_id: 'esp32-default',
-        });
+        const response = await axiosPrivate.get('/users/esp32-threshold');
 
         const threshold = Number(response?.data?.threshold);
 
@@ -105,8 +103,7 @@ export const Settings = () => {
     setLoading(true);
 
     try {
-      await axiosPrivate.post('/esp32/threshold', {
-        esp32_id: 'esp32-default',
+      await axiosPrivate.put('/users/esp32-threshold', {
         threshold: newValue
       });
       setPersistedValue(newValue);

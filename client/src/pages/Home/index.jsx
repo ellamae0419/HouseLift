@@ -59,7 +59,7 @@ export const Home = () => {
         let mounted = true;
         (async () => {
             try {
-                const res = await axiosPrivate.post('/esp32/config', { esp32_id: 'esp32-default' });
+                const res = await axiosPrivate.get('/users/esp32-threshold');
                 const t = Number(res?.data?.threshold);
                 if (mounted && !Number.isNaN(t)) setThreshold(t);
             } catch (err) {

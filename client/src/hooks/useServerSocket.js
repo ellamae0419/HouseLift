@@ -1,18 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
+import useAuth from './auth/useAuth';
 
 const RECONNECT_MIN_DELAY_MS = 1000;
 const RECONNECT_MAX_DELAY_MS = 15000;
 
 export default function useServerSocket() {
+    const { auth } = useAuth();
+    const accessToken = auth?.accessToken;
+
     const [wlValue, setWlValue] = useState(null);
     const [connected, setConnected] = useState(false);
     const [readingsById, setReadingsById] = useState({});
+    // Real device online/offline, pushed by the server the instant a device
+    // socket connects or disconnects — not just "is my own browser tab open".
+    const [deviceStatusById, setDeviceStatusById] = useState({});
     const wsRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
     const reconnectDelayRef = useRef(RECONNECT_MIN_DELAY_MS);
     const stoppedRef = useRef(false);
 
     useEffect(() => {
+        // No token yet (not logged in, or still refreshing on page load) —
+        // nothing to connect with.
+        if (!accessToken) return undefined;
+
         stoppedRef.current = false;
 
         // In production (Vercel), the backend lives on a different domain, so
@@ -30,6 +41,10 @@ export default function useServerSocket() {
             const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             wsUrl = `${protocol}//${hostname}:3001`;
         }
+        // The server tells a logged-in browser apart from a device by this
+        // token — without it (or with an expired one) the connection is
+        // closed as unauthorized.
+        wsUrl += `?token=${encodeURIComponent(accessToken)}`;
 
         const connect = () => {
             if (stoppedRef.current) return;
@@ -39,7 +54,7 @@ export default function useServerSocket() {
                 wsRef.current = ws;
 
                 ws.addEventListener('open', () => {
-                    console.log('WS connected to', wsUrl);
+                    console.log('WS connected to', wsUrl.split('?')[0]);
                     setConnected(true);
                     // Reset backoff once a connection actually succeeds.
                     reconnectDelayRef.current = RECONNECT_MIN_DELAY_MS;
@@ -58,6 +73,8 @@ export default function useServerSocket() {
                                     setReadingsById((prev) => ({ ...prev, [msg.esp32_id]: v }));
                                 }
                             }
+                        } else if (msg?.type === 'device-status' && msg.esp32_id) {
+                            setDeviceStatusById((prev) => ({ ...prev, [msg.esp32_id]: !!msg.online }));
                         }
                     } catch (err) {
                         console.warn('Invalid WS message', err);
@@ -81,6 +98,10 @@ export default function useServerSocket() {
         // Retries with capped exponential backoff instead of giving up after
         // one drop — a server restart or brief network blip shouldn't require
         // the user to navigate away and back just to get live data again.
+        // Note: the access token lives only 10 seconds, so a retry here reuses
+        // whatever token this effect closed over — if it's since expired, the
+        // server will keep closing the socket until something elsewhere
+        // (e.g. an API call) refreshes auth.accessToken and this effect reruns.
         const scheduleReconnect = () => {
             if (stoppedRef.current) return;
             clearTimeout(reconnectTimeoutRef.current);
@@ -97,7 +118,7 @@ export default function useServerSocket() {
             clearTimeout(reconnectTimeoutRef.current);
             try { wsRef.current?.close(); } catch (e) { /* socket already closed */ }
         };
-    }, []);
+    }, [accessToken]);
 
-    return { wlValue, connected, readingsById };
+    return { wlValue, connected, readingsById, deviceStatusById };
 }
