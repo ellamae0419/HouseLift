@@ -18,7 +18,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const verifyJWT = require('./middlewares/verifyJWT');
-const { getOwnDevice } = require('./utils/devices');
+const { getOwnDevice, getDeviceByEsp32Id, saveSensorReading, saveLiftEvent, normalizeTrigger } = require('./utils/devices');
 const WebSocket = require('ws');
 const http = require('http');
 console.log("\x1b[36m%s\x1b[0m", `Starting the server side...\n`);
@@ -160,6 +160,21 @@ global.wss.on('connection', async (ws, req) => {
                 console.log('[WS] Failed to update lastSeenAt:', err.message);
             }
 
+            // Saved at most once a minute; the broadcast below still goes out
+            // at full rate so the live dashboard stays smooth.
+            try {
+                const device = await getDeviceByEsp32Id(esp32Id);
+                if (device) {
+                    await saveSensorReading(device, {
+                        wlRaw: msg.wlValue,
+                        wlLevel: msg.wl_value ?? msg.wlValue,
+                        isLifted: msg.isLifted,
+                    });
+                }
+            } catch (err) {
+                console.log('[WS] Failed to save sensor reading:', err.message);
+            }
+
             broadcastToDeviceAudience(esp32Id, {
                 type: 'sensor-reading',
                 esp32_id: esp32Id,
@@ -167,8 +182,43 @@ global.wss.on('connection', async (ws, req) => {
                 wl_value: msg.wl_value ?? msg.wlValue
             });
         }
-        // lift-status isn't handled yet — that lands in Phase 3 once
-        // lift_events exists to save it into.
+        else if (msg && msg.type === 'lift-status') {
+            if (ws._role !== 'device') {
+                console.log('[WS] Ignored lift-status from a non-device socket', ws._remoteAddr);
+                return;
+            }
+
+            const esp32Id = ws._esp32Id;
+            const direction = msg.direction === 'retract' ? 'retract' : 'lift';
+            const trigger = normalizeTrigger(msg.trigger);
+
+            try {
+                const device = await getDeviceByEsp32Id(esp32Id);
+                if (device) {
+                    await saveLiftEvent(device, { direction, trigger, durationMs: msg.durationMs });
+
+                    // The Notifications page has always promised flood alerts
+                    // but nothing ever created one. An automatic lift is
+                    // exactly that event.
+                    if (trigger === 'auto' && direction === 'lift' && device.userId) {
+                        await global.db.query(
+                            'INSERT INTO notifications (title, description, isRead, userId) VALUES (?, ?, 0, ?)',
+                            ['Flood detected', 'Water reached the flood threshold — the platform was raised automatically.', device.userId]
+                        );
+                    }
+                }
+            } catch (err) {
+                console.log('[WS] Failed to save lift event:', err.message);
+            }
+
+            broadcastToDeviceAudience(esp32Id, {
+                type: 'lift-status',
+                esp32_id: esp32Id,
+                isLifted: msg.isLifted,
+                direction,
+                trigger,
+            });
+        }
     });
 
     ws.on('close', (code, reason) => {

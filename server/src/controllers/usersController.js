@@ -155,6 +155,10 @@ const deleteUser = async (req, res) => {
     if (!id) return res.status(400).json({ message: 'User id required' });
 
     try {
+        // The device row isn't cascaded from users, so without this it would
+        // be left orphaned. Its readings and lift events do cascade from the
+        // device, so they go with it.
+        await global.db.query('DELETE FROM esp32 WHERE userId = ?', [id]);
         await global.db.query('DELETE FROM users WHERE id = ?', [id]);
         res.json({ message: 'User deleted' });
     } catch (err) {
