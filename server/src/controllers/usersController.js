@@ -20,7 +20,9 @@ const getAllHouses = async (req, res) => {
             WHERE u.roles NOT LIKE '%admin%'
             ORDER BY u.createdAt DESC
         `);
-        res.json(rows);
+        // The driver returns the boolean expression as a BigInt, which
+        // res.json() refuses to serialize — coerce it before sending.
+        res.json(rows.map((r) => ({ ...r, online: Number(r.online) === 1 })));
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
