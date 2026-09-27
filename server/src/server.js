@@ -295,6 +295,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(verifyJWT);
 app.use('/users', require('./routes/users'));
 app.use('/notifications', require('./routes/notifications'));
+app.use('/reports', require('./routes/reports'));
 
 app.get('*', (req, res) => { res.status(404).json({'message': "Not found"}) })
 

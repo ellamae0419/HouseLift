@@ -18,6 +18,7 @@ import { Register } from "./pages/LoginSystem/register";
 import { Login } from "./pages/LoginSystem/login";
 import { ForgotPassword } from "./pages/LoginSystem/forgotPassword";
 import { AdminDashboard } from "./pages/Admin/Dashboard/index";
+import { Reports } from "./pages/Reports/index";
 import { UserManagement } from "./pages/Admin/UserManagement/index";
 
 const RootRedirect = () => {
@@ -60,6 +61,7 @@ function App() {
                             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                             <Route path="/admin/dashboard" element={<AdminDashboard />} />
                             <Route path="/admin/house-monitoring" element={<HouseMonitoring />} />
+                            <Route path="/admin/reports" element={<Reports />} />
                             <Route path="/admin/maintenance" element={<Maintenance />} />
                             <Route path="/admin/users" element={<UserManagement />} />
                         </Route>

@@ -5,6 +5,7 @@ import { Container } from '../../components/Container/index';
 import { HouseIllustration } from '../../components/HouseIllustration/index';
 import useNotifications from '../../hooks/useNotifications';
 import useServerSocket from '../../hooks/useServerSocket';
+import useDeviceStatus from '../../hooks/useDeviceStatus';
 import useAuth from '../../hooks/auth/useAuth';
 import useAxiosPrivate from '../../hooks/auth/useAxiosPrivate';
 import './index.css';
@@ -50,10 +51,31 @@ export const Home = () => {
     setTitle('Dashboard');
     const { auth } = useAuth();
     const { unreadCount } = useNotifications();
-    const { wlValue, connected } = useServerSocket();
+    const { wlValue } = useServerSocket();
+    // "Is the pet house's device reporting in", not "is my browser connected".
+    const { online: deviceOnline } = useDeviceStatus();
     const axiosPrivate = useAxiosPrivate();
     const [threshold, setThreshold] = useState(null);
     const [demoLevel, setDemoLevel] = useState(0);
+    const [lifting, setLifting] = useState(false);
+    const [liftMsg, setLiftMsg] = useState('');
+
+    const handleLift = async () => {
+        setLifting(true);
+        setLiftMsg('');
+        try {
+            await axiosPrivate.post('/users/esp32-lift');
+            setLiftMsg('Lift command sent to your pet house.');
+        } catch (err) {
+            const status = err?.response?.status;
+            setLiftMsg(status === 409
+                ? 'Device offline — it has to be powered on and connected first.'
+                : err?.response?.data?.message || 'Could not send the lift command.');
+        } finally {
+            setLifting(false);
+            setTimeout(() => setLiftMsg(''), 5000);
+        }
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -132,10 +154,39 @@ export const Home = () => {
                         <div className="hl-monitor-title">Live monitoring</div>
                         <div className="hl-monitor-subtitle">Sensor feed updates the platform automatically</div>
                     </div>
-                    <span className={`hl-status-dot ${connected ? 'is-connected' : 'is-offline'}`}>
-                        {connected ? 'Connected' : 'Offline'}
+                    <span className={`hl-status-dot ${deviceOnline ? 'is-connected' : 'is-offline'}`}>
+                        {deviceOnline ? 'Online' : 'Offline'}
                     </span>
                 </div>
+
+                <div className="hl-monitor-row">
+                    <div>
+                        <div className="hl-monitor-title">Raise the platform</div>
+                        <div className="hl-monitor-subtitle">
+                            {deviceOnline
+                                ? 'Lift or lower the pet house without being there'
+                                : 'Device offline — power it on to use this'}
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleLift}
+                        disabled={!deviceOnline || lifting}
+                        className="button"
+                        style={{ opacity: !deviceOnline || lifting ? 0.5 : 1, cursor: !deviceOnline || lifting ? 'not-allowed' : 'pointer' }}
+                    >
+                        {lifting ? 'Sending…' : 'Lift now'}
+                    </button>
+                </div>
+
+                {liftMsg && (
+                    <div style={{
+                        padding: '10px 14px', borderRadius: '9px', fontSize: '13px', fontWeight: 600,
+                        background: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', color: 'var(--hl-ink)',
+                    }}>
+                        {liftMsg}
+                    </div>
+                )}
 
                 <Link to="/history" className="hl-panel-row">
                     <div>

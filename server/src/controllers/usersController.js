@@ -9,8 +9,12 @@ const getAllUsers = async (req, res) => {
 
 const getAllHouses = async (req, res) => {
     try {
+        // lastSeenAt lets the caller work out online/offline per house in one
+        // request, instead of asking for each device's status separately.
         const rows = await global.db.query(`
-            SELECT u.id AS userId, u.username, u.isVerified, e.esp32_id, e.threshold
+            SELECT u.id AS userId, u.username, u.isVerified, e.esp32_id, e.threshold,
+                   e.lastSeenAt,
+                   (e.lastSeenAt IS NOT NULL AND e.lastSeenAt >= DATE_SUB(NOW(), INTERVAL 30 SECOND)) AS online
             FROM users u
             LEFT JOIN esp32 e ON e.userId = u.id
             WHERE u.roles NOT LIKE '%admin%'
