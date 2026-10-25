@@ -59,6 +59,12 @@ const sendViaSemaphore = async ({ to, message }) => {
     return data?.[0]?.message_id;
 };
 
+// The firmware raises the platform in small steps as water rises, and each step
+// reports as an automatic lift. One flood would otherwise text the owner once
+// per step, so each number gets at most one flood text per cooldown window.
+const COOLDOWN_MS = 10 * 60 * 1000;
+const lastSentAt = new Map();
+
 const sendFloodAlertSms = async ({ to, fullName }) => {
     if (!to) return;
 
@@ -67,12 +73,26 @@ const sendFloodAlertSms = async ({ to, fullName }) => {
         return;
     }
 
+    if (Date.now() - (lastSentAt.get(to) || 0) < COOLDOWN_MS) {
+        console.log('\x1b[33m%s\x1b[0m', `[sms] Flood alert for ${to} skipped — one was already sent in the last 10 minutes.`);
+        return;
+    }
+    // Claimed before sending so two lifts landing together can't both send.
+    lastSentAt.set(to, Date.now());
+
     const name = fullName ? fullName.split(' ')[0] : 'there';
     const message = `HydroLift: Hi ${name}, water has reached the flood level at your house. Your platform was raised automatically.`;
 
-    const id = useGateway()
-        ? await sendViaGateway({ to, message })
-        : await sendViaSemaphore({ to, message });
+    let id;
+    try {
+        id = useGateway()
+            ? await sendViaGateway({ to, message })
+            : await sendViaSemaphore({ to, message });
+    } catch (err) {
+        // A failed send shouldn't silence the next attempt.
+        lastSentAt.delete(to);
+        throw err;
+    }
 
     console.log('\x1b[32m%s\x1b[0m', `[sms] Flood alert accepted for ${to} via ${useGateway() ? 'phone gateway' : 'Semaphore'}. id=${id}`);
 };
