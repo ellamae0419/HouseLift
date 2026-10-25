@@ -60,12 +60,12 @@ export const Home = () => {
     const [lifting, setLifting] = useState(false);
     const [liftMsg, setLiftMsg] = useState('');
 
-    const handleLift = async () => {
+    const handleLift = async (direction) => {
         setLifting(true);
         setLiftMsg('');
         try {
-            await axiosPrivate.post('/users/esp32-lift');
-            setLiftMsg('Lift command sent to your pet house.');
+            await axiosPrivate.post('/users/esp32-lift', { direction });
+            setLiftMsg(direction === 'down' ? 'Lowering your pet house a little.' : 'Raising your pet house a little.');
         } catch (err) {
             const status = err?.response?.status;
             setLiftMsg(status === 409
@@ -164,19 +164,30 @@ export const Home = () => {
                         <div className="hl-monitor-title">Raise the platform</div>
                         <div className="hl-monitor-subtitle">
                             {deviceOnline
-                                ? 'Lift or lower the pet house without being there'
+                                ? 'Nudge the pet house up or down a little, from anywhere'
                                 : 'Device offline — power it on to use this'}
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={handleLift}
-                        disabled={!deviceOnline || lifting}
-                        className="button"
-                        style={{ opacity: !deviceOnline || lifting ? 0.5 : 1, cursor: !deviceOnline || lifting ? 'not-allowed' : 'pointer' }}
-                    >
-                        {lifting ? 'Sending…' : 'Lift now'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            type="button"
+                            onClick={() => handleLift('down')}
+                            disabled={!deviceOnline || lifting}
+                            className="button"
+                            style={{ opacity: !deviceOnline || lifting ? 0.5 : 1, cursor: !deviceOnline || lifting ? 'not-allowed' : 'pointer' }}
+                        >
+                            {lifting ? 'Sending…' : 'Lower a little'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleLift('up')}
+                            disabled={!deviceOnline || lifting}
+                            className="button"
+                            style={{ opacity: !deviceOnline || lifting ? 0.5 : 1, cursor: !deviceOnline || lifting ? 'not-allowed' : 'pointer' }}
+                        >
+                            {lifting ? 'Sending…' : 'Raise a little'}
+                        </button>
+                    </div>
                 </div>
 
                 {liftMsg && (

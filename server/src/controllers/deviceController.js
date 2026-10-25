@@ -39,12 +39,14 @@ const putThreshold = async (req, res) => {
 };
 
 const postLift = async (req, res) => {
+    // A phone tap only nudges the platform one small step; the device decides how far.
+    const direction = req.body?.direction === 'down' ? 'down' : 'up';
     try {
         const device = await resolveDevice(req);
         if (!device) return res.status(404).json({ message: 'No device found for this account' });
 
         const sent = typeof global.sendToDeviceSocket === 'function'
-            ? global.sendToDeviceSocket(device.esp32_id, { type: 'lift-command', esp32_id: device.esp32_id })
+            ? global.sendToDeviceSocket(device.esp32_id, { type: 'lift-command', esp32_id: device.esp32_id, mode: 'step', direction })
             : false;
 
         if (!sent) return res.status(409).json({ message: 'Device offline' });
