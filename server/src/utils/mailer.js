@@ -1,5 +1,5 @@
-// Sends via Mailjet's HTTP API instead of raw SMTP — Railway's network
-// blocks outbound SMTP (port 587/465) silently, which made nodemailer hang
+// Sends via Mailjet's HTTP API instead of raw SMTP — Free hosts like Render
+// block outbound SMTP (port 587/465) silently, which made nodemailer hang
 // or time out. HTTPS is not affected by that block. Mailjet only requires
 // verifying a single sender address (not a whole domain), and once
 // verified can send to any recipient — unlike some providers that restrict
