@@ -19,6 +19,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const verifyJWT = require('./middlewares/verifyJWT');
 const { getOwnDevice, getDeviceByEsp32Id, saveSensorReading, saveLiftEvent, normalizeTrigger } = require('./utils/devices');
+const { sendFloodAlertSms } = require('./utils/sms');
 const WebSocket = require('ws');
 const http = require('http');
 console.log("\x1b[36m%s\x1b[0m", `Starting the server side...\n`);
@@ -205,6 +206,12 @@ global.wss.on('connection', async (ws, req) => {
                             'INSERT INTO notifications (title, description, isRead, userId) VALUES (?, ?, 0, ?)',
                             ['Flood detected', 'Water reached the flood threshold — the platform was raised automatically.', device.userId]
                         );
+
+                        // Text the owner too. Not awaited, and its own catch, so a
+                        // slow or failing SMS service can never hold up saving the lift.
+                        global.db.query('SELECT fullName, mobileNumber FROM users WHERE id = ?', [device.userId])
+                            .then((rows) => rows[0] && sendFloodAlertSms({ to: rows[0].mobileNumber, fullName: rows[0].fullName }))
+                            .catch((err) => console.log('[sms] Flood alert SMS failed:', err.message));
                     }
                 }
             } catch (err) {
