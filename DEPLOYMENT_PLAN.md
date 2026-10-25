@@ -1,5 +1,12 @@
 # HydroLift Cloud Deployment Plan
 
+> **Update:** Railway is no longer used. The backend now deploys to **Render**
+> (see `render.yaml`), with a hosted MySQL from a provider such as Aiven or
+> TiDB Cloud (set `DB_SSL=true`). InfinityFree was considered but cannot run
+> Node.js or WebSockets. Wherever the text below says "Railway", read "Render".
+> After Render gives you a URL, update `SERVER_URL`/`API_URL` in `main.cpp` and
+> `arduino/HouseLift/HouseLift.ino`, and the destination in `client/vercel.json`.
+
 Status: **planning only — no code has been changed.** This document exists so
 you can review the approach before anything is touched.
 

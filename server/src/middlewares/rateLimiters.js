@@ -1,12 +1,11 @@
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
-// Railway's edge routes each request through a varying number of internal
-// hops (visible as e.g. "sin1,hnd1" in x-hikari-trace), so a fixed
-// `trust proxy` hop count resolves req.ip to a different address request to
-// request, splitting one client's traffic across several rate-limit buckets.
-// Railway sets x-real-ip itself as the one stable, edge-assigned client IP,
-// so key off that directly instead of walking X-Forwarded-For.
-const keyGenerator = (req) => req.headers['x-real-ip'] || req.ip;
+// Hosting proxies can route each request through a varying number of internal
+// hops, so a fixed `trust proxy` hop count may resolve req.ip to a different
+// address request to request, splitting one client's traffic across several
+// rate-limit buckets. Prefer x-real-ip (a stable, edge-assigned client IP)
+// when the host sets it, and fall back to req.ip otherwise.
+const keyGenerator = (req) => ipKeyGenerator(req.headers['x-real-ip'] || req.ip);
 
 const makeLimiter = (max, message) => rateLimit({
     windowMs: 15 * 60 * 1000,

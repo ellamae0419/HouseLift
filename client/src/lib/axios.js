@@ -14,7 +14,9 @@ import { setServerUnreachable } from './connectivityStore';
 //    page itself was loaded from (localhost on this computer, or this
 //    computer's LAN IP when opened from a phone), talking to the local
 //    backend on port 3001.
-const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_URL
+// Static hosts with no proxy (e.g. InfinityFree) can't do case 1; build with
+// VITE_DIRECT_API=true there to call VITE_API_URL directly instead.
+const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_URL && import.meta.env.VITE_DIRECT_API !== 'true'
     ? '/api'
     : import.meta.env.VITE_API_URL
         ? import.meta.env.VITE_API_URL

@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: houselift
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ACCESSTOKEN_SECRET
+        sync: false
+      - key: REFRESHTOKEN_SECRET
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: MAILJET_API_KEY
+        sync: false
+      - key: MAILJET_SECRET_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false

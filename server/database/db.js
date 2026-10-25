@@ -3,6 +3,7 @@ require('dotenv').config()
 
 const db = mariadb.createPool({
     host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
@@ -14,6 +15,9 @@ const db = mariadb.createPool({
     // The driver's 1s default is too short once the DB is a network hop away
     // (e.g. a hosted database) rather than on localhost.
     connectTimeout: 10000,
+    // Hosted MySQL providers (Aiven, TiDB Cloud, etc.) require an encrypted
+    // connection; set DB_SSL=true there. Left off for local MySQL.
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
 })
 
 db.getConnection()

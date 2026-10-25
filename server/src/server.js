@@ -26,8 +26,8 @@ console.log("\x1b[36m%s\x1b[0m", `Starting the server side...\n`);
 const app = express();
 const server = http.createServer(app);
 
-// Railway sits in front of this app as a single reverse-proxy hop; without
-// this, express-rate-limit (and req.ip generally) sees Railway's proxy IP
+// The host (Render) sits in front of this app as a reverse proxy; without
+// this, express-rate-limit (and req.ip generally) sees the proxy's IP
 // for every request instead of the real client IP, so one visitor's limit
 // would be shared by everyone.
 app.set('trust proxy', 1);
