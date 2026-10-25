@@ -56,6 +56,10 @@ export default function useServerSocket() {
                 ws.addEventListener('open', () => {
                     console.log('WS connected to', wsUrl.split('?')[0]);
                     setConnected(true);
+                    // Any device-status pushed before this point is old — a
+                    // server restart can drop the "device is back" message in
+                    // the gap. Forget it so the status poll decides instead.
+                    setDeviceStatusById({});
                     // Reset backoff once a connection actually succeeds.
                     reconnectDelayRef.current = RECONNECT_MIN_DELAY_MS;
                 });
@@ -84,6 +88,7 @@ export default function useServerSocket() {
                 ws.addEventListener('close', () => {
                     console.log('WS disconnected');
                     setConnected(false);
+                    setDeviceStatusById({});
                     scheduleReconnect();
                 });
                 ws.addEventListener('error', (e) => {

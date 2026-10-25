@@ -14,7 +14,7 @@ const POLL_MS = 20000;
  */
 export default function useDeviceStatus(esp32Id) {
     const axiosPrivate = useAxiosPrivate();
-    const { deviceStatusById } = useServerSocket();
+    const { deviceStatusById, connected } = useServerSocket();
     const [fetched, setFetched] = useState({ online: false, lastSeenAt: null, loaded: false });
 
     const refresh = useCallback(async () => {
@@ -34,6 +34,12 @@ export default function useDeviceStatus(esp32Id) {
         const timer = setInterval(refresh, POLL_MS);
         return () => clearInterval(timer);
     }, [refresh]);
+
+    // The socket just (re)connected, so any push we missed while it was down is
+    // gone for good — re-read the real status now instead of waiting for the poll.
+    useEffect(() => {
+        if (connected) refresh();
+    }, [connected, refresh]);
 
     // A live push always wins over the last poll, since it's newer.
     const pushed = esp32Id ? deviceStatusById[esp32Id] : Object.values(deviceStatusById)[0];

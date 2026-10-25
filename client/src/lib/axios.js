@@ -6,8 +6,8 @@ import { setServerUnreachable } from './connectivityStore';
 //    backend directly would make the login cookie a third-party cookie,
 //    which browsers increasingly block/drop outright. Instead, requests go
 //    to /api on this same domain, and vercel.json rewrites/proxies that to
-//    the Railway backend server-side, so the cookie is stored as first-party.
-// 2. Local dev with VITE_API_URL set (e.g. pointing at Railway) — there's no
+//    the backend server-side, so the cookie is stored as first-party.
+// 2. Local dev with VITE_API_URL set (e.g. pointing at Render) — there's no
 //    proxy in dev mode, so use the URL directly instead of a relative /api
 //    path (which would just 404 against the Vite dev server).
 // 3. Local/LAN dev with VITE_API_URL unset — fall back to whatever host the
