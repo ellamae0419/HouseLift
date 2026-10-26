@@ -69,40 +69,45 @@ const login = async (req, res) => {
     const { usernameOrEmail, password } = req.body;
     if (!usernameOrEmail || !password) return res.status(400).json({ 'message': 'Username (or email) and password are required.' });
 
-    const searchUser = await global.db.query('SELECT * FROM users WHERE username = ? or email = ?', [usernameOrEmail, usernameOrEmail]);
-    if (!searchUser[0]) return res.status(401).json({ 'message': 'The username (or email) is invalid.' });
+    try {
+        const searchUser = await global.db.query('SELECT * FROM users WHERE username = ? or email = ?', [usernameOrEmail, usernameOrEmail]);
+        if (!searchUser[0]) return res.status(401).json({ 'message': 'The username (or email) is invalid.' });
 
-    const match = await bcrypt.compare(password, searchUser[0].password);
-    if (match) {
-        if (!searchUser[0].isVerified) {
-            return res.status(403).json({ 'message': 'Your account is pending admin approval. Please wait for an administrator to confirm your registration before logging in.' });
+        const match = await bcrypt.compare(password, searchUser[0].password);
+        if (match) {
+            if (!searchUser[0].isVerified) {
+                return res.status(403).json({ 'message': 'Your account is pending admin approval. Please wait for an administrator to confirm your registration before logging in.' });
+            }
+
+            const roles = searchUser[0].roles.split(',');
+
+            const accessToken = jwt.sign(
+                {"user": {
+                    "username": searchUser[0].username,
+                    "roles": roles
+                }},
+                process.env.ACCESSTOKEN_SECRET,
+                { expiresIn: '10s' }
+            );
+            const refreshToken = jwt.sign(
+                { "username": searchUser[0].username },
+                process.env.REFRESHTOKEN_SECRET,
+                { expiresIn: '10d' }
+            );
+            await global.db.query('UPDATE users SET refreshToken = ? WHERE id = ?', [refreshToken, searchUser[0].id]);
+            res.cookie('jwt', refreshToken, {
+                ...refreshCookieOptions,
+                maxAge: 10 * 24 * 60 * 60 * 1000, // same lifetime as the refresh token itself
+            });
+
+            res.json({ username: searchUser[0].username, email: searchUser[0].email, accessToken });
+
+        } else {
+            res.status(401).json({ 'message': 'The password provided is incorrect.' });
         }
-
-        const roles = searchUser[0].roles.split(',');
-
-        const accessToken = jwt.sign(
-            {"user": {
-                "username": searchUser[0].username,
-                "roles": roles
-            }},
-            process.env.ACCESSTOKEN_SECRET,
-            { expiresIn: '10s' }
-        );
-        const refreshToken = jwt.sign(
-            { "username": searchUser[0].username },
-            process.env.REFRESHTOKEN_SECRET,
-            { expiresIn: '10d' }
-        );
-        await global.db.query('UPDATE users SET refreshToken = ? WHERE id = ?', [refreshToken, searchUser[0].id]);
-        res.cookie('jwt', refreshToken, {
-            ...refreshCookieOptions,
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        res.json({ username: searchUser[0].username, email: searchUser[0].email, accessToken });
-
-    } else {
-        res.status(401).json({ 'message': 'The password provided is incorrect.' });
+    } catch (err) {
+        console.error('[login] Sign-in service error:', err.code || 'unknown');
+        res.status(503).json({ message: 'The sign-in service is unavailable right now. Please try again later.' });
     }
 };
 
@@ -111,7 +116,7 @@ const logout = async (req, res) => {
     if (!cookies?.jwt) return res.sendStatus(204);
     const refreshToken = cookies.jwt;
 
-    const searchUser = await global.db.query(`SELECT id,username FROM users WHERE refreshToken = "${refreshToken}";`);
+    const searchUser = await global.db.query('SELECT id,username FROM users WHERE refreshToken = ?', [refreshToken]);
     if (!searchUser[0]) {
         res.clearCookie('jwt', refreshCookieOptions)
         return res.sendStatus(204);
@@ -128,7 +133,7 @@ const refreshToken = async (req, res) => {
     if (!cookies?.jwt) return res.status(401).json({ 'message': 'You must be logged in.' });
     const refreshToken = cookies.jwt;
 
-    const searchUser = await global.db.query(`SELECT * FROM users WHERE refreshToken = "${refreshToken}";`);
+    const searchUser = await global.db.query('SELECT * FROM users WHERE refreshToken = ?', [refreshToken]);
     if (!searchUser[0]) return res.status(403).json({ 'message': 'Forbidden !' });
     
     jwt.verify(
