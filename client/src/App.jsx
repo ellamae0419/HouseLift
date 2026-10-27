@@ -17,6 +17,7 @@ import { Maintenance } from "./pages/Maintenance/index";
 import { Login } from "./pages/LoginSystem/login";
 import { Activate } from "./pages/Activate/index";
 import { Orders } from "./pages/Admin/Orders/index";
+import { Records } from "./pages/Admin/Records/index";
 import { ForgotPassword } from "./pages/LoginSystem/forgotPassword";
 import { AdminDashboard } from "./pages/Admin/Dashboard/index";
 import { Reports } from "./pages/Reports/index";
@@ -70,6 +71,7 @@ function App() {
                             <Route path="/admin/maintenance" element={<Maintenance />} />
                             <Route path="/admin/users" element={<UserManagement />} />
                             <Route path="/admin/orders" element={<Orders />} />
+                            <Route path="/admin/records" element={<Records />} />
                         </Route>
 
                         <Route path="*" element={<Error code="404"/>} />

@@ -315,6 +315,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(verifyJWT);
 app.use('/users', require('./routes/users'));
 app.use('/orders', require('./routes/orders'));
+app.use('/records', require('./routes/records'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/reports', require('./routes/reports'));
 
