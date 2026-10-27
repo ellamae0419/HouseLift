@@ -14,8 +14,9 @@ import { Error } from "./pages/Error/index";
 import { HouseMonitoring } from "./pages/Safety/index";
 import { Notifications } from "./pages/Notifications/index";
 import { Maintenance } from "./pages/Maintenance/index";
-import { Register } from "./pages/LoginSystem/register";
 import { Login } from "./pages/LoginSystem/login";
+import { Activate } from "./pages/Activate/index";
+import { Orders } from "./pages/Admin/Orders/index";
 import { ForgotPassword } from "./pages/LoginSystem/forgotPassword";
 import { AdminDashboard } from "./pages/Admin/Dashboard/index";
 import { Reports } from "./pages/Reports/index";
@@ -39,9 +40,13 @@ function App() {
 
                     {/* Routes requiring the user to be logged out */}
                     <Route element={<RequireNotAuth />}>
-                        <Route path="/register" element={<Register/>} />
                         <Route path="/login" element={<Login/>} />
                         <Route path="/forgot-password" element={<ForgotPassword/>} />
+                    </Route>
+
+                    {/* Serial-code step for customers who ordered online; no sidebar, since nothing else is open to them yet */}
+                    <Route element={<RequireAuth allowedRoles={['user', 'app', 'admin']} />}>
+                        <Route path="/activate" element={<Activate />} />
                     </Route>
 
                     {/* Routes that show the sidebar/layout (most of the app) */}
@@ -64,6 +69,7 @@ function App() {
                             <Route path="/admin/reports" element={<Reports />} />
                             <Route path="/admin/maintenance" element={<Maintenance />} />
                             <Route path="/admin/users" element={<UserManagement />} />
+                            <Route path="/admin/orders" element={<Orders />} />
                         </Route>
 
                         <Route path="*" element={<Error code="404"/>} />

@@ -19,22 +19,55 @@ const buildScope = async (req) => {
     return { where: 'WHERE userId = ?', params: [userId] };
 };
 
+const isValidDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+
+// Narrows a scope to whole days, both ends included: `from` starts at 00:00 of
+// that day and `to` runs up to (not including) 00:00 of the following day.
+const withDateRange = ({ where, params }, from, to) => {
+    const clauses = [];
+    const extra = [];
+    if (from) {
+        clauses.push('createdAt >= ?');
+        extra.push(from);
+    }
+    if (to) {
+        clauses.push('createdAt < DATE_ADD(?, INTERVAL 1 DAY)');
+        extra.push(to);
+    }
+    if (!clauses.length) return { where, params };
+
+    return {
+        where: `${where ? `${where} AND` : 'WHERE'} ${clauses.join(' AND ')}`,
+        params: [...params, ...extra],
+    };
+};
+
 const listNotifications = async (req, res) => {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const requestedLimit = parseInt(req.query.limit, 10) || LIST_LIMIT_DEFAULT;
     const limit = Math.min(Math.max(requestedLimit, 1), LIST_LIMIT_MAX);
     const offset = (page - 1) * limit;
 
+    const from = req.query.from || '';
+    const to = req.query.to || '';
+    if ((from && !isValidDate(from)) || (to && !isValidDate(to))) {
+        return res.status(400).json({ message: 'Dates must look like YYYY-MM-DD.' });
+    }
+
     try {
-        const { where, params } = await buildScope(req);
+        const scope = await buildScope(req);
+        // The date range only narrows the list; the unread count below stays
+        // for the whole scope since it feeds the bell badge.
+        const { where: listWhere, params: listParams } = withDateRange(scope, from, to);
+        const { where, params } = scope;
 
         const rows = await global.db.query(
-            `SELECT id, title, description, isRead, createdAt FROM notifications ${where} ORDER BY createdAt DESC, id DESC LIMIT ? OFFSET ?`,
-            [...params, limit, offset]
+            `SELECT id, title, description, isRead, createdAt FROM notifications ${listWhere} ORDER BY createdAt DESC, id DESC LIMIT ? OFFSET ?`,
+            [...listParams, limit, offset]
         );
         const totalResult = await global.db.query(
-            `SELECT COUNT(*) AS total FROM notifications ${where}`,
-            params
+            `SELECT COUNT(*) AS total FROM notifications ${listWhere}`,
+            listParams
         );
         const unreadResult = await global.db.query(
             `SELECT COUNT(*) AS unreadCount FROM notifications ${where}${where ? ' AND' : ' WHERE'} isRead = 0`,

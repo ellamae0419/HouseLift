@@ -1,0 +1,85 @@
+.wrap {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+.page { background: var(--teal-pale); padding-top: 56px; padding-bottom: 88px; min-height: 60vh; }
+.eyebrow { font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--teal-deep); }
+.title { font-size: clamp(1.8rem, 3.6vw, 2.5rem); margin-top: 10px; }
+.intro { color: var(--muted); margin-top: 14px; font-size: 1.05rem; max-width: 40em; }
+
+/* overflow: clip keeps the rounded corners without making the box a scroll container, which would stop the sticky summary panel from sticking. */
+.box { background: var(--white); border: 1px solid var(--line); border-radius: 20px; display: grid; grid-template-columns: 1.1fr 1fr; margin-top: 36px; overflow: clip; }
+.fields { display: grid; gap: 18px; align-content: start; padding: 32px; min-width: 0; }
+.group { display: grid; gap: 14px; min-width: 0; }
+.groupTitle { font-family: var(--display); font-weight: 600; font-size: 1.02rem; padding-top: 10px; border-top: 1px solid var(--line); }
+.fields .group:first-child .groupTitle { border-top: 0; padding-top: 0; }
+
+.field { display: grid; gap: 6px; font-size: 0.86rem; font-weight: 600; min-width: 0; }
+.field input, .field select {
+    font: inherit; font-weight: 400; padding: 11px 14px; width: 100%; min-width: 0;
+    border: 1px solid #c9d8da; border-radius: 10px; background: var(--white); color: var(--navy);
+}
+.field select:disabled { background: #f3f7f7; color: var(--muted); cursor: not-allowed; }
+.field input:focus, .field select:focus { border-color: var(--teal-deep); outline: 2px solid rgba(23, 103, 107, 0.25); outline-offset: 0; }
+.invalid input, .invalid select { border-color: #c4573f; }
+.hint { font-size: 0.82rem; font-weight: 400; color: var(--muted); }
+.hintBad { color: #a8402a; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.pwWrap { position: relative; }
+.pwWrap input { padding-right: 64px; }
+.toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0; cursor: pointer; font: 600 0.8rem var(--body); color: var(--teal-deep); padding: 6px 8px; }
+
+.drop {
+    display: grid; gap: 4px; justify-items: center; text-align: center; cursor: pointer;
+    padding: 20px 14px; background: var(--teal-pale); border: 1.5px dashed #9bc7c5; border-radius: 12px;
+    font-size: 0.9rem; font-weight: 400; color: var(--muted);
+}
+.drop:hover, .drop:focus-within { border-color: var(--teal-deep); }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.drop strong { color: var(--navy); font-size: 0.95rem; }
+.idPreview { display: grid; gap: 8px; justify-items: start; margin-top: 4px; }
+.idPreview img { max-width: 100%; max-height: 220px; border-radius: 12px; border: 1px solid var(--line); object-fit: contain; background: var(--teal-pale); }
+.linkBtn { background: none; border: 0; padding: 0; cursor: pointer; font: 600 0.85rem var(--body); color: var(--teal-deep); text-decoration: underline; }
+
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.88rem; font-weight: 400; color: var(--muted); line-height: 1.5; }
+.consent input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--teal-deep); flex: none; }
+
+.panel { min-width: 0; background: var(--navy); color: var(--white); padding: 32px; }
+/* Stays in view while the long form scrolls, so the Place order button is always there. */
+.panelInner { position: sticky; top: 96px; display: flex; flex-direction: column; gap: 16px; }
+.panel .eyebrow { color: var(--teal); }
+.panelName { font-family: var(--display); font-weight: 600; font-size: 1.5rem; }
+.panelPrice { font-family: var(--display); font-weight: 700; font-size: 1.6rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.panelPriceSmall { font-size: 1.05rem; font-weight: 600; }
+.panelNote { color: #a9bccb; font-size: 0.9rem; margin-top: 2px; }
+.next { margin: 0; padding: 18px 18px 18px 38px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; font-size: 0.95rem; line-height: 1.55; color: #e5edf2; }
+.next li { margin-top: 6px; }
+.next li:first-child { margin-top: 0; }
+.panelEnd { display: grid; gap: 12px; margin-top: 8px; }
+.error { background: #fbe9e5; color: #8f3321; border-radius: 10px; padding: 11px 14px; font-size: 0.92rem; font-weight: 500; }
+.foot { text-align: center; font-size: 0.85rem; color: #a9bccb; }
+.foot a { color: var(--white); }
+
+/* Order received */
+.done { max-width: 620px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 20px; padding: 40px 32px; text-align: center; }
+.doneMark { width: 56px; height: 56px; border-radius: 50%; background: var(--teal); display: grid; place-items: center; margin: 0 auto 18px; }
+.doneMark svg { width: 28px; height: 28px; }
+.done h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); }
+.done p { color: var(--muted); margin-top: 10px; }
+.doneSteps { text-align: left; margin: 22px 0 0; padding-left: 22px; color: var(--navy); line-height: 1.6; }
+.doneSteps li { margin-top: 8px; }
+.doneAction { margin-top: 24px; }
+
+@media (max-width: 900px) {
+    .box { grid-template-columns: 1fr; }
+    .fields, .panel { padding: 22px; }
+    .panelInner { position: static; }
+    .page { padding-top: 40px; padding-bottom: 56px; }
+}
+@media (max-width: 520px) {
+    .row2 { grid-template-columns: 1fr; }
+    .done { padding: 28px 20px; }
+}

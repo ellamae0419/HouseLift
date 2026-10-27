@@ -1,6 +1,7 @@
 -- HydroLift / HouseLift: set up the database and check it (TiDB / MySQL 8).
--- Safe to run again at any time: it only CREATES what is missing and only READS
--- everything else. It never drops, deletes or changes any data.
+-- Safe to run again at any time: it only CREATES what is missing (tables, and the
+-- one new users.isActivated column) and only READS everything else. It never
+-- drops, deletes or changes any data.
 -- Run it all with the SQL Editor: select all (Ctrl+A), then Run.
 
 USE house_lift;
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
     resetOtp            VARCHAR(10)  DEFAULT NULL,
     resetOtpExpires     DATETIME     DEFAULT NULL,
     resetOtpAttempts    INT          NOT NULL DEFAULT 0,
+    isActivated         TINYINT(1)   NOT NULL DEFAULT 1,      -- 0 = bought online, locked until the serial code is entered
     UNIQUE KEY uniq_users_username (username),
     UNIQUE KEY uniq_users_email (email)
 );
@@ -80,6 +82,73 @@ CREATE TABLE IF NOT EXISTS lift_events (
     CONSTRAINT fk_lift_events_esp32 FOREIGN KEY (esp32Id) REFERENCES esp32 (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS orders (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    userId       VARCHAR(100) NOT NULL,                       -- the customer who ordered
+    price        INT          DEFAULT NULL,                   -- pesos, if a price was set
+    status       VARCHAR(10)  NOT NULL DEFAULT 'pending',     -- 'pending', 'approved' or 'rejected'
+    rejectReason VARCHAR(255) DEFAULT NULL,
+    paidAt       DATETIME     DEFAULT NULL,                   -- payment is taken in person
+    reviewedAt   DATETIME     DEFAULT NULL,
+    createdAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_orders_status_time (status, createdAt),
+    KEY idx_orders_user (userId),
+    CONSTRAINT fk_orders_user FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS id_verifications (
+    id        INT AUTO_INCREMENT PRIMARY KEY,
+    orderId   INT         NOT NULL,
+    idType    VARCHAR(30) NOT NULL,                           -- e.g. 'philsys', 'passport'
+    mimeType  VARCHAR(20) NOT NULL,                           -- image/jpeg, image/png or image/webp
+    image     MEDIUMBLOB  NOT NULL,                           -- photo of the ID, admin-only
+    createdAt DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_id_verifications_order (orderId),
+    CONSTRAINT fk_id_verifications_order FOREIGN KEY (orderId) REFERENCES orders (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS serial_codes (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    code       VARCHAR(20) NOT NULL,                          -- HL-XXXX-XXXX-XXXX
+    orderId    INT         NOT NULL,
+    userId     VARCHAR(100) NOT NULL,                         -- only this customer can use the code
+    esp32Id    INT         NOT NULL,                          -- the device the code links to
+    status     VARCHAR(10) NOT NULL DEFAULT 'issued',         -- 'issued' or 'redeemed'
+    issuedAt   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    redeemedAt DATETIME    DEFAULT NULL,
+    UNIQUE KEY uniq_serial_code (code),
+    UNIQUE KEY uniq_serial_order (orderId),
+    KEY idx_serial_user (userId),
+    CONSTRAINT fk_serial_order FOREIGN KEY (orderId) REFERENCES orders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_serial_user FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_serial_esp32 FOREIGN KEY (esp32Id) REFERENCES esp32 (id) ON DELETE CASCADE
+);
+
+-- A readable list of who bought, which ID they gave and which serial code they got.
+-- It only reads the tables above and never includes the ID photo.
+CREATE OR REPLACE VIEW customer_serials AS
+SELECT u.username, u.fullName, u.email, u.mobileNumber,
+       o.id AS orderId, o.status AS orderStatus, v.idType, o.paidAt,
+       s.code AS serialCode, s.status AS serialStatus, s.issuedAt, s.redeemedAt,
+       e.esp32_id AS deviceId
+FROM serial_codes s
+JOIN users u ON u.id = s.userId
+JOIN orders o ON o.id = s.orderId
+LEFT JOIN id_verifications v ON v.orderId = o.id
+LEFT JOIN esp32 e ON e.id = s.esp32Id;
+
+-- An existing users table needs the new isActivated column added once. This adds
+-- it only if it is missing, and every existing account starts as activated (1),
+-- so nobody is locked out. No data is changed.
+SET @has_col = (SELECT COUNT(*) FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'isActivated');
+SET @add_col = IF(@has_col = 0,
+                  'ALTER TABLE users ADD COLUMN isActivated TINYINT(1) NOT NULL DEFAULT 1',
+                  'SELECT 1');
+PREPARE stmt FROM @add_col;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- ---------------------------------------------------------------------------
 -- 2. Checks (read-only)
 -- ---------------------------------------------------------------------------
@@ -89,7 +158,10 @@ SELECT 'users' AS tbl, COUNT(*) AS n FROM users
 UNION ALL SELECT 'esp32', COUNT(*) FROM esp32
 UNION ALL SELECT 'notifications', COUNT(*) FROM notifications
 UNION ALL SELECT 'sensor_readings', COUNT(*) FROM sensor_readings
-UNION ALL SELECT 'lift_events', COUNT(*) FROM lift_events;
+UNION ALL SELECT 'lift_events', COUNT(*) FROM lift_events
+UNION ALL SELECT 'orders', COUNT(*) FROM orders
+UNION ALL SELECT 'id_verifications', COUNT(*) FROM id_verifications
+UNION ALL SELECT 'serial_codes', COUNT(*) FROM serial_codes;
 
 -- Every account with its device. A device with key_length 64 can connect.
 -- secs_ago under 30 means that device is online right now.
@@ -99,6 +171,18 @@ SELECT u.username, u.roles, u.isVerified, u.mobileNumber,
 FROM users u
 LEFT JOIN esp32 e ON e.userId = u.id
 ORDER BY u.createdAt;
+
+-- Orders and where each one is in the buying steps (the ID photo itself is not shown).
+SELECT o.id, u.username, o.status, o.paidAt, s.code AS serial_code, s.status AS serial_status
+FROM orders o
+JOIN users u ON u.id = o.userId
+LEFT JOIN serial_codes s ON s.orderId = o.id
+ORDER BY o.createdAt DESC;
+
+-- Every customer with the serial code they were given. Each code is different.
+SELECT username, fullName, mobileNumber, idType, serialCode, serialStatus, deviceId
+FROM customer_serials
+ORDER BY issuedAt DESC;
 
 -- Lifts by cause (auto = water reached the threshold).
 SELECT `trigger`, direction, COUNT(*) AS total, MAX(completedAt) AS latest

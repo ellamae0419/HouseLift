@@ -7,7 +7,10 @@
 !**/.env.example
 
 # Build output
+.build/
+.local/
 client/dist/
+client/dist-shop/
 client/build/
 
 # Logs

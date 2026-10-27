@@ -275,9 +275,22 @@ const isLocalNetworkOrigin = (origin) => {
     }
 };
 
+// The shop is a public website that can live at any address, and its two endpoints use
+// no cookies or logins, so any website may call them. They are mounted before the CORS
+// rule below, which only admits the dashboard site. The order form uploads a photo of
+// an ID, so this route family also gets a bigger body limit than the 100 KB default.
+app.use('/shop', cors({ origin: '*', credentials: false }), express.json({ limit: '3mb' }), require('./routes/shop'));
+
+// ALLOWED_ORIGIN can list several website addresses separated by commas, so the
+// same backend serves the main site and a separate shop domain at the same time.
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/+$/, '').toLowerCase())
+    .filter(Boolean);
+
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || origin === process.env.ALLOWED_ORIGIN || isLocalNetworkOrigin(origin)) {
+        if (!origin || allowedOrigins.includes(origin.toLowerCase()) || isLocalNetworkOrigin(origin)) {
             return callback(null, true);
         }
         callback(new Error('Not allowed by CORS'));
@@ -301,6 +314,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.use(verifyJWT);
 app.use('/users', require('./routes/users'));
+app.use('/orders', require('./routes/orders'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/reports', require('./routes/reports'));
 

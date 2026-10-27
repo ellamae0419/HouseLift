@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     resetOtp            VARCHAR(10)  DEFAULT NULL,
     resetOtpExpires     DATETIME     DEFAULT NULL,
     resetOtpAttempts    INT          NOT NULL DEFAULT 0,
+    isActivated         TINYINT(1)   NOT NULL DEFAULT 1,      -- 0 = bought online, locked until the serial code is entered
     UNIQUE KEY uniq_users_username (username),
     UNIQUE KEY uniq_users_email (email)
 );
@@ -72,3 +73,58 @@ CREATE TABLE IF NOT EXISTS lift_events (
     KEY idx_lift_events_device_time (esp32Id, completedAt),
     CONSTRAINT fk_lift_events_esp32 FOREIGN KEY (esp32Id) REFERENCES esp32 (id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS orders (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    userId       VARCHAR(100) NOT NULL,                       -- the customer who ordered
+    price        INT          DEFAULT NULL,                   -- pesos, if a price was set
+    status       VARCHAR(10)  NOT NULL DEFAULT 'pending',     -- 'pending', 'approved' or 'rejected'
+    rejectReason VARCHAR(255) DEFAULT NULL,
+    paidAt       DATETIME     DEFAULT NULL,                   -- payment is taken in person
+    reviewedAt   DATETIME     DEFAULT NULL,
+    createdAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_orders_status_time (status, createdAt),
+    KEY idx_orders_user (userId),
+    CONSTRAINT fk_orders_user FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS id_verifications (
+    id        INT AUTO_INCREMENT PRIMARY KEY,
+    orderId   INT         NOT NULL,
+    idType    VARCHAR(30) NOT NULL,                           -- e.g. 'philsys', 'passport'
+    mimeType  VARCHAR(20) NOT NULL,                           -- image/jpeg, image/png or image/webp
+    image     MEDIUMBLOB  NOT NULL,                           -- photo of the ID, admin-only
+    createdAt DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_id_verifications_order (orderId),
+    CONSTRAINT fk_id_verifications_order FOREIGN KEY (orderId) REFERENCES orders (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS serial_codes (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    code       VARCHAR(20) NOT NULL,                          -- HL-XXXX-XXXX-XXXX
+    orderId    INT         NOT NULL,
+    userId     VARCHAR(100) NOT NULL,                         -- only this customer can use the code
+    esp32Id    INT         NOT NULL,                          -- the device the code links to
+    status     VARCHAR(10) NOT NULL DEFAULT 'issued',         -- 'issued' or 'redeemed'
+    issuedAt   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    redeemedAt DATETIME    DEFAULT NULL,
+    UNIQUE KEY uniq_serial_code (code),
+    UNIQUE KEY uniq_serial_order (orderId),
+    KEY idx_serial_user (userId),
+    CONSTRAINT fk_serial_order FOREIGN KEY (orderId) REFERENCES orders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_serial_user FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_serial_esp32 FOREIGN KEY (esp32Id) REFERENCES esp32 (id) ON DELETE CASCADE
+);
+
+-- A readable list of who bought, which ID they gave and which serial code they got.
+-- Look here instead of joining the tables by hand. It never includes the ID photo.
+CREATE OR REPLACE VIEW customer_serials AS
+SELECT u.username, u.fullName, u.email, u.mobileNumber,
+       o.id AS orderId, o.status AS orderStatus, v.idType, o.paidAt,
+       s.code AS serialCode, s.status AS serialStatus, s.issuedAt, s.redeemedAt,
+       e.esp32_id AS deviceId
+FROM serial_codes s
+JOIN users u ON u.id = s.userId
+JOIN orders o ON o.id = s.orderId
+LEFT JOIN id_verifications v ON v.orderId = o.id
+LEFT JOIN esp32 e ON e.id = s.esp32Id;

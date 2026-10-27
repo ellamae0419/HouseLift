@@ -28,4 +28,21 @@ const forgotPasswordLimiter = makeLimiter(5, 'Too many password reset requests. 
 // spreading guesses across many accounts.
 const resetPasswordLimiter = makeLimiter(10, 'Too many attempts. Please try again in a few minutes.');
 
-module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter };
+// Placing an order creates an account and stores a photo, so it is limited per
+// connection to keep someone from filling the database with fake orders.
+const orderLimiter = makeLimiter(5, 'Too many orders from this connection. Please try again later.');
+
+// Guards guessing serial codes. Keyed on the signed-in user (not the IP) and
+// counting only wrong tries, so a customer who enters the right code first time
+// is never blocked, but anyone guessing is stopped after five misses.
+const activateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many wrong codes. Please try again in a few minutes.' },
+    keyGenerator: (req) => (req.username ? `activate:${req.username}` : ipKeyGenerator(req.headers['x-real-ip'] || req.ip)),
+});
+
+module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter, orderLimiter, activateLimiter };

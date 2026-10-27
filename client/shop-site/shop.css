@@ -1,0 +1,39 @@
+/* Styles for the HydroLift shop website only. The dashboard site has its own
+   stylesheet (src/assets/main.css) and does not load this one. */
+:root {
+    --teal: #7fd1cc;
+    --teal-deep: #17676b;
+    --teal-pale: #eef8f7;
+    --line: #dbe7e8;
+    --white: #ffffff;
+    --navy: #182d44;
+    --muted: #5b6f7c;
+    --amber: #f2a516;
+    --amber-deep: #d98c06;
+    --display: "Sora", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --body: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+
+body {
+    margin: 0;
+    background: var(--white);
+    color: var(--navy);
+    font: 16px/1.65 var(--body);
+    -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: inherit; }
+img { max-width: 100%; }
+
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}

@@ -79,6 +79,11 @@
     --green: #4caf7d;
 }
 
+/* Keeps the native calendar picker icon readable on the dark background. */
+:root[data-theme="dark"] input[type="date"] {
+    color-scheme: dark;
+}
+
 * {
     margin: 0;
     padding: 0;

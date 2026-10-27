@@ -4,6 +4,8 @@ import { setTitle } from '../../utils/generalFunctions';
 import { useRef, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from '../../lib/axios';
+import { getLoginErrorMessage } from '../../lib/loginError';
+import { shopBase, shopUrl } from '../../utils/siteLinks';
 import useAuth from '../../hooks/auth/useAuth';
 import { faUser } from "@fortawesome/free-regular-svg-icons";
 import { faUnlockKeyhole, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
@@ -60,16 +62,8 @@ export const Login = () => {
             setPassword('');
             navigate(redirection, { replace: true }); // We redirect to the previous page
         } catch (err) {
-            if(!err?.response) {
-                setErrMsg("The server didn't respond.");
-                setTimeout(() => { setErrMsg(''); }, 4000)
-            } else if([400, 401, 403].includes(err.response?.status)) {
-                setErrMsg(err.response?.data?.message);
-                setTimeout(() => { setErrMsg(''); }, 4000)
-            } else {
-                setErrMsg('Login failed.');
-                setTimeout(() => { setErrMsg(''); }, 4000)
-            }
+            setErrMsg(getLoginErrorMessage(err));
+            setTimeout(() => { setErrMsg(''); }, 4000);
             errRef.current.focus();
         }
     }
@@ -130,7 +124,7 @@ export const Login = () => {
                         </button>
                     </form>
 
-                    <div className={styles.footer_link}>You don't have an account? <Link to="/register">Register</Link></div>
+                    {shopBase && <div className={styles.footer_link}>Don't have a HydroLift yet? <a href={shopUrl('/buy')}>Buy one here</a></div>}
                 </div>
             </div>
         </div>

@@ -1,0 +1,6 @@
+# Single-page app: send every non-file URL (e.g. /dashboard) to index.html
+# so refreshing a page doesn't 404 on InfinityFree (Apache).
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]

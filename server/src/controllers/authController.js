@@ -1,7 +1,6 @@
 require('dotenv').config()
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { generateUserID } = require('../utils/functions');
 const { sendOtpEmail } = require('../utils/mailer');
 
 const OTP_TTL_MS = 20 * 60 * 1000;
@@ -12,57 +11,6 @@ const refreshCookieOptions = {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'None' : 'Lax',
-};
-
-const register = async (req, res) => {
-    const { username, email, password, fullName, address, mobileNumber } = req.body;
-    if (!username || !email || !password || !fullName || !address || !mobileNumber) {
-        return res.status(400).json({ 'message': 'All the fields are required.' });
-    }
-
-    try {
-        const searchUsername = await global.db.query('SELECT id,username FROM users WHERE username = ?', [username]);
-        if (searchUsername[0]) return res.status(409).json({ 'message': "This username is already taken." });
-
-        const searchEmail = await global.db.query('SELECT id,email FROM users WHERE email = ?', [email]);
-        if (searchEmail[0]) return res.status(409).json({ 'message': "This email is already taken." });
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const userId = generateUserID(15);
-
-        await global.db.query(
-            'INSERT INTO users (id,username,email,password,fullName,address,mobileNumber,isVerified) VALUES (?,?,?,?,?,?,?,?)',
-            [userId, username, email, hashedPassword, fullName, address, mobileNumber, 0]
-        );
-
-        try {
-            await global.db.query(
-                'INSERT INTO notifications (title, description, isRead) VALUES (?, ?, 0)',
-                ['New user registration', `${username} just signed up and is pending admin approval.`]
-            );
-        } catch (notifyErr) {
-            console.error('[register] Failed to create signup notification:', notifyErr.message);
-        }
-
-        // Every user gets their own pet-house device slot right away, so
-        // Flood Monitoring can list them immediately (shows "no data yet"
-        // until a real ESP32 provisioned with this ID actually connects).
-        try {
-            await global.db.query(
-                'INSERT INTO esp32 (esp32_id, threshold, wifi_ssid, wifi_pass, userId) VALUES (?, ?, ?, ?, ?)',
-                [`esp32-${userId}`, 2, '', '', userId]
-            );
-        } catch (deviceErr) {
-            console.error('[register] Failed to create placeholder device:', deviceErr.message);
-        }
-
-        res.status(201).json({ 'success': `Account created! An administrator will review and approve your account before you can log in.` });
-    } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ 'message': 'This username or email is already taken.' });
-        }
-        res.status(500).json({ 'message': err.message });
-    }
 };
 
 const login = async (req, res) => {
@@ -76,7 +24,11 @@ const login = async (req, res) => {
         const match = await bcrypt.compare(password, searchUser[0].password);
         if (match) {
             if (!searchUser[0].isVerified) {
-                return res.status(403).json({ 'message': 'Your account is pending admin approval. Please wait for an administrator to confirm your registration before logging in.' });
+                const latest = await global.db.query('SELECT status, rejectReason FROM orders WHERE userId = ? ORDER BY id DESC LIMIT 1', [searchUser[0].id]);
+                if (latest[0]?.status === 'rejected') {
+                    return res.status(403).json({ 'message': `Your order could not be approved: ${latest[0].rejectReason}. Please contact HydroLift.` });
+                }
+                return res.status(403).json({ 'message': 'Your order is still being reviewed. We are checking your ID, and you can log in once it is approved.' });
             }
 
             const roles = searchUser[0].roles.split(',');
@@ -84,7 +36,11 @@ const login = async (req, res) => {
             const accessToken = jwt.sign(
                 {"user": {
                     "username": searchUser[0].username,
-                    "roles": roles
+                    "roles": roles,
+                    // Customers who ordered online stay locked out of the app until
+                    // they enter their serial code. Rows without the column count as
+                    // activated, so a database that isn't migrated yet still works.
+                    "activated": Number(searchUser[0].isActivated ?? 1) !== 0
                 }},
                 process.env.ACCESSTOKEN_SECRET,
                 { expiresIn: '10s' }
@@ -146,7 +102,8 @@ const refreshToken = async (req, res) => {
             const accessToken = jwt.sign(
                 {"user": {
                     "username": decoded.username,
-                    "roles": roles
+                    "roles": roles,
+                    "activated": Number(searchUser[0].isActivated ?? 1) !== 0
                 }},
                 process.env.ACCESSTOKEN_SECRET,
                 { expiresIn: '10s' }
@@ -234,4 +191,4 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { register, login, logout, refreshToken, forgotPassword, resetPassword };
+module.exports = { login, logout, refreshToken, forgotPassword, resetPassword };

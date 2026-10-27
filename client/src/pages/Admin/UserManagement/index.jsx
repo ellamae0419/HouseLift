@@ -19,6 +19,14 @@ import TextField from '@mui/material/TextField';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { Link } from 'react-router-dom';
+
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!*@#$%]).{8,24}$/;
+const mobileRegex = /^09\d{9}$/;
+
+const EMPTY_FORM = { fullName: '', username: '', email: '', password: '', address: '', mobileNumber: '', roles: 'user' };
+
+const fieldSx = { '& .MuiInputBase-input': { color: 'var(--heading)' }, '& .MuiInputLabel-root': { color: 'var(--text)' }, '& .MuiOutlinedInput-root': { backgroundColor: 'var(--background)' } };
 
 export const UserManagement = () => {
     setTitle('User Management');
@@ -27,7 +35,7 @@ export const UserManagement = () => {
     const [loading, setLoading] = React.useState(false);
     const [dialogOpen, setDialogOpen] = React.useState(false);
     const [editingUser, setEditingUser] = React.useState(null);
-    const [form, setForm] = React.useState({ username: '', email: '', password: '', roles: 'user' });
+    const [form, setForm] = React.useState(EMPTY_FORM);
     const [error, setError] = React.useState('');
 
     const loadUsers = async () => {
@@ -49,28 +57,54 @@ export const UserManagement = () => {
 
     const openAddDialog = () => {
         setEditingUser(null);
-        setForm({ username: '', email: '', password: '', roles: 'user' });
+        setForm(EMPTY_FORM);
+        setError('');
         setDialogOpen(true);
     };
 
     const openEditDialog = (user) => {
         setEditingUser(user);
-        setForm({ username: user.username, email: user.email, password: '', roles: user.roles || 'user' });
+        setForm({
+            fullName: user.fullName || '',
+            username: user.username,
+            email: user.email,
+            password: '',
+            address: user.address || '',
+            mobileNumber: user.mobileNumber || '',
+            roles: user.roles || 'user',
+        });
+        setError('');
         setDialogOpen(true);
     };
 
     const submitForm = async () => {
         setError('');
-        if (!form.username || !form.email || (!editingUser && !form.password)) {
-            setError('Username, email and password are required');
+        if (!form.username || !form.email) {
+            setError('Username and email are required');
             return;
         }
+        if (form.mobileNumber && !mobileRegex.test(form.mobileNumber)) {
+            setError('Mobile number must be 11 digits starting with 09');
+            return;
+        }
+        if (!editingUser) {
+            if (!form.fullName.trim() || !form.address.trim() || !form.mobileNumber) {
+                setError('Full name, address and mobile number are required — the mobile number is where flood texts are sent');
+                return;
+            }
+            if (!passwordRegex.test(form.password)) {
+                setError('Password must be 8 to 24 characters with an uppercase letter, a lowercase letter, a number and a special character (! * @ # $ %)');
+                return;
+            }
+        }
+
+        const details = { fullName: form.fullName, address: form.address, mobileNumber: form.mobileNumber };
 
         try {
             if (editingUser) {
-                await axiosPrivate.put(`/users/${editingUser.id}`, { username: form.username, email: form.email, roles: form.roles });
+                await axiosPrivate.put(`/users/${editingUser.id}`, { username: form.username, email: form.email, roles: form.roles, ...details });
             } else {
-                await axiosPrivate.post('/users', { username: form.username, email: form.email, password: form.password, roles: form.roles });
+                await axiosPrivate.post('/users', { username: form.username, email: form.email, password: form.password, roles: form.roles, ...details });
             }
 
             setDialogOpen(false);
@@ -116,7 +150,7 @@ export const UserManagement = () => {
     return (
         <>
             <h1 className="page-title">User management</h1>
-            <p className="page-subtitle">Review signups and manage access for HydroLift accounts.</p>
+            <p className="page-subtitle">Create accounts for your users and manage their access to HydroLift.</p>
 
             <Card sx={{ backgroundColor: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', boxShadow: 'none' }}>
                 <CardContent>
@@ -153,6 +187,7 @@ export const UserManagement = () => {
                                 <TableCell sx={{ color: 'var(--hl-ink-secondary)', fontWeight: 600 }}>Username</TableCell>
                                 <TableCell sx={{ color: 'var(--hl-ink-secondary)', fontWeight: 600 }}>Email</TableCell>
                                 <TableCell sx={{ color: 'var(--hl-ink-secondary)', fontWeight: 600 }}>Role</TableCell>
+                                <TableCell sx={{ color: 'var(--hl-ink-secondary)', fontWeight: 600 }}>Serial code</TableCell>
                                 <TableCell sx={{ color: 'var(--hl-ink-secondary)', fontWeight: 600 }}>Status</TableCell>
                                 <TableCell sx={{ color: 'var(--hl-ink-secondary)', fontWeight: 600 }}>Action</TableCell>
                             </TableRow>
@@ -165,6 +200,11 @@ export const UserManagement = () => {
                                         <TableCell sx={{ color: 'var(--hl-ink)' }}>{user.username}</TableCell>
                                         <TableCell sx={{ color: 'var(--hl-ink)', fontFamily: 'var(--font-mono)' }}>{user.email}</TableCell>
                                         <TableCell sx={{ color: 'var(--hl-ink)' }}>{user.roles}</TableCell>
+                                        <TableCell sx={{ color: 'var(--hl-ink)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+                                            {user.serialCode
+                                                ? <>{user.serialCode}{user.serialStatus === 'redeemed' && <span style={{ color: 'var(--hl-ink-secondary)', fontFamily: 'inherit' }}> (used)</span>}</>
+                                                : '—'}
+                                        </TableCell>
                                         <TableCell>
                                             <span style={{
                                                 fontSize: '12px',
@@ -174,12 +214,24 @@ export const UserManagement = () => {
                                                 color: pending ? 'var(--hl-warning-ink)' : 'var(--hl-success-ink)',
                                                 background: pending ? 'var(--hl-warning-bg)' : 'var(--hl-success-bg)',
                                             }}>
-                                                {pending ? 'Pending' : 'Approved'}
+                                                {pending ? (user.hasPendingOrder ? 'ID check' : 'Pending') : 'Approved'}
                                             </span>
                                         </TableCell>
                                         <TableCell className="maintenance-table__action-col">
                                             <div className="maintenance-table__actions">
-                                                {pending ? (
+                                                {pending && user.hasPendingOrder ? (
+                                                    <Button
+                                                        className="maintenance-table__action-btn"
+                                                        component={Link}
+                                                        to="/admin/orders"
+                                                        sx={{
+                                                            backgroundColor: 'var(--hl-accent)', color: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none',
+                                                            '&:hover': { backgroundColor: 'var(--hl-secondary-dark)' },
+                                                        }}
+                                                    >
+                                                        Review ID
+                                                    </Button>
+                                                ) : pending ? (
                                                     <>
                                                         <Button
                                                             className="maintenance-table__action-btn"
@@ -233,15 +285,23 @@ export const UserManagement = () => {
             </Card>
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm" sx={{ '& .MuiPaper-root': { backgroundColor: 'var(--background-card)', color: 'var(--heading)' } }}>
-                <DialogTitle sx={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{editingUser ? 'Edit user' : 'Add user'}</DialogTitle>
+                <DialogTitle sx={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{editingUser ? 'Edit user' : 'Create account'}</DialogTitle>
                 <DialogContent>
+                    <TextField
+                        label="Full name"
+                        fullWidth
+                        margin="normal"
+                        value={form.fullName}
+                        onChange={(e) => setForm((state) => ({ ...state, fullName: e.target.value }))}
+                        sx={fieldSx}
+                    />
                     <TextField
                         label="Username"
                         fullWidth
                         margin="normal"
                         value={form.username}
                         onChange={(e) => setForm((state) => ({ ...state, username: e.target.value }))}
-                        sx={{ '& .MuiInputBase-input': { color: 'var(--heading)' }, '& .MuiInputLabel-root': { color: 'var(--text)' }, '& .MuiOutlinedInput-root': { backgroundColor: 'var(--background)' } }}
+                        sx={fieldSx}
                     />
                     <TextField
                         label="Email"
@@ -249,7 +309,7 @@ export const UserManagement = () => {
                         margin="normal"
                         value={form.email}
                         onChange={(e) => setForm((state) => ({ ...state, email: e.target.value }))}
-                        sx={{ '& .MuiInputBase-input': { color: 'var(--heading)' }, '& .MuiInputLabel-root': { color: 'var(--text)' }, '& .MuiOutlinedInput-root': { backgroundColor: 'var(--background)' } }}
+                        sx={fieldSx}
                     />
                     {!editingUser && (
                         <TextField
@@ -259,8 +319,33 @@ export const UserManagement = () => {
                             margin="normal"
                             value={form.password}
                             onChange={(e) => setForm((state) => ({ ...state, password: e.target.value }))}
-                            sx={{ '& .MuiInputBase-input': { color: 'var(--heading)' }, '& .MuiInputLabel-root': { color: 'var(--text)' }, '& .MuiOutlinedInput-root': { backgroundColor: 'var(--background)' } }}
+                            helperText="Give this username and password to the user. They can change the password later in their profile."
+                            sx={fieldSx}
                         />
+                    )}
+                    <TextField
+                        label="Mobile number"
+                        placeholder="09XXXXXXXXX"
+                        fullWidth
+                        margin="normal"
+                        value={form.mobileNumber}
+                        onChange={(e) => setForm((state) => ({ ...state, mobileNumber: e.target.value }))}
+                        helperText="Flood alert texts are sent to this number."
+                        sx={fieldSx}
+                    />
+                    <TextField
+                        label="Address"
+                        placeholder="Street, barangay, city, province"
+                        fullWidth
+                        margin="normal"
+                        value={form.address}
+                        onChange={(e) => setForm((state) => ({ ...state, address: e.target.value }))}
+                        sx={fieldSx}
+                    />
+                    {!editingUser && (
+                        <Typography variant="body2" sx={{ color: 'var(--text-low)', mt: 1 }}>
+                            The user's pet-house device is set up automatically with this account.
+                        </Typography>
                     )}
                     <Select fullWidth value={form.roles} onChange={(e) => setForm((state) => ({ ...state, roles: e.target.value }))} sx={{ mt: 2 }}>
                         <MenuItem value="user">User</MenuItem>

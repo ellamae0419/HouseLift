@@ -1,0 +1,71 @@
+.wrap {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- Top bar ---------- */
+.topbar { background: var(--navy); color: #c5d3dd; font-size: 0.85rem; }
+.topbar .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
+.topbar b { color: var(--white); font-weight: 500; user-select: all; }
+.topbar a { color: var(--white); font-weight: 500; text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+
+/* ---------- Header ---------- */
+.header { position: sticky; top: 0; z-index: 9; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.header .wrap { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 14px; padding-bottom: 14px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--display); font-weight: 700; font-size: 1.2rem; color: var(--navy); }
+.logo svg { width: 34px; height: 34px; flex: none; }
+.logo small { display: block; font: 500 0.7rem var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-top: -2px; }
+.right { display: flex; align-items: center; gap: 26px; }
+.menu { display: flex; align-items: center; gap: 26px; }
+.menu a { text-decoration: none; font-weight: 500; font-size: 0.95rem; color: var(--muted); padding: 6px 0; border-bottom: 2px solid transparent; }
+.menu a:hover { color: var(--navy); }
+.menu a.active { color: var(--navy); border-bottom-color: var(--amber); }
+.right > .btn { padding: 10px 18px; }
+.menuBtn { display: none; background: transparent; border: 1.5px solid var(--navy); color: var(--navy); font: 600 0.9rem var(--body); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+
+/* ---------- Buttons (shared by every shop page) ---------- */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--amber); color: var(--navy);
+    font: 600 1rem var(--body); padding: 13px 24px; border-radius: 10px;
+    text-decoration: none; border: 0; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+}
+.btn:hover { background: var(--amber-deep); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btnOutline { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); }
+.btnOutline:hover { background: var(--navy); color: var(--white); }
+.btnWide { width: 100%; }
+
+/* ---------- Footer ---------- */
+.footer { background: var(--navy); color: #a9bccb; font-size: 0.93rem; }
+.cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; padding-top: 56px; padding-bottom: 40px; }
+.footer h4 { color: var(--white); font: 600 0.8rem var(--body); letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 14px; }
+.footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.footer a { text-decoration: none; }
+.footer a:hover { color: var(--white); }
+.footer .logo { color: var(--white); }
+.footer .logo small { color: #a9bccb; }
+.about { margin-top: 14px; max-width: 30ch; }
+.footer b { color: var(--white); font-weight: 500; user-select: all; word-break: break-word; }
+.legal { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.legal .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); font-size: 0.85rem; }
+
+@media (max-width: 900px) {
+    .right { gap: 10px; }
+    .menuBtn { display: inline-block; }
+    /* On a phone the menu folds into a list under the header. */
+    .menu { display: none; position: absolute; left: 0; right: 0; top: 100%; flex-direction: column; align-items: stretch; gap: 0; background: var(--white); border-bottom: 1px solid var(--line); box-shadow: 0 18px 30px -20px rgba(24, 45, 68, 0.4); padding: 8px max(20px, env(safe-area-inset-left, 0px)) 14px; }
+    .menuOpen { display: flex; }
+    .menu a { padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 1.02rem; }
+    .menu a:last-child { border-bottom: 0; }
+    .menu a.active { border-bottom-color: var(--line); color: var(--teal-deep); font-weight: 600; }
+    .cols { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) {
+    .logo small { display: none; }
+    .cols { grid-template-columns: 1fr; }
+    .topbar .wrap { justify-content: center; text-align: center; }
+}

@@ -75,6 +75,30 @@ const sendApprovalEmail = async ({ to, username }) => {
     console.log('\x1b[32m%s\x1b[0m', `[mailer] Approval email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
 };
 
+const sendOrderApprovedEmail = async ({ to, username }) => {
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:1234';
+    const loginLink = `${clientUrl}/login`;
+
+    if (!isConfigured()) {
+        console.log('\x1b[33m%s\x1b[0m', `[mailer] MAILJET_API_KEY/MAILJET_SECRET_KEY not configured — skipping order approval email.`);
+        console.log('\x1b[36m%s\x1b[0m', `[mailer] ${username} <${to}> had their ID approved and can now log in.`);
+        return;
+    }
+
+    const data = await sendEmail({
+        to,
+        subject: 'Your HydroLift order has been approved',
+        html: `
+            <p>Hi ${username},</p>
+            <p>We checked your ID and approved your HydroLift order. You can now log in.</p>
+            <p>When you pay for and receive your HydroLift, we will give you a serial code. Enter it after you log in to link the unit to your account.</p>
+            <p><a href="${loginLink}">Log in to HydroLift</a></p>
+        `,
+    });
+
+    console.log('\x1b[32m%s\x1b[0m', `[mailer] Order approval email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
+};
+
 const sendOtpEmail = async ({ to, otp }) => {
     if (!isConfigured()) {
         console.log('\x1b[33m%s\x1b[0m', `[mailer] MAILJET_API_KEY/MAILJET_SECRET_KEY not configured — skipping OTP email.`);
@@ -95,4 +119,4 @@ const sendOtpEmail = async ({ to, otp }) => {
     console.log('\x1b[32m%s\x1b[0m', `[mailer] OTP email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
 };
 
-module.exports = { sendApprovalEmail, sendOtpEmail };
+module.exports = { sendApprovalEmail, sendOrderApprovedEmail, sendOtpEmail };

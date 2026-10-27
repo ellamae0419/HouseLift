@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar/index";
 import { MobileTabBar } from "./MobileTabBar/index";
 import { AppTopBar } from "./AppTopBar/index";
 import { ConnectivityBanner } from "./ConnectivityBanner/index";
 import useAuth from "../hooks/auth/useAuth";
-import { hasAnyRole } from "../utils/roles";
+import { hasAnyRole, isActivated } from "../utils/roles";
 
 const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,6 +16,11 @@ const Layout = () => {
     useEffect(() => {
         setSidebarOpen(false);
     }, [location.pathname]);
+
+    // A customer who has not entered their serial code yet has nothing to see.
+    if (auth?.accessToken && !isAdmin && !isActivated(auth)) {
+        return <Navigate to="/activate" replace />;
+    }
 
     if (!isAdmin) {
         return (

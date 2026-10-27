@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const checkRoles = require('../middlewares/checkRoles');
-const { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser } = require('../controllers/usersController');
+const { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser, activateDevice } = require('../controllers/usersController');
+const { activateLimiter } = require('../middlewares/rateLimiters');
 const { getThreshold, putThreshold, postLift, getStatus } = require('../controllers/deviceController');
 
 // Own-profile and device routes must be declared before "/:id" so their
 // fixed paths are never matched as an :id param.
 router.get("/me", getOwnProfile);
 router.put("/me", updateOwnProfile);
+router.post("/activate", activateLimiter, activateDevice);
 
 // Browser-facing device routes. Regular users always act on their own
 // device; admins may pass ?esp32_id= to target any house.

@@ -1,8 +1,6 @@
 import "../../assets/main.css";
 import * as React from "react";
 import { setTitle } from "../../utils/generalFunctions";
-import Box from "@mui/material/Box";
-import Slider from "@mui/material/Slider";
 import Container from "../../components/Container";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -34,9 +32,6 @@ export const Settings = () => {
   setTitle("Settings");
   const axiosPrivate = useAxiosPrivate();
   const [theme, setThemeState] = React.useState(getStoredTheme());
-  const [value, setValue] = React.useState(2);
-  const [persistedValue, setPersistedValue] = React.useState(2);
-  const [loading, setLoading] = React.useState(false);
 
   const [users, setUsers] = React.useState([]);
   const [usersLoading, setUsersLoading] = React.useState(false);
@@ -52,25 +47,6 @@ export const Settings = () => {
   const [formError, setFormError] = React.useState('');
   const [profileError, setProfileError] = React.useState('');
   const isAdmin = hasAnyRole(auth, ['admin']);
-
-  React.useEffect(() => {
-    const loadThreshold = async () => {
-      try {
-        const response = await axiosPrivate.get('/users/esp32-threshold');
-
-        const threshold = Number(response?.data?.threshold);
-
-        if (!Number.isNaN(threshold)) {
-          setValue(threshold);
-          setPersistedValue(threshold);
-        }
-      } catch (err) {
-        console.error('Error loading threshold:', err.response?.data?.message);
-      }
-    };
-
-    loadThreshold();
-  }, [axiosPrivate]);
 
   React.useEffect(() => {
     setUsers([]);
@@ -93,27 +69,6 @@ export const Settings = () => {
     const nextTheme = event.target.checked ? 'light' : 'dark';
     setThemeState(nextTheme);
     persistTheme(nextTheme);
-  };
-
-  const handleSliderChange = (_event, newValue) => {
-    setValue(newValue);
-  };
-
-  const handleSliderCommit = async (_event, newValue) => {
-    setLoading(true);
-
-    try {
-      await axiosPrivate.put('/users/esp32-threshold', {
-        threshold: newValue
-      });
-      setPersistedValue(newValue);
-      console.log('Threshold updated to:', newValue);
-    } catch (err) {
-      console.error('Error updating threshold:', err.response?.data?.message);
-      setValue(persistedValue);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const openAddDialog = () => {
@@ -296,80 +251,9 @@ export const Settings = () => {
 
           <Card sx={{ backgroundColor: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', boxShadow: 'none' }}>
             <CardContent>
-              <Typography
-                variant="h6"
-                component="div"
-                sx={{
-                  display: 'block',
-                  mb: 2,
-                  color: 'var(--hl-ink)',
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: '1.125rem',
-                  fontWeight: 600,
-                  letterSpacing: '0',
-                  lineHeight: 1.2,
-                }}
-              >
-                Flood threshold: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--hl-accent)' }}>{value}</span>
-              </Typography>
-              <Box sx={{ width: 300 }}>
-                <Slider
-                  value={value}
-                  onChange={handleSliderChange}
-                  onChangeCommitted={handleSliderCommit}
-                  disabled={loading}
-                  valueLabelDisplay="auto"
-                  step={1}
-                  marks
-                  min={0}
-                  max={4}
-                  sx={{
-                    color: 'var(--hl-accent)',
-                    height: 6,
-                    '& .MuiSlider-thumb': {
-                      width: 16,
-                      height: 16,
-                      backgroundColor: '#ffffff',
-                      border: '2px solid var(--hl-accent)',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                      '&:hover, &.Mui-focusVisible': { boxShadow: '0 0 0 6px color-mix(in srgb, var(--hl-accent) 16%, transparent)' },
-                    },
-                    '& .MuiSlider-track': {
-                      backgroundColor: 'var(--hl-accent)',
-                      border: 'none',
-                    },
-                    '& .MuiSlider-rail': {
-                      backgroundColor: '#DCEAE7',
-                      opacity: 1,
-                    },
-                    '& .MuiSlider-mark': {
-                      backgroundColor: '#DCEAE7',
-                      opacity: 1,
-                      width: 4,
-                      height: 4,
-                      borderRadius: '50%',
-                    },
-                    '& .MuiSlider-mark.MuiSlider-markActive': {
-                      backgroundColor: 'var(--hl-accent)',
-                      opacity: 1,
-                    },
-                    '&.Mui-disabled': {
-                      '& .MuiSlider-track': { backgroundColor: 'var(--hl-accent)' },
-                      '& .MuiSlider-rail': { backgroundColor: '#DCEAE7' },
-                      '& .MuiSlider-thumb': { backgroundColor: '#ffffff', border: '2px solid var(--hl-accent)' },
-                    },
-                    opacity: loading ? 0.6 : 1,
-                  }}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ backgroundColor: 'var(--hl-card-bg)', border: '1px solid var(--hl-border)', borderRadius: '14px', boxShadow: 'none' }}>
-            <CardContent>
               <Typography variant="h6" sx={{ color: 'var(--hl-ink)', fontFamily: 'var(--font-heading)', fontWeight: 600, mb: 1 }}>Pet house settings</Typography>
               <Typography variant="body2" sx={{ color: 'var(--hl-ink-secondary)', mb: 2 }}>
-                Set the water level that triggers automatic elevation of the pet house. Account details are now in Profile.
+                Account details are now in Profile.
               </Typography>
               <Link href="/profile" underline="hover" sx={{ color: 'var(--hl-accent)', fontWeight: 600 }}>Open profile</Link>
             </CardContent>
