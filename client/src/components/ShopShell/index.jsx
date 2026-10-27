@@ -48,7 +48,7 @@ export const ShopShell = ({ children }) => {
         <>
             <div className={styles.topbar}>
                 <div className={styles.wrap}>
-                    <span>Order online, pay in person when you receive your HydroLift</span>
+                    <span>Sold face to face only. Reserve online, then pay and pick up in person.</span>
                     {CONTACT.phone
                         ? <span>Call or Viber <b>{CONTACT.phone}</b></span>
                         : appBase && <span>Already a customer? <a href={appUrl('/login')}>Log in</a></span>}
@@ -63,7 +63,7 @@ export const ShopShell = ({ children }) => {
                             {PAGES.map((p) => <NavLink key={p.to} to={p.to} className={linkClass}>{p.label}</NavLink>)}
                             {appBase && <a href={appUrl('/login')}>Log in</a>}
                         </nav>
-                        <Link to="/buy" className={styles.btn}>Order now</Link>
+                        <Link to="/buy" className={styles.btn}>Reserve now</Link>
                         <button
                             type="button" className={styles.menuBtn} aria-expanded={open} aria-controls="site-menu"
                             onClick={() => setOpen((v) => !v)}
@@ -87,8 +87,8 @@ export const ShopShell = ({ children }) => {
                         <ul>
                             <li><Link to="/product">Product</Link></li>
                             <li><Link to="/specifications">Specifications</Link></li>
-                            <li><Link to="/how-it-works">How to order</Link></li>
-                            <li><Link to="/buy">Order form</Link></li>
+                            <li><Link to="/how-it-works">How to buy</Link></li>
+                            <li><Link to="/buy">Reservation form</Link></li>
                         </ul>
                     </div>
                     <div>
@@ -98,7 +98,7 @@ export const ShopShell = ({ children }) => {
                             {CONTACT.facebook && <li>Facebook<br /><b>{CONTACT.facebook}</b></li>}
                             {CONTACT.email && <li>Email<br /><b>{CONTACT.email}</b></li>}
                             {!CONTACT.phone && !CONTACT.facebook && !CONTACT.email && (
-                                <li>Place an order and we will contact you on the mobile number you give.</li>
+                                <li>Reserve a unit and we will contact you on the mobile number you give.</li>
                             )}
                         </ul>
                     </div>
@@ -115,7 +115,7 @@ export const ShopShell = ({ children }) => {
                 <div className={styles.legal}>
                     <div className={styles.wrap}>
                         <span>© {new Date().getFullYear()} HydroLift</span>
-                        <span>Order online. Pay in person.</span>
+                        <span>Face to face only. Pay and pick up in person.</span>
                     </div>
                 </div>
             </footer>

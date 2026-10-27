@@ -72,7 +72,7 @@ const placeOrder = async (req, res) => {
     if (!USERNAME_REGEX.test(username || '')) return res.status(400).json({ message: 'Username must be 4 to 19 characters, start with a letter, and use only letters, numbers, - or _.' });
     if (!EMAIL_REGEX.test(email || '') || email.length > 75) return res.status(400).json({ message: 'Enter a valid email address.' });
     if (!MOBILE_REGEX.test(mobileNumber || '')) return res.status(400).json({ message: 'Mobile number must be 11 digits starting with 09.' });
-    if (!String(address || '').trim() || String(address).length > 255) return res.status(400).json({ message: 'Enter your delivery address.' });
+    if (!String(address || '').trim() || String(address).length > 255) return res.status(400).json({ message: 'Enter your home address.' });
     if (!PASSWORD_REGEX.test(password || '')) return res.status(400).json({ message: 'Password must be 8 to 24 characters with an uppercase letter, a lowercase letter, a number and a special character (! * @ # $ %).' });
     if (!Object.prototype.hasOwnProperty.call(SIZES, size)) return res.status(400).json({ message: 'Choose a size: Small, Medium or Large.' });
     if (!ID_TYPES[idType]) return res.status(400).json({ message: 'Choose the type of ID you are uploading.' });

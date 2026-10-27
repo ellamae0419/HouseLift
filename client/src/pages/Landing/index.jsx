@@ -56,9 +56,9 @@ const HOW = [
 ];
 
 const BUY_STEPS = [
-    { title: 'Order online', text: 'Fill in the order form and upload a photo of a valid ID.' },
-    { title: 'We check your ID', text: 'We approve your order, and you can log in to your account.' },
-    { title: 'Pay in person', text: 'You pay when you receive your HydroLift. We give you a serial code with it.' },
+    { title: 'Reserve online', text: 'Fill in the form and upload a photo of a valid ID. This only reserves your unit. Nothing is paid or delivered online.' },
+    { title: 'We check your ID', text: 'We check your ID and approve your reservation, and you can log in to your account.' },
+    { title: 'Pay and pick up in person', text: 'You meet us, pay and collect your HydroLift. We give you a serial code with it.' },
     { title: 'Activate it', text: 'Log in and enter the serial code. This links the unit to your account.' },
 ];
 
@@ -83,12 +83,12 @@ const HOUSE = [
 const FAQS = [
     { q: 'Which size should I choose?', a: 'Your pet should be able to stand, turn around and lie fully stretched out inside. If your pet is between sizes, choose the larger one. Small suits pets up to 7 kg, Medium up to 18 kg and Large up to 40 kg.' },
     { q: 'What if the flood rises higher than the lift?', a: 'HydroLift raises the house as far as its lift can go. If the water rises past that, it can no longer keep the house dry, so please move your pet to a safe place when you get the flood text. In a strong typhoon, follow local advice and bring your pet to safety.' },
-    { q: 'Do I pay online?', a: 'No. You pay in person when you receive your HydroLift. The website only takes your order and your ID.' },
-    { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. Only HydroLift administrators can see your ID, and you agree to this when you order.' },
+    { q: 'Can I buy online?', a: 'No. HydroLift is sold face to face only. There is no online payment and no delivery. You pay and pick up your unit in person. The website only takes your reservation and your ID.' },
+    { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. Only HydroLift administrators can see your ID, and you agree to this when you reserve.' },
     { q: 'What is the serial code?', a: 'A code like HL-7QK2-M9XD-4PWH that we give you when you pay and receive your unit. Entering it after you log in proves you own the unit. It works only for your account.' },
     { q: 'Will it still lift if my WiFi goes down?', a: 'Sensing and lifting run on the unit itself, so a dropped connection does not stop it from lifting. The dashboard, history and text alerts need WiFi.' },
-    { q: 'How many texts will I get?', a: 'One when an automatic lift happens, and then no more than one every ten minutes. They go to the mobile number you give when you order.' },
-    { q: 'What if my order is not approved?', a: 'When you try to log in you will see the reason, for example that the ID photo was not clear. Contact us and we will sort it out.' },
+    { q: 'How many texts will I get?', a: 'One when an automatic lift happens, and then no more than one every ten minutes. They go to the mobile number you give when you reserve.' },
+    { q: 'What if my reservation is not approved?', a: 'When you try to log in you will see the reason, for example that the ID photo was not clear. Contact us and we will sort it out.' },
 ];
 
 const Price = ({ price }) => (
@@ -163,11 +163,11 @@ export const Landing = () => {
                                 HydroLift senses rising water and lifts your pet&apos;s house on its own. You get a text when it lifts, and you can watch the water level from your phone.
                             </p>
                             <div className={styles.ctas}>
-                                <Link to="/buy" className={shellStyles.btn}>Order now</Link>
+                                <Link to="/buy" className={shellStyles.btn}>Reserve now</Link>
                                 <Link to="/how-it-works" className={`${shellStyles.btn} ${shellStyles.btnOutline}`}>See how it works</Link>
                             </div>
                             <ul className={styles.checks}>
-                                <li><Tick />Pay in person</li>
+                                <li><Tick />Buy in person</li>
                                 <li><Tick />Lifts on its own</li>
                                 <li><Tick />Text alerts</li>
                             </ul>
@@ -195,25 +195,25 @@ export const Landing = () => {
                         <div className={styles.stat}><b>4 actuators</b><span>lift the platform</span></div>
                         <div className={styles.stat}><b>About 10 seconds</b><span>from low to fully raised</span></div>
                         <div className={styles.stat}><b>Text alert</b><span>when it lifts</span></div>
-                        <div className={styles.stat}><b>Pay on receipt</b><span>no online payment</span></div>
+                        <div className={styles.stat}><b>Face to face</b><span>no online selling</span></div>
                     </div>
                 </div>
 
-                <section className={`${styles.section} ${styles.tint}`} aria-label="Order">
+                <section className={`${styles.section} ${styles.tint}`} aria-label="Reserve">
                     <div className={styles.wrap}>
                         <div className={styles.orderBox}>
                             <div>
-                                <span className={styles.eyebrow}>Order</span>
+                                <span className={styles.eyebrow}>Reserve</span>
                                 <h2>Get your HydroLift before the next flood.</h2>
-                                <p>The order form takes a few minutes. You pay nothing online.</p>
+                                <p>The form takes a few minutes. HydroLift is sold face to face only, so you pay and pick up in person. Nothing is paid online.</p>
                                 <div className={styles.orderAction}>
-                                    <Link to="/buy" className={shellStyles.btn}>Open the order form</Link>
+                                    <Link to="/buy" className={shellStyles.btn}>Open the reservation form</Link>
                                 </div>
                             </div>
                             <ul className={styles.needs} aria-label="What you need">
                                 <li><Tick fill="#7fd1cc" />A valid ID to photograph</li>
                                 <li><Tick fill="#7fd1cc" />Your mobile number for flood texts</li>
-                                <li><Tick fill="#7fd1cc" />Your delivery address</li>
+                                <li><Tick fill="#7fd1cc" />Your home address</li>
                                 <li><Tick fill="#7fd1cc" />A username and password</li>
                             </ul>
                         </div>
@@ -281,7 +281,7 @@ export const Product = () => {
                                     </dl>
                                     <div className={styles.bottom}>
                                         <Price price={priceFor(size.value)} />
-                                        <Link to={`/buy?size=${size.value}`} className={shellStyles.btn}>Order {size.name}</Link>
+                                        <Link to={`/buy?size=${size.value}`} className={shellStyles.btn}>Reserve {size.name}</Link>
                                     </div>
                                 </article>
                             ))}
@@ -314,13 +314,13 @@ export const HowItWorks = () => {
                 <section className={`${styles.section} ${styles.tint}`}>
                     <div className={styles.wrap}>
                         <div className={styles.head}>
-                            <span className={styles.eyebrow}>How to order</span>
-                            <h2>From order form to doorstep</h2>
-                            <p>You order online, then pay in person when you receive your unit.</p>
+                            <span className={styles.eyebrow}>How to buy</span>
+                            <h2>From reservation to pick-up</h2>
+                            <p>HydroLift is sold face to face only. You reserve online, then pay and pick up your unit in person.</p>
                         </div>
                         <Steps items={BUY_STEPS} />
                         <p className={styles.note}>
-                            <strong>Why we ask for an ID.</strong> It tells us who owns each unit. Only HydroLift administrators can see it, and you agree to this when you order.
+                            <strong>Why we ask for an ID.</strong> It tells us who owns each unit. Only HydroLift administrators can see it, and you agree to this when you reserve.
                         </p>
                     </div>
                 </section>
@@ -404,7 +404,7 @@ export const Contact = () => {
                 <section className={styles.section}>
                     <div className={styles.wrap}>
                         <PageHead eyebrow="Contact" title="Get in touch">
-                            Questions about HydroLift, your order or your unit.
+                            Questions about HydroLift, your reservation or your unit.
                         </PageHead>
                         {items.length > 0 && (
                             <div className={styles.contactGrid}>
@@ -417,10 +417,10 @@ export const Contact = () => {
                             </div>
                         )}
                         <p className={styles.note}>
-                            <strong>After you order,</strong> we contact you on the mobile number and email you give on the order form, to confirm your order and arrange payment in person.
+                            <strong>After you reserve,</strong> we contact you on the mobile number and email you give on the form, to confirm your reservation and arrange a time to meet, pay and pick up your unit.
                         </p>
                         <div className={styles.contactActions}>
-                            <Link to="/buy" className={shellStyles.btn}>Order now</Link>
+                            <Link to="/buy" className={shellStyles.btn}>Reserve now</Link>
                             {appBase && <a href={appUrl('/login')} className={`${shellStyles.btn} ${shellStyles.btnOutline}`}>Log in to your account</a>}
                         </div>
                     </div>

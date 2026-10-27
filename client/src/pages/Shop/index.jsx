@@ -54,13 +54,13 @@ const prepareIdPhoto = async (file) => {
 const Hint = ({ show, children }) => (show ? <span className={`${styles.hint} ${styles.hintBad}`}>{children}</span> : null);
 
 export const Shop = () => {
-    setTitle('Order HydroLift');
+    setTitle('Reserve HydroLift');
 
     const errRef = useRef();
 
     const [product, setProduct] = useState({ name: 'HydroLift', price: null, sizes: [], idTypes: [] });
 
-    // The product page's "Order now" buttons open this form with a size already chosen.
+    // The product page's "Reserve" buttons open this form with a size already chosen.
     const [params] = useSearchParams();
     const [size, setSize] = useState(() => {
         const wanted = (params.get('size') || '').toUpperCase();
@@ -166,7 +166,7 @@ export const Shop = () => {
             setIdImage('');
         } catch (err) {
             if (!err?.response) setErrMsg("The server didn't respond. Check your connection and try again.");
-            else setErrMsg(err.response?.data?.message || 'We could not place your order.');
+            else setErrMsg(err.response?.data?.message || 'We could not save your reservation.');
             errRef.current?.focus();
         } finally {
             setSubmitting(false);
@@ -182,11 +182,11 @@ export const Shop = () => {
                             <div className={styles.doneMark}>
                                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#182d44" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
                             </div>
-                            <h1>Order received</h1>
-                            <p>{orderId ? `Your order number is #${orderId}. ` : ''}{chosen ? `You ordered a ${chosen.name} HydroLift. ` : ''}We will check your ID and contact you.</p>
+                            <h1>Reservation received</h1>
+                            <p>{orderId ? `Your reservation number is #${orderId}. ` : ''}{chosen ? `You reserved a ${chosen.name} HydroLift. ` : ''}HydroLift is sold face to face only, so we will contact you to arrange a time to meet.</p>
                             <ol className={styles.doneSteps}>
-                                <li>We check your ID. You can log in once it is approved.</li>
-                                <li>You pay in person when you receive your HydroLift.</li>
+                                <li>We check your ID and approve your reservation. You can log in once it is approved.</li>
+                                <li>You pay and pick up your HydroLift in person.</li>
                                 <li>We give you a serial code with your unit.</li>
                                 <li>Log in and enter the serial code to link the unit to your account.</li>
                             </ol>
@@ -206,9 +206,9 @@ export const Shop = () => {
         <ShopShell>
             <main className={styles.page} id="order-form">
                 <div className={styles.wrap}>
-                    <span className={styles.eyebrow}>Order form</span>
-                    <h1 className={styles.title}>Order your HydroLift</h1>
-                    <p className={styles.intro}>Fill in your details and upload a valid ID. You pay in person when you receive your unit.</p>
+                    <span className={styles.eyebrow}>Reservation form</span>
+                    <h1 className={styles.title}>Reserve your HydroLift</h1>
+                    <p className={styles.intro}>Fill in your details and upload a valid ID. HydroLift is sold face to face only: you pay and pick up your unit in person. Nothing is paid or delivered online.</p>
 
                     <div className={styles.box}>
                         <form className={styles.fields} id="order" onSubmit={handleSubmit} noValidate>
@@ -260,7 +260,7 @@ export const Shop = () => {
                             </div>
 
                             <div className={styles.group}>
-                                <h2 className={styles.groupTitle}>Delivery address</h2>
+                                <h2 className={styles.groupTitle}>Home address</h2>
                                 <label className={`${styles.field} ${street && street.trim().length < 2 ? styles.invalid : ''}`} htmlFor="street">
                                     Street / house no.
                                     <input type="text" id="street" autoComplete="street-address" placeholder="e.g. 123 Mabini St."
@@ -340,26 +340,26 @@ export const Shop = () => {
                             </div>
                         </form>
 
-                        <aside className={styles.panel} aria-label="Your order">
+                        <aside className={styles.panel} aria-label="Your reservation">
                             <div className={styles.panelInner}>
-                                <span className={styles.eyebrow}>Your order</span>
+                                <span className={styles.eyebrow}>Your reservation</span>
                                 <div>
                                     <div className={styles.panelName}>{product.name}{chosen ? ` · ${chosen.name}` : ''}</div>
                                     {!chosen && <p className={styles.panelNote}>Choose a size to continue.</p>}
                                     {price
                                         ? <div className={styles.panelPrice}>₱{price.toLocaleString('en-PH')}</div>
                                         : <div className={`${styles.panelPrice} ${styles.panelPriceSmall}`}>Price confirmed when we contact you</div>}
-                                    <p className={styles.panelNote}>Paid in person. Nothing to pay online.</p>
+                                    <p className={styles.panelNote}>Face to face only. Nothing to pay online and no delivery.</p>
                                 </div>
                                 <ol className={styles.next}>
-                                    <li>We check your ID and approve your order.</li>
-                                    <li>You pay in person and receive your unit with a serial code.</li>
+                                    <li>We check your ID and approve your reservation.</li>
+                                    <li>You pay and pick up your unit in person, with a serial code.</li>
                                     <li>You log in and enter the serial code.</li>
                                 </ol>
                                 <div className={styles.panelEnd}>
                                     <p ref={errRef} tabIndex={-1} className={errMsg ? styles.error : ''} role="alert" hidden={!errMsg}>{errMsg}</p>
                                     <button type="submit" form="order" id="placeOrder" className={`${shellStyles.btn} ${shellStyles.btnWide}`} disabled={!canSubmit}>
-                                        {submitting ? 'Placing your order…' : 'Place order'}
+                                        {submitting ? 'Reserving…' : 'Reserve'}
                                     </button>
                                     {appBase && <p className={styles.foot}>Already have an account? <a href={appUrl('/login')}>Log in</a></p>}
                                 </div>

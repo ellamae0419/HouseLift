@@ -124,7 +124,7 @@ export const Login = () => {
                         </button>
                     </form>
 
-                    {shopBase && <div className={styles.footer_link}>Don't have a HydroLift yet? <a href={shopUrl('/buy')}>Buy one here</a></div>}
+                    {shopBase && <div className={styles.footer_link}>Don't have a HydroLift yet? <a href={shopUrl('/buy')}>Reserve one here</a></div>}
                 </div>
             </div>
         </div>
