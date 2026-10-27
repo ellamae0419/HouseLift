@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const checkRoles = require('../middlewares/checkRoles');
-const { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser, activateDevice } = require('../controllers/usersController');
-const { activateLimiter } = require('../middlewares/rateLimiters');
+const { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser, activateDevice, getSmsStatus, sendTestText } = require('../controllers/usersController');
+const { activateLimiter, testSmsLimiter } = require('../middlewares/rateLimiters');
 const { getThreshold, putThreshold, postLift, getStatus } = require('../controllers/deviceController');
 
 // Own-profile and device routes must be declared before "/:id" so their
@@ -19,6 +19,8 @@ router.post("/esp32-lift", postLift);
 router.get("/esp32-status", getStatus);
 
 router.get("/houses", checkRoles("admin"), getAllHouses);
+router.get("/sms-status", checkRoles("admin"), getSmsStatus);
+router.post("/test-sms", checkRoles("admin"), testSmsLimiter, sendTestText);
 router.get("/", checkRoles("admin"), getAllUsers);
 router.post("/", checkRoles("admin"), createUser);
 router.put("/:id/approve", checkRoles("admin"), approveUser);

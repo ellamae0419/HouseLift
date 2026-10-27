@@ -38,6 +38,7 @@ const getAllHouses = async (req, res) => {
 const bcrypt = require('bcrypt');
 const { generateUserID } = require('../utils/functions');
 const { sendApprovalEmail } = require('../utils/mailer');
+const { smsRoute, sendTestSms } = require('../utils/sms');
 
 const approveUser = async (req, res) => {
     const id = req.params.id;
@@ -285,4 +286,26 @@ const activateDevice = async (req, res) => {
     }
 };
 
-module.exports = { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser, activateDevice };
+// Tells an admin whether flood texts can actually go out, and by which route.
+const getSmsStatus = (req, res) => {
+    res.json({ route: smsRoute() });
+};
+
+// Sends one test text so an admin can see that the phone setup works before a real flood.
+const sendTestText = async (req, res) => {
+    const to = String(req.body?.to || '').trim();
+    if (!MOBILE_REGEX.test(to)) return res.status(400).json({ message: 'Enter an 11-digit mobile number starting with 09.' });
+
+    try {
+        const route = await sendTestSms(to);
+        res.json({ message: `Test text sent through the ${route}. It should arrive within a few seconds.` });
+    } catch (err) {
+        if (err.code === 'NOT_CONFIGURED') {
+            return res.status(409).json({ message: 'Text sending is not set up yet. Add SMS_GATEWAY_USER and SMS_GATEWAY_PASSWORD in Render and redeploy.' });
+        }
+        console.error('[sendTestText]', err.message);
+        res.status(502).json({ message: `The text could not be sent: ${err.message}` });
+    }
+};
+
+module.exports = { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser, activateDevice, getSmsStatus, sendTestText };

@@ -19,7 +19,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const verifyJWT = require('./middlewares/verifyJWT');
 const { getOwnDevice, getDeviceByEsp32Id, saveSensorReading, saveLiftEvent, normalizeTrigger } = require('./utils/devices');
-const { sendFloodAlertSms } = require('./utils/sms');
+const { ALERT_KINDS, raiseAlert, onReading, onLift } = require('./utils/floodAlerts');
 const WebSocket = require('ws');
 const http = require('http');
 console.log("\x1b[36m%s\x1b[0m", `Starting the server side...\n`);
@@ -171,6 +171,12 @@ global.wss.on('connection', async (ws, req) => {
                         wlLevel: msg.wl_value ?? msg.wlValue,
                         isLifted: msg.isLifted,
                     });
+
+                    // Water at the critical level is an alert in its own right. Its own catch, so an
+                    // alert problem can never stop readings from being saved or shown.
+                    if (device.userId) {
+                        await onReading(device, msg.wl_value).catch((err) => console.log('[alerts] Critical check failed:', err.message));
+                    }
                 }
             } catch (err) {
                 console.log('[WS] Failed to save sensor reading:', err.message);
@@ -182,6 +188,25 @@ global.wss.on('connection', async (ws, req) => {
                 wlValue: msg.wlValue,
                 wl_value: msg.wl_value ?? msg.wlValue
             });
+        }
+        else if (msg && msg.type === 'device-alert') {
+            // Things only the unit knows (a fault, a low battery, "I am floating", the daily
+            // heartbeat). Only a verified device socket may raise one, and only for its own house.
+            if (ws._role !== 'device') {
+                console.log('[WS] Ignored device-alert from a non-device socket', ws._remoteAddr);
+                return;
+            }
+            if (!ALERT_KINDS.includes(msg.kind)) {
+                console.log('[WS] Ignored device-alert with an unknown kind:', String(msg.kind).slice(0, 30));
+                return;
+            }
+
+            try {
+                const device = await getDeviceByEsp32Id(ws._esp32Id);
+                await raiseAlert({ device, kind: msg.kind, detail: msg.detail });
+            } catch (err) {
+                console.log('[WS] Failed to save device alert:', err.message);
+            }
         }
         else if (msg && msg.type === 'lift-status') {
             if (ws._role !== 'device') {
@@ -198,21 +223,10 @@ global.wss.on('connection', async (ws, req) => {
                 if (device) {
                     await saveLiftEvent(device, { direction, trigger, durationMs: msg.durationMs });
 
-                    // The Notifications page has always promised flood alerts
-                    // but nothing ever created one. An automatic lift is
-                    // exactly that event.
-                    if (trigger === 'auto' && direction === 'lift' && device.userId) {
-                        await global.db.query(
-                            'INSERT INTO notifications (title, description, isRead, userId) VALUES (?, ?, 0, ?)',
-                            ['Flood detected', 'Water reached the flood threshold — the platform was raised automatically.', device.userId]
-                        );
-
-                        // Text the owner too. Not awaited, and its own catch, so a
-                        // slow or failing SMS service can never hold up saving the lift.
-                        global.db.query('SELECT fullName, mobileNumber FROM users WHERE id = ?', [device.userId])
-                            .then((rows) => rows[0] && sendFloodAlertSms({ to: rows[0].mobileNumber, fullName: rows[0].fullName }))
-                            .catch((err) => console.log('[sms] Flood alert SMS failed:', err.message));
-                    }
+                    // The unit's own automatic moves are the flood alerts: a lift is the WARNING,
+                    // and the lowering that follows is the ALL CLEAR. Each is saved for the
+                    // dashboard and texted to the owner's registered number.
+                    if (device.userId) await onLift(device, { direction, trigger });
                 }
             } catch (err) {
                 console.log('[WS] Failed to save lift event:', err.message);

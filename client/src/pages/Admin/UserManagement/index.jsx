@@ -38,6 +38,39 @@ export const UserManagement = () => {
     const [form, setForm] = React.useState(EMPTY_FORM);
     const [error, setError] = React.useState('');
 
+    // "Send test text": checks that flood alert texts can really go out.
+    const [smsOpen, setSmsOpen] = React.useState(false);
+    const [smsRoute, setSmsRoute] = React.useState(undefined); // undefined = checking, null = not set up, text = the route in use
+    const [smsNumber, setSmsNumber] = React.useState('');
+    const [smsBusy, setSmsBusy] = React.useState(false);
+    const [smsResult, setSmsResult] = React.useState({ ok: false, text: '' });
+
+    const openSmsDialog = async () => {
+        setSmsOpen(true);
+        setSmsResult({ ok: false, text: '' });
+        setSmsRoute(undefined);
+        try {
+            const res = await axiosPrivate.get('/users/sms-status');
+            setSmsRoute(res.data?.route ?? null);
+        } catch {
+            setSmsRoute(null);
+            setSmsResult({ ok: false, text: 'Could not check the text setup. Try again in a moment.' });
+        }
+    };
+
+    const sendTestText = async () => {
+        setSmsBusy(true);
+        setSmsResult({ ok: false, text: '' });
+        try {
+            const res = await axiosPrivate.post('/users/test-sms', { to: smsNumber.trim() });
+            setSmsResult({ ok: true, text: res.data?.message || 'Test text sent.' });
+        } catch (err) {
+            setSmsResult({ ok: false, text: err?.response?.data?.message || 'The test text could not be sent.' });
+        } finally {
+            setSmsBusy(false);
+        }
+    };
+
     const loadUsers = async () => {
         setLoading(true);
         try {
@@ -167,6 +200,14 @@ export const UserManagement = () => {
                                 }}
                             >
                                 Refresh
+                            </Button>
+                            <Button
+                                onClick={openSmsDialog}
+                                sx={{
+                                    color: 'var(--hl-accent)', borderColor: 'var(--hl-accent)', border: '1px solid', backgroundColor: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none', px: 2.5,
+                                }}
+                            >
+                                Send test text
                             </Button>
                             <Button
                                 onClick={openAddDialog}
@@ -365,6 +406,59 @@ export const UserManagement = () => {
                         sx={{ backgroundColor: 'var(--hl-accent)', color: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none', '&:hover': { backgroundColor: 'var(--hl-secondary-dark)' } }}
                     >
                         Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={smsOpen} onClose={() => setSmsOpen(false)} fullWidth maxWidth="sm" sx={{ '& .MuiPaper-root': { backgroundColor: 'var(--background-card)', color: 'var(--heading)' } }}>
+                <DialogTitle sx={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>Send a test text</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" sx={{ color: 'var(--text-low)', mb: 1 }}>
+                        Flood alerts are texted to each house owner&apos;s registered mobile number. Send one test text to your own number to check it works before a real flood.
+                    </Typography>
+                    <div
+                        role="status"
+                        style={{
+                            padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 600, marginTop: 8,
+                            background: smsRoute ? 'var(--hl-success-bg)' : smsRoute === null ? 'var(--hl-warning-bg)' : 'var(--hl-page-bg)',
+                            color: smsRoute ? 'var(--hl-success-ink)' : smsRoute === null ? 'var(--hl-warning-ink)' : 'var(--hl-ink-secondary)',
+                        }}
+                    >
+                        {smsRoute === undefined && 'Checking the text setup…'}
+                        {smsRoute === null && 'Text sending is not set up yet. In Render, add SMS_GATEWAY_USER and SMS_GATEWAY_PASSWORD from the SMS Gateway app on your phone, then redeploy.'}
+                        {smsRoute && `Text sending is set up (${smsRoute}).`}
+                    </div>
+                    <TextField
+                        label="Mobile number"
+                        placeholder="09XXXXXXXXX"
+                        fullWidth
+                        margin="normal"
+                        value={smsNumber}
+                        onChange={(e) => setSmsNumber(e.target.value)}
+                        error={Boolean(smsNumber) && !mobileRegex.test(smsNumber.trim())}
+                        helperText="11 digits, starting with 09."
+                        sx={fieldSx}
+                    />
+                    {smsResult.text && (
+                        <Typography sx={{ color: smsResult.ok ? 'var(--hl-success-ink)' : 'var(--red)', mt: 1 }}>{smsResult.text}</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => setSmsOpen(false)}
+                        sx={{ color: 'var(--hl-accent)', borderColor: 'var(--hl-accent)', border: '1px solid', backgroundColor: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none' }}
+                    >
+                        Close
+                    </Button>
+                    <Button
+                        onClick={sendTestText}
+                        disabled={smsBusy || !smsRoute || !mobileRegex.test(smsNumber.trim())}
+                        sx={{
+                            backgroundColor: 'var(--hl-accent)', color: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none',
+                            '&:hover': { backgroundColor: 'var(--hl-secondary-dark)' }, '&.Mui-disabled': { backgroundColor: 'var(--hl-accent)', color: '#fff', opacity: 0.5 },
+                        }}
+                    >
+                        {smsBusy ? 'Sending…' : 'Send test text'}
                     </Button>
                 </DialogActions>
             </Dialog>
