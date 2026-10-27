@@ -48,7 +48,7 @@ export const ShopShell = ({ children }) => {
         <>
             <div className={styles.topbar}>
                 <div className={styles.wrap}>
-                    <span>Sold face to face only. Reserve online, then pay and pick up in person.</span>
+                    <span>Sold face to face only. Send an inquiry, then pay and pick up in person.</span>
                     {CONTACT.phone
                         ? <span>Call or Viber <b>{CONTACT.phone}</b></span>
                         : appBase && <span>Already a customer? <a href={appUrl('/login')}>Log in</a></span>}
@@ -63,7 +63,7 @@ export const ShopShell = ({ children }) => {
                             {PAGES.map((p) => <NavLink key={p.to} to={p.to} className={linkClass}>{p.label}</NavLink>)}
                             {appBase && <a href={appUrl('/login')}>Log in</a>}
                         </nav>
-                        <Link to="/buy" className={styles.btn}>Reserve now</Link>
+                        <Link to="/inquire" className={styles.btn}>Inquire now</Link>
                         <button
                             type="button" className={styles.menuBtn} aria-expanded={open} aria-controls="site-menu"
                             onClick={() => setOpen((v) => !v)}
@@ -88,7 +88,7 @@ export const ShopShell = ({ children }) => {
                             <li><Link to="/product">Product</Link></li>
                             <li><Link to="/specifications">Specifications</Link></li>
                             <li><Link to="/how-it-works">How to buy</Link></li>
-                            <li><Link to="/buy">Reservation form</Link></li>
+                            <li><Link to="/inquire">Ask a question</Link></li>
                         </ul>
                     </div>
                     <div>
@@ -98,7 +98,7 @@ export const ShopShell = ({ children }) => {
                             {CONTACT.facebook && <li>Facebook<br /><b>{CONTACT.facebook}</b></li>}
                             {CONTACT.email && <li>Email<br /><b>{CONTACT.email}</b></li>}
                             {!CONTACT.phone && !CONTACT.facebook && !CONTACT.email && (
-                                <li>Reserve a unit and we will contact you on the mobile number you give.</li>
+                                <li>Send an inquiry and we will contact you on the mobile number you give.</li>
                             )}
                         </ul>
                     </div>

@@ -291,8 +291,8 @@ const isLocalNetworkOrigin = (origin) => {
 
 // The shop is a public website that can live at any address, and its two endpoints use
 // no cookies or logins, so any website may call them. They are mounted before the CORS
-// rule below, which only admits the dashboard site. The order form uploads a photo of
-// an ID, so this route family also gets a bigger body limit than the 100 KB default.
+// rule below, which only admits the dashboard site. Neither needs more than a
+// small body, but the limit stays generous.
 app.use('/shop', cors({ origin: '*', credentials: false }), express.json({ limit: '3mb' }), require('./routes/shop'));
 
 // ALLOWED_ORIGIN can list several website addresses separated by commas, so the
@@ -313,6 +313,9 @@ app.use(cors({
     optionsSuccessStatus: 200
 }));
 
+// Registering a buyer in person uploads a photo of their ID, so this one admin route gets a
+// bigger body limit than the 100 KB default. It must come before the general parser below.
+app.use('/orders/walk-in', express.json({ limit: '3mb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -329,6 +332,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(verifyJWT);
 app.use('/users', require('./routes/users'));
 app.use('/orders', require('./routes/orders'));
+app.use('/inquiries', require('./routes/inquiries'));
 app.use('/records', require('./routes/records'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/reports', require('./routes/reports'));

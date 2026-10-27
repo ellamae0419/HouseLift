@@ -61,6 +61,22 @@ const TABLES = {
             { key: 'createdAt', label: 'Ordered', type: 'time' },
         ],
     },
+    inquiries: {
+        label: 'Inquiries',
+        from: 'inquiries',
+        sql: `SELECT id, fullName, mobileNumber, email, houseSize, message, status, createdAt
+              FROM inquiries ORDER BY createdAt DESC, id DESC LIMIT ?`,
+        columns: [
+            { key: 'id', label: 'Inquiry', type: 'number' },
+            { key: 'fullName', label: 'Full name' },
+            { key: 'mobileNumber', label: 'Mobile' },
+            { key: 'email', label: 'Email' },
+            { key: 'houseSize', label: 'Size' },
+            { key: 'message', label: 'Message' },
+            { key: 'status', label: 'Status' },
+            { key: 'createdAt', label: 'Sent', type: 'time' },
+        ],
+    },
     serials: {
         label: 'Serial codes',
         from: 'serial_codes',

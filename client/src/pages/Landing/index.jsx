@@ -56,9 +56,9 @@ const HOW = [
 ];
 
 const BUY_STEPS = [
-    { title: 'Reserve online', text: 'Fill in the form and upload a photo of a valid ID. This only reserves your unit. Nothing is paid or delivered online.' },
-    { title: 'We check your ID', text: 'We check your ID and approve your reservation, and you can log in to your account.' },
-    { title: 'Pay and pick up in person', text: 'You meet us, pay and collect your HydroLift. We give you a serial code with it.' },
+    { title: 'Send an inquiry', text: 'Give your name and mobile number on the inquiry form. You do not need an account, and nothing is paid online.' },
+    { title: 'Meet us and pay', text: 'We contact you and arrange a time to meet. You pay and pick up your HydroLift in person.' },
+    { title: 'We register you', text: 'We check your ID and register you. We give you your username, password and a serial code.' },
     { title: 'Activate it', text: 'Log in and enter the serial code. This links the unit to your account.' },
 ];
 
@@ -83,12 +83,14 @@ const HOUSE = [
 const FAQS = [
     { q: 'Which size should I choose?', a: 'Your pet should be able to stand, turn around and lie fully stretched out inside. If your pet is between sizes, choose the larger one. Small suits pets up to 7 kg, Medium up to 18 kg and Large up to 40 kg.' },
     { q: 'What if the flood rises higher than the lift?', a: 'HydroLift raises the house as far as its lift can go. If the water rises past that, it can no longer keep the house dry, so please move your pet to a safe place when you get the flood text. In a strong typhoon, follow local advice and bring your pet to safety.' },
-    { q: 'Can I buy online?', a: 'No. HydroLift is sold face to face only. There is no online payment and no delivery. You pay and pick up your unit in person. The website only takes your reservation and your ID.' },
-    { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. Only HydroLift administrators can see your ID, and you agree to this when you reserve.' },
+    { q: 'Can I buy online?', a: 'No. HydroLift is sold face to face only. There is no online payment and no delivery. You pay and pick up your unit in person. The website only takes your inquiry.' },
+    { q: 'Do I need an account to ask?', a: 'No. Anyone can send an inquiry with just a name and a mobile number. No account is made, and nothing is paid online.' },
+    { q: 'When do I get my account?', a: 'When you pay and pick up your HydroLift. We check your ID and register you, then give you your username, password and serial code.' },
+    { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. We check your ID in person when you buy, and only HydroLift administrators can see it.' },
     { q: 'What is the serial code?', a: 'A code like HL-7QK2-M9XD-4PWH that we give you when you pay and receive your unit. Entering it after you log in proves you own the unit. It works only for your account.' },
     { q: 'Will it still lift if my WiFi goes down?', a: 'Sensing and lifting run on the unit itself, so a dropped connection does not stop it from lifting. The dashboard, history and text alerts need WiFi.' },
-    { q: 'How many texts will I get?', a: 'One when an automatic lift happens, and then no more than one every ten minutes. They go to the mobile number you give when you reserve.' },
-    { q: 'What if my reservation is not approved?', a: 'When you try to log in you will see the reason, for example that the ID photo was not clear. Contact us and we will sort it out.' },
+    { q: 'How many texts will I get?', a: 'One when an automatic lift happens, and then no more than one every ten minutes. They go to the mobile number you registered with when you bought.' },
+    { q: 'What do I get when I buy?', a: 'A HydroLift pet house, your login to the dashboard and a serial code that links the unit to your account.' },
 ];
 
 const Price = ({ price }) => (
@@ -163,7 +165,7 @@ export const Landing = () => {
                                 HydroLift senses rising water and lifts your pet&apos;s house on its own. You get a text when it lifts, and you can watch the water level from your phone.
                             </p>
                             <div className={styles.ctas}>
-                                <Link to="/buy" className={shellStyles.btn}>Reserve now</Link>
+                                <Link to="/inquire" className={shellStyles.btn}>Inquire now</Link>
                                 <Link to="/how-it-works" className={`${shellStyles.btn} ${shellStyles.btnOutline}`}>See how it works</Link>
                             </div>
                             <ul className={styles.checks}>
@@ -199,22 +201,22 @@ export const Landing = () => {
                     </div>
                 </div>
 
-                <section className={`${styles.section} ${styles.tint}`} aria-label="Reserve">
+                <section className={`${styles.section} ${styles.tint}`} aria-label="Inquire">
                     <div className={styles.wrap}>
                         <div className={styles.orderBox}>
                             <div>
-                                <span className={styles.eyebrow}>Reserve</span>
+                                <span className={styles.eyebrow}>Inquire</span>
                                 <h2>Get your HydroLift before the next flood.</h2>
-                                <p>The form takes a few minutes. HydroLift is sold face to face only, so you pay and pick up in person. Nothing is paid online.</p>
+                                <p>The inquiry takes a minute. HydroLift is sold face to face only, so you pay and pick up in person. Nothing is paid online, and you do not need an account to ask.</p>
                                 <div className={styles.orderAction}>
-                                    <Link to="/buy" className={shellStyles.btn}>Open the reservation form</Link>
+                                    <Link to="/inquire" className={shellStyles.btn}>Send an inquiry</Link>
                                 </div>
                             </div>
                             <ul className={styles.needs} aria-label="What you need">
-                                <li><Tick fill="#7fd1cc" />A valid ID to photograph</li>
-                                <li><Tick fill="#7fd1cc" />Your mobile number for flood texts</li>
-                                <li><Tick fill="#7fd1cc" />Your home address</li>
-                                <li><Tick fill="#7fd1cc" />A username and password</li>
+                                <li><Tick fill="#7fd1cc" />Your name and mobile number</li>
+                                <li><Tick fill="#7fd1cc" />The size you are thinking of (optional)</li>
+                                <li><Tick fill="#7fd1cc" />A question for us (optional)</li>
+                                <li><Tick fill="#7fd1cc" />A valid ID when you meet us to buy</li>
                             </ul>
                         </div>
                     </div>
@@ -281,7 +283,7 @@ export const Product = () => {
                                     </dl>
                                     <div className={styles.bottom}>
                                         <Price price={priceFor(size.value)} />
-                                        <Link to={`/buy?size=${size.value}`} className={shellStyles.btn}>Reserve {size.name}</Link>
+                                        <Link to={`/inquire?size=${size.value}`} className={shellStyles.btn}>Ask about {size.name}</Link>
                                     </div>
                                 </article>
                             ))}
@@ -315,12 +317,12 @@ export const HowItWorks = () => {
                     <div className={styles.wrap}>
                         <div className={styles.head}>
                             <span className={styles.eyebrow}>How to buy</span>
-                            <h2>From reservation to pick-up</h2>
-                            <p>HydroLift is sold face to face only. You reserve online, then pay and pick up your unit in person.</p>
+                            <h2>From inquiry to pick-up</h2>
+                            <p>HydroLift is sold face to face only. You send an inquiry, then pay and pick up your unit in person.</p>
                         </div>
                         <Steps items={BUY_STEPS} />
                         <p className={styles.note}>
-                            <strong>Why we ask for an ID.</strong> It tells us who owns each unit. Only HydroLift administrators can see it, and you agree to this when you reserve.
+                            <strong>Why we ask for an ID.</strong> It tells us who owns each unit. We check it in person when you buy, and only HydroLift administrators can see it.
                         </p>
                     </div>
                 </section>
@@ -404,7 +406,7 @@ export const Contact = () => {
                 <section className={styles.section}>
                     <div className={styles.wrap}>
                         <PageHead eyebrow="Contact" title="Get in touch">
-                            Questions about HydroLift, your reservation or your unit.
+                            Questions about HydroLift, your inquiry or your unit.
                         </PageHead>
                         {items.length > 0 && (
                             <div className={styles.contactGrid}>
@@ -417,10 +419,10 @@ export const Contact = () => {
                             </div>
                         )}
                         <p className={styles.note}>
-                            <strong>After you reserve,</strong> we contact you on the mobile number and email you give on the form, to confirm your reservation and arrange a time to meet, pay and pick up your unit.
+                            <strong>After you send an inquiry,</strong> we contact you on the mobile number you give, to answer your questions and arrange a time to meet, pay and pick up your unit.
                         </p>
                         <div className={styles.contactActions}>
-                            <Link to="/buy" className={shellStyles.btn}>Reserve now</Link>
+                            <Link to="/inquire" className={shellStyles.btn}>Inquire now</Link>
                             {appBase && <a href={appUrl('/login')} className={`${shellStyles.btn} ${shellStyles.btnOutline}`}>Log in to your account</a>}
                         </div>
                     </div>

@@ -97,6 +97,18 @@ CREATE TABLE IF NOT EXISTS orders (
     CONSTRAINT fk_orders_user FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS inquiries (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    fullName     VARCHAR(100) NOT NULL,
+    mobileNumber VARCHAR(15)  NOT NULL,                       -- how we reach them; no account is made
+    email        VARCHAR(75)  DEFAULT NULL,
+    houseSize    VARCHAR(10)  DEFAULT NULL,                   -- 'S', 'M' or 'L', if they said
+    message      VARCHAR(500) DEFAULT NULL,
+    status       VARCHAR(10)  NOT NULL DEFAULT 'new',         -- 'new', 'contacted', 'bought' or 'closed'
+    createdAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_inquiries_status_time (status, createdAt)
+);
+
 CREATE TABLE IF NOT EXISTS id_verifications (
     id        INT AUTO_INCREMENT PRIMARY KEY,
     orderId   INT         NOT NULL,
@@ -186,14 +198,14 @@ LEFT JOIN esp32 e ON e.userId = u.id
 ORDER BY u.createdAt;
 
 -- Orders and where each one is in the buying steps (the ID photo itself is not shown).
-SELECT o.id, u.username, o.status, o.paidAt, s.code AS serial_code, s.status AS serial_status
+SELECT o.id, u.username, o.houseSize, o.status, o.paidAt, s.code AS serial_code, s.status AS serial_status
 FROM orders o
 JOIN users u ON u.id = o.userId
 LEFT JOIN serial_codes s ON s.orderId = o.id
 ORDER BY o.createdAt DESC;
 
 -- Every customer with the serial code they were given. Each code is different.
-SELECT username, fullName, mobileNumber, idType, serialCode, serialStatus, deviceId
+SELECT username, fullName, mobileNumber, houseSize, idType, serialCode, serialStatus, deviceId
 FROM customer_serials
 ORDER BY issuedAt DESC;
 

@@ -28,9 +28,9 @@ const forgotPasswordLimiter = makeLimiter(5, 'Too many password reset requests. 
 // spreading guesses across many accounts.
 const resetPasswordLimiter = makeLimiter(10, 'Too many attempts. Please try again in a few minutes.');
 
-// Placing an order creates an account and stores a photo, so it is limited per
-// connection to keep someone from filling the database with fake orders.
-const orderLimiter = makeLimiter(5, 'Too many orders from this connection. Please try again later.');
+// Anyone can send an inquiry, so it is limited per connection to keep someone from
+// filling the database with fake ones.
+const inquiryLimiter = makeLimiter(8, 'Too many inquiries from this connection. Please try again later.');
 
 // Guards guessing serial codes. Keyed on the signed-in user (not the IP) and
 // counting only wrong tries, so a customer who enters the right code first time
@@ -48,4 +48,4 @@ const activateLimiter = rateLimit({
 // Every test text costs the phone's load, so even an admin can only send a few in a short time.
 const testSmsLimiter = makeLimiter(5, 'Too many test texts. Please wait a few minutes.');
 
-module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter, orderLimiter, activateLimiter, testSmsLimiter };
+module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter, inquiryLimiter, activateLimiter, testSmsLimiter };

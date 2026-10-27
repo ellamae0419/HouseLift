@@ -89,6 +89,18 @@ CREATE TABLE IF NOT EXISTS orders (
     CONSTRAINT fk_orders_user FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS inquiries (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    fullName     VARCHAR(100) NOT NULL,
+    mobileNumber VARCHAR(15)  NOT NULL,                       -- how we reach them; no account is made
+    email        VARCHAR(75)  DEFAULT NULL,
+    houseSize    VARCHAR(10)  DEFAULT NULL,                   -- 'S', 'M' or 'L', if they said
+    message      VARCHAR(500) DEFAULT NULL,
+    status       VARCHAR(10)  NOT NULL DEFAULT 'new',         -- 'new', 'contacted', 'bought' or 'closed'
+    createdAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_inquiries_status_time (status, createdAt)
+);
+
 CREATE TABLE IF NOT EXISTS id_verifications (
     id        INT AUTO_INCREMENT PRIMARY KEY,
     orderId   INT         NOT NULL,

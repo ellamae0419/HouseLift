@@ -17,13 +17,14 @@
 .fields .group:first-child .groupTitle { border-top: 0; padding-top: 0; }
 
 .field { display: grid; gap: 6px; font-size: 0.86rem; font-weight: 600; min-width: 0; }
-.field input, .field select {
+.field input, .field select, .field textarea {
     font: inherit; font-weight: 400; padding: 11px 14px; width: 100%; min-width: 0;
     border: 1px solid #c9d8da; border-radius: 10px; background: var(--white); color: var(--navy);
 }
 .field select:disabled { background: #f3f7f7; color: var(--muted); cursor: not-allowed; }
-.field input:focus, .field select:focus { border-color: var(--teal-deep); outline: 2px solid rgba(23, 103, 107, 0.25); outline-offset: 0; }
-.invalid input, .invalid select { border-color: #c4573f; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--teal-deep); outline: 2px solid rgba(23, 103, 107, 0.25); outline-offset: 0; }
+.field textarea { resize: vertical; min-height: 96px; }
+.invalid input, .invalid select, .invalid textarea { border-color: #c4573f; }
 .hint { font-size: 0.82rem; font-weight: 400; color: var(--muted); }
 .hintBad { color: #a8402a; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

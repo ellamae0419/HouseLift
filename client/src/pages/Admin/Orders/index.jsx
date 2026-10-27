@@ -21,6 +21,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { RegisterBuyerDialog } from '../../../components/RegisterBuyerDialog/index';
 
 const FILTERS = [
     { value: 'pending', label: 'Needs review' },
@@ -89,6 +90,9 @@ export const Orders = () => {
     const [reason, setReason] = React.useState('');
     const [reviewBusy, setReviewBusy] = React.useState(false);
     const [reviewError, setReviewError] = React.useState('');
+
+    // Register a buyer who has just paid in person
+    const [registering, setRegistering] = React.useState(false);
 
     // Serial dialog
     const [issuing, setIssuing] = React.useState(null);
@@ -203,7 +207,7 @@ export const Orders = () => {
     return (
         <>
             <h1 className="page-title">Orders and ID checks</h1>
-            <p className="page-subtitle">Check each buyer&apos;s ID, then give them a serial code when they pay in person.</p>
+            <p className="page-subtitle">Every sale is face to face. Use Register a buyer when someone pays in person: it makes their account, records their ID and gives them a serial code. Orders from before that change can still be reviewed here.</p>
 
             {notice && (
                 <div role="status" style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 9, background: 'var(--hl-success-bg)', color: 'var(--hl-success-ink)', fontSize: 13, fontWeight: 600 }}>
@@ -231,6 +235,8 @@ export const Orders = () => {
                                 </Button>
                             ))}
                         </div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <Button onClick={() => setRegistering(true)} sx={{ ...solidBtn, px: 2.5 }}>Register a buyer</Button>
                         <Button
                             onClick={load}
                             disabled={loading}
@@ -239,6 +245,7 @@ export const Orders = () => {
                         >
                             Refresh
                         </Button>
+                        </div>
                     </div>
 
                     <div className="table-responsive">
@@ -311,6 +318,11 @@ export const Orders = () => {
                     )}
                 </CardContent>
             </Card>
+
+            <RegisterBuyerDialog
+                open={registering}
+                onClose={(registered) => { setRegistering(false); if (registered) { setNotice('Buyer registered.'); load(); } }}
+            />
 
             {/* ---------- Review the ID ---------- */}
             <Dialog open={Boolean(reviewing)} onClose={closeReview} fullWidth maxWidth="md" sx={{ '& .MuiPaper-root': { backgroundColor: 'var(--background-card)', color: 'var(--heading)' } }}>

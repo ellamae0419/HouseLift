@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { getProduct, placeOrder } = require('../controllers/shopController');
-const { orderLimiter } = require('../middlewares/rateLimiters');
+const { getProduct } = require('../controllers/shopController');
+const { createInquiry } = require('../controllers/inquiriesController');
+const { inquiryLimiter } = require('../middlewares/rateLimiters');
 
-// Public on purpose: this is how a stranger becomes a customer.
+// Public on purpose: anyone may look at the product and send an inquiry. Neither creates an
+// account. Accounts are made by an admin when a buyer pays in person.
 router.get('/product', getProduct);
-router.post('/orders', orderLimiter, placeOrder);
+router.post('/inquiries', inquiryLimiter, createInquiry);
 
 module.exports = router;
