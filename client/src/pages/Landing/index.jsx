@@ -423,7 +423,7 @@ export const Contact = () => {
                         </p>
                         <div className={styles.contactActions}>
                             <Link to="/inquire" className={shellStyles.btn}>Inquire now</Link>
-                            {appBase && <a href={appUrl('/login')} className={`${shellStyles.btn} ${shellStyles.btnOutline}`}>Log in to your account</a>}
+                            {appBase && <a href={appUrl('/login?fresh=1')} className={`${shellStyles.btn} ${shellStyles.btnOutline}`}>Log in to your account</a>}
                         </div>
                     </div>
                 </section>

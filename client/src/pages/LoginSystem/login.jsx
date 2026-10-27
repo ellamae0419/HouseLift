@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from '../../lib/axios';
 import { getLoginErrorMessage } from '../../lib/loginError';
 import { shopBase, shopUrl } from '../../utils/siteLinks';
+import { IDLE_MINUTES, markActive, takeIdleNotice } from '../../utils/idleSession';
 import useAuth from '../../hooks/auth/useAuth';
 import { faUser } from "@fortawesome/free-regular-svg-icons";
 import { faUnlockKeyhole, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
@@ -32,6 +33,7 @@ export const Login = () => {
     const [password, setPassword] = useState(remembered?.password || '');
     const [errMsg, setErrMsg] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [idleNotice] = useState(() => takeIdleNotice());   // shown once after an automatic sign-out
 
     useEffect(() => { usernameOrEmailRef.current.focus(); }, [])
     useEffect(() => { setErrMsg(''); }, [usernameOrEmail, password])
@@ -51,6 +53,7 @@ export const Login = () => {
             const username = response?.data?.username;
             const email = response?.data?.email;
             setAuth({ username, email, accessToken });
+            markActive();
 
             if (JSON.parse(persist)) {
                 localStorage.setItem('rememberedCredentials', JSON.stringify({ usernameOrEmail, password }));
@@ -84,6 +87,9 @@ export const Login = () => {
                         </div>
                         <h1 className={styles.title}>Welcome</h1>
                         <p className={styles.description}>Log in to your HydroLift control panel.</p>
+                        {idleNotice && !errMsg && (
+                            <p className={styles.description} role="status">You were signed out after {IDLE_MINUTES} minutes without activity. Please log in again.</p>
+                        )}
                         <p ref={errRef} className={errMsg ? styles.err_message : 'hide'} aria-live="assertive">{errMsg}</p>
 
                         <div className={styles.field_group}>

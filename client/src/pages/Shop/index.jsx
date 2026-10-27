@@ -184,7 +184,7 @@ export const Inquire = () => {
                                     <button type="submit" form="inquiry" id="sendInquiry" className={`${shellStyles.btn} ${shellStyles.btnWide}`} disabled={!canSubmit}>
                                         {submitting ? 'Sending…' : 'Send inquiry'}
                                     </button>
-                                    {appBase && <p className={styles.foot}>Already bought one? <a href={appUrl('/login')}>Log in</a></p>}
+                                    {appBase && <p className={styles.foot}>Already bought one? <a href={appUrl('/login?fresh=1')}>Log in</a></p>}
                                 </div>
                             </div>
                         </aside>

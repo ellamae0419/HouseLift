@@ -51,7 +51,7 @@ export const ShopShell = ({ children }) => {
                     <span>Sold face to face only. Send an inquiry, then pay and pick up in person.</span>
                     {CONTACT.phone
                         ? <span>Call or Viber <b>{CONTACT.phone}</b></span>
-                        : appBase && <span>Already a customer? <a href={appUrl('/login')}>Log in</a></span>}
+                        : appBase && <span>Already a customer? <a href={appUrl('/login?fresh=1')}>Log in</a></span>}
                 </div>
             </div>
 
@@ -61,7 +61,7 @@ export const ShopShell = ({ children }) => {
                     <div className={styles.right}>
                         <nav id="site-menu" className={`${styles.menu} ${open ? styles.menuOpen : ''}`} aria-label="Main">
                             {PAGES.map((p) => <NavLink key={p.to} to={p.to} className={linkClass}>{p.label}</NavLink>)}
-                            {appBase && <a href={appUrl('/login')}>Log in</a>}
+                            {appBase && <a href={appUrl('/login?fresh=1')}>Log in</a>}
                         </nav>
                         <Link to="/inquire" className={styles.btn}>Inquire now</Link>
                         <button
@@ -107,7 +107,7 @@ export const ShopShell = ({ children }) => {
                         <ul>
                             {CONTACT.location && <li>{CONTACT.location}</li>}
                             {CONTACT.hours && <li>{CONTACT.hours}</li>}
-                            {appBase && <li><a href={appUrl('/login')}>Log in</a></li>}
+                            {appBase && <li><a href={appUrl('/login?fresh=1')}>Log in</a></li>}
                             {appBase && <li><a href={appUrl('/forgot-password')}>Forgot your password?</a></li>}
                         </ul>
                     </div>
