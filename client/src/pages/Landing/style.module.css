@@ -53,6 +53,15 @@
 .feat p { color: var(--muted); }
 
 /* Product */
+.sizeGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.sizeCard { background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; transition: box-shadow 0.2s; }
+.sizeCard:hover { box-shadow: 0 20px 40px -24px rgba(24, 45, 68, 0.35); }
+.sizeCard h2 { font-size: 1.3rem; }
+.sizeCard dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; margin: 0; font-size: 0.92rem; font-variant-numeric: tabular-nums; border-top: 1px solid var(--line); padding-top: 14px; }
+.sizeCard dt { color: var(--muted); }
+.sizeCard dd { margin: 0; text-align: right; font-weight: 500; }
+.sizeCard .bottom { margin-top: auto; }
+.subhead { font-size: 1.25rem; margin-top: 36px; }
 .productCard { position: relative; margin-top: 48px; background: var(--white); border: 2px solid var(--teal-deep); border-radius: 20px; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
 .pic { background: var(--teal-pale); border-radius: 14px; }
 .pic svg { width: 100%; height: auto; display: block; }
@@ -120,7 +129,7 @@
     .statsGrid { grid-template-columns: repeat(2, 1fr); }
     .stat { padding: 20px 0; border-left: 0; border-top: 1px solid var(--line); }
     .stat:nth-child(-n+2) { border-top: 0; }
-    .featureGrid, .productCard, .orderBox { grid-template-columns: 1fr; }
+    .featureGrid, .productCard, .orderBox, .sizeGrid { grid-template-columns: 1fr; }
     .stepGrid { grid-template-columns: 1fr 1fr; }
     .section { padding-top: 64px; padding-bottom: 64px; }
     .orderBox { padding: 26px; }

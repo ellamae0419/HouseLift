@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS lift_events (
 CREATE TABLE IF NOT EXISTS orders (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     userId       VARCHAR(100) NOT NULL,                       -- the customer who ordered
+    houseSize    VARCHAR(10)  DEFAULT NULL,                   -- 'S', 'M' or 'L'
     price        INT          DEFAULT NULL,                   -- pesos, if a price was set
     status       VARCHAR(10)  NOT NULL DEFAULT 'pending',     -- 'pending', 'approved' or 'rejected'
     rejectReason VARCHAR(255) DEFAULT NULL,
@@ -124,18 +125,6 @@ CREATE TABLE IF NOT EXISTS serial_codes (
     CONSTRAINT fk_serial_esp32 FOREIGN KEY (esp32Id) REFERENCES esp32 (id) ON DELETE CASCADE
 );
 
--- A readable list of who bought, which ID they gave and which serial code they got.
--- It only reads the tables above and never includes the ID photo.
-CREATE OR REPLACE VIEW customer_serials AS
-SELECT u.username, u.fullName, u.email, u.mobileNumber,
-       o.id AS orderId, o.status AS orderStatus, v.idType, o.paidAt,
-       s.code AS serialCode, s.status AS serialStatus, s.issuedAt, s.redeemedAt,
-       e.esp32_id AS deviceId
-FROM serial_codes s
-JOIN users u ON u.id = s.userId
-JOIN orders o ON o.id = s.orderId
-LEFT JOIN id_verifications v ON v.orderId = o.id
-LEFT JOIN esp32 e ON e.id = s.esp32Id;
 
 -- An existing users table needs the new isActivated column added once. This adds
 -- it only if it is missing, and every existing account starts as activated (1),
@@ -148,6 +137,30 @@ SET @add_col = IF(@has_col = 0,
 PREPARE stmt FROM @add_col;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- An existing orders table needs the new houseSize column (S, M or L) added once. This adds
+-- it only if it is missing. Orders placed before sizes existed simply have no size.
+SET @has_size = (SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'houseSize');
+SET @add_size = IF(@has_size = 0,
+                   'ALTER TABLE orders ADD COLUMN houseSize VARCHAR(10) DEFAULT NULL',
+                   'SELECT 1');
+PREPARE stmt FROM @add_size;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- A readable list of who bought, which size and ID they gave and which serial code they got.
+-- It only reads the tables above and never includes the ID photo.
+CREATE OR REPLACE VIEW customer_serials AS
+SELECT u.username, u.fullName, u.email, u.mobileNumber,
+       o.id AS orderId, o.status AS orderStatus, o.houseSize, v.idType, o.paidAt,
+       s.code AS serialCode, s.status AS serialStatus, s.issuedAt, s.redeemedAt,
+       e.esp32_id AS deviceId
+FROM serial_codes s
+JOIN users u ON u.id = s.userId
+JOIN orders o ON o.id = s.orderId
+LEFT JOIN id_verifications v ON v.orderId = o.id
+LEFT JOIN esp32 e ON e.id = s.esp32Id;
 
 -- ---------------------------------------------------------------------------
 -- 2. Checks (read-only)

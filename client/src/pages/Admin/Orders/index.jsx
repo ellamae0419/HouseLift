@@ -257,7 +257,7 @@ export const Orders = () => {
                                 {shown.map((o) => (
                                     <TableRow key={o.id}>
                                         <TableCell sx={td}>
-                                            <div style={{ fontWeight: 600 }}>#{o.id}</div>
+                                            <div style={{ fontWeight: 600 }}>#{o.id}{o.sizeLabel ? ` · ${o.sizeLabel}` : ''}</div>
                                             <div style={{ fontSize: 12, color: 'var(--hl-ink-tertiary)' }}>{when(o.createdAt)}</div>
                                         </TableCell>
                                         <TableCell sx={td}>

@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { ID_TYPES } = require('./shopController');
+const { ID_TYPES, SIZES } = require('./shopController');
 const { sendOrderApprovedEmail } = require('../utils/mailer');
 
 // No 0/O, 1/I/L: a code read off a sticker or over the phone can't be misheard.
@@ -13,7 +13,7 @@ const makeSerialCode = () => {
 const listOrders = async (req, res) => {
     try {
         const rows = await global.db.query(`
-            SELECT o.id, o.status, o.price, o.rejectReason, o.paidAt, o.reviewedAt, o.createdAt,
+            SELECT o.id, o.status, o.houseSize, o.price, o.rejectReason, o.paidAt, o.reviewedAt, o.createdAt,
                    u.id AS userId, u.username, u.fullName, u.email, u.mobileNumber, u.address,
                    v.idType, s.code AS serialCode, s.status AS serialStatus, e.esp32_id AS esp32Id
             FROM orders o
@@ -23,7 +23,7 @@ const listOrders = async (req, res) => {
             LEFT JOIN esp32 e ON e.id = s.esp32Id
             ORDER BY o.createdAt DESC, o.id DESC
         `);
-        res.json(rows.map((r) => ({ ...r, idTypeLabel: ID_TYPES[r.idType] || r.idType })));
+        res.json(rows.map((r) => ({ ...r, idTypeLabel: ID_TYPES[r.idType] || r.idType, sizeLabel: SIZES[r.houseSize] || null })));
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

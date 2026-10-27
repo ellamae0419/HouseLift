@@ -5,6 +5,7 @@ import axios from '../../lib/axios';
 import { setTitle } from '../../utils/generalFunctions';
 import { appBase, appUrl } from '../../utils/siteLinks';
 import { CONTACT } from '../../config/shopContact';
+import { SIZES } from '../../config/shopSizes';
 import { ShopShell } from '../../components/ShopShell/index';
 import shellStyles from '../../components/ShopShell/shell.module.css';
 import { houseSvg, VIEW_BOX } from '../../components/ShopShell/isometric';
@@ -70,7 +71,18 @@ const SPECS = [
     ['By hand', 'Toggle switch on the unit'],
 ];
 
+// The house itself, as described on the product page.
+const HOUSE = [
+    ['Frame', 'Treated wood, sanded and sealed'],
+    ['Roof', 'Waterproofed panel with a slanted gable'],
+    ['Floor', 'Removable panel for washing'],
+    ['Ventilation', 'Side window plus open airflow under the floor'],
+    ['Made in', 'Antipolo, Rizal'],
+];
+
 const FAQS = [
+    { q: 'Which size should I choose?', a: 'Your pet should be able to stand, turn around and lie fully stretched out inside. If your pet is between sizes, choose the larger one. Small suits pets up to 7 kg, Medium up to 18 kg and Large up to 40 kg.' },
+    { q: 'What if the flood rises higher than the lift?', a: 'HydroLift raises the house as far as its lift can go. If the water rises past that, it can no longer keep the house dry, so please move your pet to a safe place when you get the flood text. In a strong typhoon, follow local advice and bring your pet to safety.' },
     { q: 'Do I pay online?', a: 'No. You pay in person when you receive your HydroLift. The website only takes your order and your ID.' },
     { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. Only HydroLift administrators can see your ID, and you agree to this when you order.' },
     { q: 'What is the serial code?', a: 'A code like HL-7QK2-M9XD-4PWH that we give you when you pay and receive your unit. Entering it after you log in proves you own the unit. It works only for your account.' },
@@ -244,33 +256,39 @@ export const Product = () => {
     setTitle('The HydroLift product');
     const product = useProduct();
     const cardArt = useMemo(() => houseSvg({ lift: 1.6 }), []);
+    // A price set for one size wins, then the one price for every size, then none.
+    const priceFor = (value) => product.sizes?.find((x) => x.value === value)?.price ?? product.price;
     return (
         <ShopShell>
             <main>
                 <section className={styles.section}>
                     <div className={styles.wrap}>
-                        <PageHead eyebrow="Product" title="One pet house, ready to lift">
-                            Every HydroLift comes with its sensor, controller, battery and your own dashboard.
+                        <PageHead eyebrow="Product" title="Choose the right size">
+                            Your pet should be able to stand, turn around and lie fully stretched out inside. If your pet is between sizes, choose the larger one.
                         </PageHead>
-                        <article className={styles.productCard}>
-                            <div className={styles.pic}><svg viewBox={VIEW_BOX} role="img" aria-label="A HydroLift pet house raised on its actuators" dangerouslySetInnerHTML={{ __html: cardArt }} /></div>
-                            <div className={styles.productBody}>
-                                <div>
-                                    <h2>HydroLift</h2>
-                                    <p className={styles.fit}>A lifting pet house for homes in flood-prone areas.</p>
-                                </div>
-                                <dl>
-                                    <dt>Lifting</dt><dd>4 actuators, automatic</dd>
-                                    <dt>Full travel</dt><dd>About 10 seconds</dd>
-                                    <dt>Alerts</dt><dd>Text message</dd>
-                                    <dt>Control</dt><dd>Dashboard or switch</dd>
-                                </dl>
-                                <div className={styles.bottom}>
-                                    <Price price={product.price} />
-                                    <Link to="/buy" className={shellStyles.btn}>Order now</Link>
-                                </div>
-                            </div>
-                        </article>
+                        <div className={styles.sizeGrid}>
+                            {SIZES.map((size) => (
+                                <article key={size.value} className={styles.sizeCard}>
+                                    <div className={styles.pic}><svg viewBox={VIEW_BOX} role="img" aria-label={`A ${size.name} HydroLift pet house raised on its actuators`} dangerouslySetInnerHTML={{ __html: cardArt }} /></div>
+                                    <div>
+                                        <h2>{size.name}</h2>
+                                        <p className={styles.fit}>{size.fit}</p>
+                                    </div>
+                                    <dl>
+                                        <dt>Inside size</dt><dd>{size.inside}</dd>
+                                        <dt>Pet weight</dt><dd>{size.petWeight}</dd>
+                                        <dt>Lifting</dt><dd>4 actuators, automatic</dd>
+                                    </dl>
+                                    <div className={styles.bottom}>
+                                        <Price price={priceFor(size.value)} />
+                                        <Link to={`/buy?size=${size.value}`} className={shellStyles.btn}>Order {size.name}</Link>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                        <p className={styles.note}>
+                            <strong>Every HydroLift comes with its sensor, controller, battery and your own dashboard.</strong> Full travel is about 10 seconds, and you get a text when it lifts on its own.
+                        </p>
                     </div>
                 </section>
             </main>
@@ -326,6 +344,12 @@ export const Specifications = () => {
                             <table className={styles.specTable}>
                                 <tbody>
                                     {SPECS.map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{v}</td></tr>)}
+                                </tbody>
+                            </table>
+                            <h2 className={styles.subhead}>The house</h2>
+                            <table className={styles.specTable}>
+                                <tbody>
+                                    {HOUSE.map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{v}</td></tr>)}
                                 </tbody>
                             </table>
                         </div>

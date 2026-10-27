@@ -41,7 +41,7 @@ const TABLES = {
     orders: {
         label: 'Orders',
         from: 'orders',
-        sql: `SELECT o.id, u.username, u.fullName, o.status, v.idType, o.price, o.paidAt,
+        sql: `SELECT o.id, u.username, u.fullName, o.status, o.houseSize, v.idType, o.price, o.paidAt,
                      o.reviewedAt, o.rejectReason, o.createdAt
               FROM orders o
               JOIN users u ON u.id = o.userId
@@ -52,6 +52,7 @@ const TABLES = {
             { key: 'username', label: 'Username' },
             { key: 'fullName', label: 'Full name' },
             { key: 'status', label: 'Status' },
+            { key: 'houseSize', label: 'Size' },
             { key: 'idType', label: 'ID type' },
             { key: 'price', label: 'Price', type: 'number' },
             { key: 'paidAt', label: 'Paid', type: 'time' },

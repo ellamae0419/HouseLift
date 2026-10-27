@@ -3,7 +3,8 @@ import { setTitle } from '../../utils/generalFunctions';
 import { appBase, appUrl } from '../../utils/siteLinks';
 import { ShopShell } from '../../components/ShopShell/index';
 import shellStyles from '../../components/ShopShell/shell.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { SIZES, sizeByValue } from '../../config/shopSizes';
 
 import { useRef, useState, useEffect, useMemo } from "react";
 import axios from '../../lib/axios';
@@ -57,7 +58,14 @@ export const Shop = () => {
 
     const errRef = useRef();
 
-    const [product, setProduct] = useState({ name: 'HydroLift', price: null, idTypes: [] });
+    const [product, setProduct] = useState({ name: 'HydroLift', price: null, sizes: [], idTypes: [] });
+
+    // The product page's "Order now" buttons open this form with a size already chosen.
+    const [params] = useSearchParams();
+    const [size, setSize] = useState(() => {
+        const wanted = (params.get('size') || '').toUpperCase();
+        return sizeByValue(wanted) ? wanted : '';
+    });
 
     const [fullName, setFullName] = useState('');
     const [username, setUsername] = useState('');
@@ -107,7 +115,7 @@ export const Shop = () => {
         setBarangayOptions(cityCode ? PhilAddress.sort(PhilAddress.getBarangayByMun(cityCode)) : []);
     }, [cityCode]);
 
-    useEffect(() => { setErrMsg(''); }, [fullName, username, email, mobileNumber, street, provinceCode, cityCode, barangayName, password, matchPassword, idType, idImage, consent]);
+    useEffect(() => { setErrMsg(''); }, [size, fullName, username, email, mobileNumber, street, provinceCode, cityCode, barangayName, password, matchPassword, idType, idImage, consent]);
 
     const validFullName = fullNameRegex.test(fullName.trim());
     const validUsername = userRegex.test(username);
@@ -116,7 +124,10 @@ export const Shop = () => {
     const validAddress = street.trim().length >= 2 && !!provinceCode && !!cityCode && !!barangayName;
     const validPassword = passwordRegex.test(password);
     const validMatch = password === matchPassword;
-    const canSubmit = validFullName && validUsername && validEmail && validMobile && validAddress
+    const chosen = sizeByValue(size);
+    // A price set for this size wins, then the one price for every size, then none.
+    const price = product.sizes?.find((x) => x.value === size)?.price ?? product.price;
+    const canSubmit = !!chosen && validFullName && validUsername && validEmail && validMobile && validAddress
         && validPassword && validMatch && !!idType && !!idImage && consent && !idBusy && !submitting;
 
     const handleFile = async (e) => {
@@ -147,7 +158,7 @@ export const Shop = () => {
         setSubmitting(true);
         try {
             const res = await axios.post('/shop/orders', {
-                fullName: fullName.trim(), username, email, mobileNumber, address, password, idType, idImage, consent,
+                size, fullName: fullName.trim(), username, email, mobileNumber, address, password, idType, idImage, consent,
             }, { timeout: 60000 });
             setOrderId(res?.data?.orderId ?? 0);
             setPassword('');
@@ -172,7 +183,7 @@ export const Shop = () => {
                                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#182d44" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
                             </div>
                             <h1>Order received</h1>
-                            <p>{orderId ? `Your order number is #${orderId}. ` : ''}We will check your ID and contact you.</p>
+                            <p>{orderId ? `Your order number is #${orderId}. ` : ''}{chosen ? `You ordered a ${chosen.name} HydroLift. ` : ''}We will check your ID and contact you.</p>
                             <ol className={styles.doneSteps}>
                                 <li>We check your ID. You can log in once it is approved.</li>
                                 <li>You pay in person when you receive your HydroLift.</li>
@@ -201,6 +212,23 @@ export const Shop = () => {
 
                     <div className={styles.box}>
                         <form className={styles.fields} id="order" onSubmit={handleSubmit} noValidate>
+                            <div className={styles.group}>
+                                <h2 className={styles.groupTitle}>Choose a size</h2>
+                                <fieldset className={styles.sizes}>
+                                    <legend className={styles.srOnly}>Size of the pet house</legend>
+                                    {SIZES.map((x) => (
+                                        <label key={x.value} htmlFor={`size-${x.value}`} className={`${styles.sizeCard} ${size === x.value ? styles.sizeOn : ''}`}>
+                                            <input type="radio" id={`size-${x.value}`} name="size" value={x.value} checked={size === x.value} onChange={() => setSize(x.value)} />
+                                            <strong>{x.name}</strong>
+                                            <span>{x.fit}</span>
+                                            <small>Inside {x.inside}</small>
+                                            <small>{x.petWeight}</small>
+                                        </label>
+                                    ))}
+                                </fieldset>
+                                <span className={styles.hint}>Your pet should be able to stand, turn around and lie fully stretched out inside. If your pet is between sizes, choose the larger one.</span>
+                            </div>
+
                             <div className={styles.group}>
                                 <h2 className={styles.groupTitle}>Your details</h2>
                                 <label className={`${styles.field} ${fullName && !validFullName ? styles.invalid : ''}`} htmlFor="fullName">
@@ -316,9 +344,10 @@ export const Shop = () => {
                             <div className={styles.panelInner}>
                                 <span className={styles.eyebrow}>Your order</span>
                                 <div>
-                                    <div className={styles.panelName}>{product.name}</div>
-                                    {product.price
-                                        ? <div className={styles.panelPrice}>₱{product.price.toLocaleString('en-PH')}</div>
+                                    <div className={styles.panelName}>{product.name}{chosen ? ` · ${chosen.name}` : ''}</div>
+                                    {!chosen && <p className={styles.panelNote}>Choose a size to continue.</p>}
+                                    {price
+                                        ? <div className={styles.panelPrice}>₱{price.toLocaleString('en-PH')}</div>
                                         : <div className={`${styles.panelPrice} ${styles.panelPriceSmall}`}>Price confirmed when we contact you</div>}
                                     <p className={styles.panelNote}>Paid in person. Nothing to pay online.</p>
                                 </div>

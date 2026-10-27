@@ -19,6 +19,9 @@ const ID_TYPES = {
     other: 'Other government-issued ID',
 };
 
+// The pet house comes in three sizes, as on the product page.
+const SIZES = { S: 'Small', M: 'Medium', L: 'Large' };
+
 // The browser shrinks the photo before sending it, so a real upload is a few
 // hundred KB. This cap only stops someone posting something huge on purpose.
 const MAX_ID_BYTES = 2 * 1024 * 1024;
@@ -42,7 +45,11 @@ const decodeIdImage = (dataUrl) => {
     return { mimeType: match[1], buffer };
 };
 
-const productPrice = () => {
+// HYDROLIFT_PRICE_PHP_S / _M / _L set a price per size; HYDROLIFT_PRICE_PHP is the one
+// price used for any size that has none of its own.
+const productPrice = (size) => {
+    const own = size ? Math.round(Number(process.env[`HYDROLIFT_PRICE_PHP_${size}`])) : 0;
+    if (own > 0) return own;
     const price = Math.round(Number(process.env.HYDROLIFT_PRICE_PHP));
     return price > 0 ? price : null;
 };
@@ -53,12 +60,13 @@ const getProduct = (req, res) => {
         // Only shown when the owner has set it; the page says the price is
         // confirmed at hand-over otherwise, rather than inventing one.
         price: productPrice(),
+        sizes: Object.entries(SIZES).map(([value, label]) => ({ value, label, price: productPrice(value) })),
         idTypes: Object.entries(ID_TYPES).map(([value, label]) => ({ value, label })),
     });
 };
 
 const placeOrder = async (req, res) => {
-    const { fullName, username, email, mobileNumber, address, password, idType, idImage, consent } = req.body || {};
+    const { fullName, username, email, mobileNumber, address, password, size, idType, idImage, consent } = req.body || {};
 
     if (!NAME_REGEX.test(String(fullName || '').trim())) return res.status(400).json({ message: 'Enter your full name (letters only).' });
     if (!USERNAME_REGEX.test(username || '')) return res.status(400).json({ message: 'Username must be 4 to 19 characters, start with a letter, and use only letters, numbers, - or _.' });
@@ -66,6 +74,7 @@ const placeOrder = async (req, res) => {
     if (!MOBILE_REGEX.test(mobileNumber || '')) return res.status(400).json({ message: 'Mobile number must be 11 digits starting with 09.' });
     if (!String(address || '').trim() || String(address).length > 255) return res.status(400).json({ message: 'Enter your delivery address.' });
     if (!PASSWORD_REGEX.test(password || '')) return res.status(400).json({ message: 'Password must be 8 to 24 characters with an uppercase letter, a lowercase letter, a number and a special character (! * @ # $ %).' });
+    if (!Object.prototype.hasOwnProperty.call(SIZES, size)) return res.status(400).json({ message: 'Choose a size: Small, Medium or Large.' });
     if (!ID_TYPES[idType]) return res.status(400).json({ message: 'Choose the type of ID you are uploading.' });
     if (consent !== true) return res.status(400).json({ message: 'Please agree to let us keep your ID photo for verification.' });
 
@@ -91,7 +100,7 @@ const placeOrder = async (req, res) => {
                 'INSERT INTO users (id, username, email, password, fullName, address, mobileNumber, isVerified, isActivated) VALUES (?,?,?,?,?,?,?,0,0)',
                 [userId, username, email, hashed, String(fullName).trim(), String(address).trim(), mobileNumber]
             );
-            const order = await conn.query('INSERT INTO orders (userId, price) VALUES (?, ?)', [userId, productPrice()]);
+            const order = await conn.query('INSERT INTO orders (userId, houseSize, price) VALUES (?, ?, ?)', [userId, size, productPrice(size)]);
             orderId = Number(order.insertId);
             await conn.query(
                 'INSERT INTO id_verifications (orderId, idType, mimeType, image) VALUES (?,?,?,?)',
@@ -108,7 +117,7 @@ const placeOrder = async (req, res) => {
         try {
             await global.db.query(
                 'INSERT INTO notifications (title, description, isRead) VALUES (?, ?, 0)',
-                ['New HydroLift order', `${String(fullName).trim()} (${username}) placed order #${orderId}. Their ID is waiting for review in Orders.`]
+                ['New HydroLift order', `${String(fullName).trim()} (${username}) placed order #${orderId} for a ${SIZES[size]} HydroLift. Their ID is waiting for review in Orders.`]
             );
         } catch (notifyErr) {
             console.error('[placeOrder] Failed to create order notification:', notifyErr.message);
@@ -124,4 +133,4 @@ const placeOrder = async (req, res) => {
     }
 };
 
-module.exports = { getProduct, placeOrder, ID_TYPES };
+module.exports = { getProduct, placeOrder, ID_TYPES, SIZES };
