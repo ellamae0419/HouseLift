@@ -41,12 +41,13 @@ export const UserManagement = () => {
     // "Send test text": checks that flood alert texts can really go out.
     const [smsOpen, setSmsOpen] = React.useState(false);
     const [smsRoute, setSmsRoute] = React.useState(undefined); // undefined = checking, null = not set up, text = the route in use
-    const [smsNumber, setSmsNumber] = React.useState('');
+    const [smsUserId, setSmsUserId] = React.useState('');
     const [smsBusy, setSmsBusy] = React.useState(false);
     const [smsResult, setSmsResult] = React.useState({ ok: false, text: '' });
 
     const openSmsDialog = async () => {
         setSmsOpen(true);
+        setSmsUserId('');
         setSmsResult({ ok: false, text: '' });
         setSmsRoute(undefined);
         try {
@@ -62,7 +63,7 @@ export const UserManagement = () => {
         setSmsBusy(true);
         setSmsResult({ ok: false, text: '' });
         try {
-            const res = await axiosPrivate.post('/users/test-sms', { to: smsNumber.trim() });
+            const res = await axiosPrivate.post('/users/test-sms', { userId: smsUserId });
             setSmsResult({ ok: true, text: res.data?.message || 'Test text sent.' });
         } catch (err) {
             setSmsResult({ ok: false, text: err?.response?.data?.message || 'The test text could not be sent.' });
@@ -414,7 +415,7 @@ export const UserManagement = () => {
                 <DialogTitle sx={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>Send a test text</DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" sx={{ color: 'var(--text-low)', mb: 1 }}>
-                        Flood alerts are texted to each house owner&apos;s registered mobile number. Send one test text to your own number to check it works before a real flood.
+                        Flood alerts are texted to each house owner&apos;s registered mobile number. Pick yourself, or anyone with a registered number, and send one test text to check it works before a real flood.
                     </Typography>
                     <div
                         role="status"
@@ -429,16 +430,21 @@ export const UserManagement = () => {
                         {smsRoute && `Text sending is set up (${smsRoute}).`}
                     </div>
                     <TextField
-                        label="Mobile number"
-                        placeholder="09XXXXXXXXX"
+                        select
+                        label="Send to"
                         fullWidth
                         margin="normal"
-                        value={smsNumber}
-                        onChange={(e) => setSmsNumber(e.target.value)}
-                        error={Boolean(smsNumber) && !mobileRegex.test(smsNumber.trim())}
-                        helperText="11 digits, starting with 09."
+                        value={smsUserId}
+                        onChange={(e) => setSmsUserId(e.target.value)}
+                        helperText="Texts only ever go to the mobile number a user registered with."
                         sx={fieldSx}
-                    />
+                    >
+                        {users.filter((u) => mobileRegex.test(u.mobileNumber || '')).map((u) => (
+                            <MenuItem key={u.id} value={u.id}>
+                                {u.fullName || u.username} ({u.mobileNumber.slice(0, 2)}•••••{u.mobileNumber.slice(-4)})
+                            </MenuItem>
+                        ))}
+                    </TextField>
                     {smsResult.text && (
                         <Typography sx={{ color: smsResult.ok ? 'var(--hl-success-ink)' : 'var(--red)', mt: 1 }}>{smsResult.text}</Typography>
                     )}
@@ -452,7 +458,7 @@ export const UserManagement = () => {
                     </Button>
                     <Button
                         onClick={sendTestText}
-                        disabled={smsBusy || !smsRoute || !mobileRegex.test(smsNumber.trim())}
+                        disabled={smsBusy || !smsRoute || !smsUserId}
                         sx={{
                             backgroundColor: 'var(--hl-accent)', color: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none',
                             '&:hover': { backgroundColor: 'var(--hl-secondary-dark)' }, '&.Mui-disabled': { backgroundColor: 'var(--hl-accent)', color: '#fff', opacity: 0.5 },
