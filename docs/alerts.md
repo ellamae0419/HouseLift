@@ -50,6 +50,8 @@ The design raises the critical alarm well above the warning level, where the lif
 
 Sign in as admin, open **User management** and click **Send test text**. It says whether text sending is set up. Pick a user from the list and it sends one test text to the mobile number that user registered with.
 
+If the list is empty, nobody has a registered mobile number yet, so nobody can be texted. Click **Edit** on a user and add their mobile number. If the window says it could not ask the server, the server on Render is still an older version without the text feature.
+
 ## Who gets the texts
 
 Only the mobile number a user registered with. The system never asks anyone to type a number, and it cannot text a number that is not on an account. An alert goes to the owner of the device that raised it, and the number is looked up automatically when the alert happens. The test button works the same way: you pick a registered user, you do not type a number.

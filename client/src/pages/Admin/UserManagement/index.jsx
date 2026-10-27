@@ -40,7 +40,7 @@ export const UserManagement = () => {
 
     // "Send test text": checks that flood alert texts can really go out.
     const [smsOpen, setSmsOpen] = React.useState(false);
-    const [smsRoute, setSmsRoute] = React.useState(undefined); // undefined = checking, null = not set up, text = the route in use
+    const [smsRoute, setSmsRoute] = React.useState(undefined); // undefined = checking, false = could not ask the server, null = not set up, text = the route in use
     const [smsUserId, setSmsUserId] = React.useState('');
     const [smsBusy, setSmsBusy] = React.useState(false);
     const [smsResult, setSmsResult] = React.useState({ ok: false, text: '' });
@@ -54,8 +54,7 @@ export const UserManagement = () => {
             const res = await axiosPrivate.get('/users/sms-status');
             setSmsRoute(res.data?.route ?? null);
         } catch {
-            setSmsRoute(null);
-            setSmsResult({ ok: false, text: 'Could not check the text setup. Try again in a moment.' });
+            setSmsRoute(false);
         }
     };
 
@@ -71,6 +70,8 @@ export const UserManagement = () => {
             setSmsBusy(false);
         }
     };
+
+    const textableUsers = users.filter((u) => mobileRegex.test(u.mobileNumber || ''));
 
     const loadUsers = async () => {
         setLoading(true);
@@ -421,11 +422,12 @@ export const UserManagement = () => {
                         role="status"
                         style={{
                             padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 600, marginTop: 8,
-                            background: smsRoute ? 'var(--hl-success-bg)' : smsRoute === null ? 'var(--hl-warning-bg)' : 'var(--hl-page-bg)',
-                            color: smsRoute ? 'var(--hl-success-ink)' : smsRoute === null ? 'var(--hl-warning-ink)' : 'var(--hl-ink-secondary)',
+                            background: smsRoute ? 'var(--hl-success-bg)' : smsRoute === undefined ? 'var(--hl-page-bg)' : 'var(--hl-warning-bg)',
+                            color: smsRoute ? 'var(--hl-success-ink)' : smsRoute === undefined ? 'var(--hl-ink-secondary)' : 'var(--hl-warning-ink)',
                         }}
                     >
                         {smsRoute === undefined && 'Checking the text setup…'}
+                        {smsRoute === false && 'Could not ask the server about texting. The server may still be on an old version, or it may be waking up. Try again in a minute.'}
                         {smsRoute === null && 'Text sending is not set up yet. In Render, add SMS_GATEWAY_USER and SMS_GATEWAY_PASSWORD from the SMS Gateway app on your phone, then redeploy.'}
                         {smsRoute && `Text sending is set up (${smsRoute}).`}
                     </div>
@@ -436,10 +438,10 @@ export const UserManagement = () => {
                         margin="normal"
                         value={smsUserId}
                         onChange={(e) => setSmsUserId(e.target.value)}
-                        helperText="Texts only ever go to the mobile number a user registered with."
+                        helperText={textableUsers.length ? 'Texts only ever go to the mobile number a user registered with.' : 'Nobody has a registered mobile number yet, so nobody can be texted. Click Edit on a user, add their mobile number, then come back.'}
                         sx={fieldSx}
                     >
-                        {users.filter((u) => mobileRegex.test(u.mobileNumber || '')).map((u) => (
+                        {textableUsers.map((u) => (
                             <MenuItem key={u.id} value={u.id}>
                                 {u.fullName || u.username} ({u.mobileNumber.slice(0, 2)}•••••{u.mobileNumber.slice(-4)})
                             </MenuItem>
