@@ -41,25 +41,103 @@ const Icon = ({ name }) => (
 
 const FEATURES = [
     { icon: 'steps', title: 'Lifts in proportion', text: 'The house rises as the water rises, so there is no sudden jump at the flood line.' },
-    { icon: 'text', title: 'Flood text alerts', text: 'A text goes to your mobile number when the platform lifts on its own, at most once every ten minutes.' },
+    { icon: 'text', title: 'Flood text alerts', text: 'You get a text when the platform lifts, again if the water reaches the critical level, and when it is all clear.' },
     { icon: 'chart', title: 'Live water level', text: 'See the water level and whether your unit is online, from your phone or computer.' },
     { icon: 'updown', title: 'Lift from your phone', text: 'Raise or lower the house from the dashboard when you want to, not only during a flood.' },
     { icon: 'toggle', title: 'Manual switch', text: 'A toggle switch on the unit lifts or lowers the house by hand.' },
     { icon: 'list', title: 'History and reports', text: 'Every lift is recorded with its date. Filter the history and see water level trends for 24 hours, 7 days or 30 days.' },
 ];
 
-const HOW = [
-    { title: 'It senses the water', text: 'A water level sensor is checked many times a second. A splash is ignored. Rising water is not.' },
-    { title: 'It lifts the house', text: 'The platform climbs in step with the water and is fully up when the water reaches the flood level. It stays up until the water has clearly dropped.' },
-    { title: 'It texts you', text: 'When an automatic lift happens you get a text on your mobile number, so you know even when you are away.' },
-    { title: 'You can check in', text: 'The dashboard shows the water level, whether the unit is online and every lift.' },
+// What HydroLift does, stage by stage, with what the owner is texted at each one. This follows the
+// stages in the Flood-Adaptive Pethouse design and the alerts the system sends (see docs/alerts.md).
+const STAGES = [
+    {
+        tag: 'All the time',
+        title: 'It watches the water',
+        text: [
+            'A water level sensor is read many times a second. It reports the water on a scale from 0 (dry) to 4 (the highest the sensor can read).',
+            'A splash, a ripple or a bucket of water thrown by accident is ignored. Only water that keeps rising makes the unit act.',
+        ],
+        sms: 'Nothing to do. Once a day the dashboard notes that your unit is online and working.',
+    },
+    {
+        tag: 'Stage 1 · Warning',
+        title: 'The house lifts, step by step',
+        text: [
+            'When the water is rising, four actuators raise the platform together. It climbs in proportion to the water: the higher the water, the higher the house, with no sudden jump.',
+            'From low to fully raised takes about 10 seconds. The platform is fully up when the water reaches the flood level, and it stays up until the water has clearly dropped.',
+        ],
+        sms: 'You get a WARNING text that the water has reached the warning level and your platform was raised automatically. It is sent once, and not again for 10 minutes.',
+    },
+    {
+        tag: 'Stage 2 · Floating',
+        title: 'If the water keeps rising',
+        text: [
+            'If the water rises past the flood level after the platform is fully up, the house can float on it. Your pet is protected for now, but the water is still rising and you should stay alert.',
+        ],
+        sms: 'You get a text that the water is still rising and the house is floating, so you can get ready.',
+    },
+    {
+        tag: 'Stage 3 · Critical',
+        title: 'The lift has no more height to give',
+        text: [
+            'When the water reaches the critical level, the platform has used all of its travel and the house can no longer be kept above the water by lifting alone. This is the moment to act.',
+            'HydroLift cannot move your pet for you. If you can do so safely, go and get your pet out.',
+        ],
+        sms: 'You get a CRITICAL text straight away: get your pet to safety now. It is sent again every 5 minutes for as long as the water stays that high.',
+    },
+    {
+        tag: 'Recovery · All clear',
+        title: 'The water goes down',
+        text: [
+            'When the water has clearly dropped, the platform lowers by itself and the house settles back to its normal height. You do not need to be there.',
+        ],
+        sms: 'You get an ALL CLEAR text, so you know the flood has passed and the platform was lowered.',
+    },
+    {
+        tag: 'If something is wrong',
+        title: 'It tells you about problems',
+        text: [
+            'If the unit finds a problem, such as a lift that could not finish, or if its battery is running low, it reports it so you can fix it before the next flood.',
+        ],
+        sms: 'You get a text saying the unit reported a problem, or that the battery is low and needs charging or replacing.',
+    },
+    {
+        tag: 'Whenever you want',
+        title: 'You stay in control',
+        text: [
+            'On the dashboard you can watch the water level live, see whether your unit is online, and raise or lower the house from your phone or computer.',
+            'On the unit itself, a toggle switch raises or lowers the house by hand. Every lift is saved with its date, and the reports show the water level over 24 hours, 7 days or 30 days.',
+        ],
+        sms: 'A lift or lowering that you start yourself, from the dashboard or the switch, never sends a flood text, because you already know about it.',
+    },
+    {
+        tag: 'If the internet fails',
+        title: 'It keeps lifting',
+        text: [
+            'Sensing and lifting run on the unit itself, so a dropped WiFi connection does not stop it from lifting the house.',
+            'The dashboard, the history and the text alerts do need WiFi, so while it is down you will not see them or receive texts.',
+        ],
+        sms: null,
+    },
+];
+
+// The same alerts as a quick table.
+const ALERTS = [
+    ['Flood warning', 'The platform lifts by itself because the water is rising. Sent once, then not again for 10 minutes.'],
+    ['House is floating', 'The water keeps rising after the platform is fully up. At most once every 10 minutes.'],
+    ['CRITICAL flood level', 'The water reaches the critical level. Sent at once, then every 5 minutes while the water stays that high.'],
+    ['All clear', 'The water has gone down and the platform was lowered. At most once every 10 minutes.'],
+    ['Unit fault', 'The unit reports a problem. At most once every 30 minutes.'],
+    ['Battery low', 'The unit reports a low battery. At most once every 6 hours.'],
+    ['Daily online check', 'Shown on the dashboard only. It is never texted.'],
 ];
 
 const BUY_STEPS = [
-    { title: 'Send an inquiry', text: 'Give your name and mobile number on the inquiry form. You do not need an account, and nothing is paid online.' },
-    { title: 'Meet us and pay', text: 'We contact you and arrange a time to meet. You pay and pick up your HydroLift in person.' },
-    { title: 'We register you', text: 'We check your ID and register you. We give you your username, password and a serial code.' },
-    { title: 'Activate it', text: 'Log in and enter the serial code. This links the unit to your account.' },
+    { title: 'Send an inquiry', text: 'Give your name and mobile number on the inquiry form. You can add the size you are thinking of and a question. You do not need an account, and nothing is paid online.' },
+    { title: 'We contact you', text: 'We reply on your mobile number, answer your questions, help you choose a size and agree on a time and place to meet.' },
+    { title: 'Meet, pay and get registered', text: 'You pay and pick up your HydroLift in person. We look at your valid ID with you, register you as the owner and give you your username, password and a serial code. Flood texts go to the mobile number you gave.' },
+    { title: 'Log in and activate', text: 'Go to the login page, log in, and type in the serial code. This links the unit to your account and opens your dashboard.' },
 ];
 
 const SPECS = [
@@ -81,16 +159,22 @@ const HOUSE = [
 ];
 
 const FAQS = [
-    { q: 'Which size should I choose?', a: 'Your pet should be able to stand, turn around and lie fully stretched out inside. If your pet is between sizes, choose the larger one. Small suits pets up to 7 kg, Medium up to 18 kg and Large up to 40 kg.' },
-    { q: 'What if the flood rises higher than the lift?', a: 'HydroLift raises the house as far as its lift can go. If the water rises past that, it can no longer keep the house dry, so please move your pet to a safe place when you get the flood text. In a strong typhoon, follow local advice and bring your pet to safety.' },
     { q: 'Can I buy online?', a: 'No. HydroLift is sold face to face only. There is no online payment and no delivery. You pay and pick up your unit in person. The website only takes your inquiry.' },
+    { q: 'How do I buy one?', a: 'Send an inquiry with your name and mobile number. We contact you, answer your questions and agree on a time and place to meet. You pay and pick up your unit in person, and we register you and give you your login and serial code.' },
     { q: 'Do I need an account to ask?', a: 'No. Anyone can send an inquiry with just a name and a mobile number. No account is made, and nothing is paid online.' },
-    { q: 'When do I get my account?', a: 'When you pay and pick up your HydroLift. We check your ID and register you, then give you your username, password and serial code.' },
-    { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. We check your ID in person when you buy, and only HydroLift administrators can see it.' },
-    { q: 'What is the serial code?', a: 'A code like HL-7QK2-M9XD-4PWH that we give you when you pay and receive your unit. Entering it after you log in proves you own the unit. It works only for your account.' },
-    { q: 'Will it still lift if my WiFi goes down?', a: 'Sensing and lifting run on the unit itself, so a dropped connection does not stop it from lifting. The dashboard, history and text alerts need WiFi.' },
-    { q: 'How many texts will I get?', a: 'One when an automatic lift happens, and then no more than one every ten minutes. They go to the mobile number you registered with when you bought.' },
-    { q: 'What do I get when I buy?', a: 'A HydroLift pet house, your login to the dashboard and a serial code that links the unit to your account.' },
+    { q: 'How much does it cost?', a: 'The price depends on the size, and we confirm it when we contact you. You pay it in person. There is nothing to pay online.' },
+    { q: 'Which size should I choose?', a: 'Choose the size where your pet can stand, turn around and lie fully stretched out. If your pet is between sizes, choose the larger one. Small suits cats, puppies and toy breeds up to 7 kg. Medium suits aspins, beagles and shih tzu up to 18 kg. Large suits Labradors, huskies and large aspins up to 40 kg. Not sure? Tell us your pet’s breed and weight in your inquiry and we will help you choose.' },
+    { q: 'What do I get when I buy?', a: 'The pet house on its lifting platform, with the four actuators, the WiFi controller and the water level sensor, plus the toggle switch for lifting by hand. You also get your login to the dashboard and a serial code that links the unit to your account. The Specifications page lists everything.' },
+    { q: 'When do I get my account?', a: 'When you pay and pick up your HydroLift. We check your ID and register you, then give you your username, password and serial code. You cannot log in before that.' },
+    { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. We check your ID with you in person when you buy and keep a photo of it. Only HydroLift administrators can see it.' },
+    { q: 'What is the serial code?', a: 'A code like HL-7QK2-M9XD-4PWH that we give you when you pay and pick up your unit. After you log in, you type it in once. That links the unit to your account and opens your dashboard. It works only for your account.' },
+    { q: 'What does HydroLift do in a flood?', a: 'It senses the water rising and lifts your pet’s house on its own, in step with the water, so the house stays above it. It texts you as the flood grows and again when it has passed, and lowers the house when the water has gone down. The How it works page explains each stage.' },
+    { q: 'What if the flood rises higher than the lift?', a: 'The platform can only rise as far as its lift can travel. If the water goes past that, the house can no longer be kept dry by lifting. You get a CRITICAL text right away and again every 5 minutes while the water stays that high, telling you to get your pet to safety. HydroLift is a protection, not a guarantee. In a strong typhoon or a very deep flood, follow local advice and bring your pet and your family to safety.' },
+    { q: 'Will it still lift if my WiFi goes down?', a: 'Yes. Sensing and lifting run on the unit itself, so a dropped connection does not stop it from lifting. While the WiFi is down you will not see the dashboard or get text alerts, because those need the internet.' },
+    { q: 'What texts will I get?', a: 'A warning when the platform lifts, a CRITICAL text if the water reaches the critical level (repeated every 5 minutes while it stays that high), and an ALL CLEAR when the water has gone down. You also get a text if the unit reports a problem or its battery is low. To avoid filling your phone, the other alerts are limited to one every 10 minutes or longer. A lift or lowering you start yourself never sends a flood text.' },
+    { q: 'Who receives the texts, and do they cost me anything?', a: 'The texts go only to the mobile number registered on your account, and nobody else gets them. They cost you nothing. You only need a phone that can receive ordinary text messages, with no app to install.' },
+    { q: 'Can I raise or lower the house myself?', a: 'Yes. You can do it from the dashboard on your phone or computer, or with the toggle switch on the unit.' },
+    { q: 'What if I forget my password?', a: 'On the login page, choose Forgot password? A code is sent to your email so you can set a new one.' },
 ];
 
 const Price = ({ price }) => (
@@ -298,7 +382,7 @@ export const Product = () => {
     );
 };
 
-/* ---------- How it works (and how to order) ---------- */
+/* ---------- How it works (and how to buy) ---------- */
 export const HowItWorks = () => {
     setTitle('How HydroLift works');
     return (
@@ -306,10 +390,30 @@ export const HowItWorks = () => {
             <main>
                 <section className={styles.section}>
                     <div className={styles.wrap}>
-                        <PageHead eyebrow="How it works" title="From rising water to a safe pet" />
-                        <Steps items={HOW} />
+                        <PageHead eyebrow="How it works" title="From rising water to a safe pet">
+                            Here is what HydroLift does, one stage at a time, and the text you get at each stage.
+                        </PageHead>
+                        <ol className={styles.stages}>
+                            {STAGES.map((s) => (
+                                <li key={s.title} className={styles.stage}>
+                                    <div className={styles.stageBody}>
+                                        <span className={styles.stageTag}>{s.tag}</span>
+                                        <h2>{s.title}</h2>
+                                        {s.text.map((t) => <p key={t}>{t}</p>)}
+                                        {s.sms && <div className={styles.stageSms}><strong>What you get:</strong> {s.sms}</div>}
+                                    </div>
+                                </li>
+                            ))}
+                        </ol>
+
+                        <h2 className={styles.subhead}>Your text alerts at a glance</h2>
+                        <table className={styles.specTable}>
+                            <tbody>
+                                {ALERTS.map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{v}</td></tr>)}
+                            </tbody>
+                        </table>
                         <p className={styles.note}>
-                            <strong>Lifting does not depend on the internet.</strong> Sensing and lifting run on the unit itself. WiFi adds the dashboard, history and text alerts.
+                            <strong>Please remember.</strong> HydroLift lifts the house as high as its lift can travel. It cannot move your pet for you. When you get the CRITICAL text, act on it.
                         </p>
                     </div>
                 </section>

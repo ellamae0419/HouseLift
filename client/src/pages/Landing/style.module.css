@@ -138,3 +138,15 @@
 @media (max-width: 520px) {
     .stepGrid { grid-template-columns: 1fr; }
 }
+
+/* How it works: one stage after another, joined by a line */
+.stages { list-style: none; padding: 0; margin: 48px 0 0; max-width: 860px; counter-reset: stage; }
+.stage { counter-increment: stage; position: relative; padding: 0 0 34px 68px; }
+.stage::before { content: counter(stage); position: absolute; left: 0; top: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--navy); color: var(--white); display: grid; place-items: center; font-family: var(--display); font-weight: 700; }
+.stage:not(:last-child)::after { content: ""; position: absolute; left: 21px; top: 50px; bottom: 6px; width: 2px; background: var(--line); }
+.stageTag { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--teal-deep); }
+.stageBody h2 { font-size: 1.3rem; margin-top: 4px; }
+.stageBody p { color: var(--muted); margin-top: 10px; max-width: 62ch; }
+.stageSms { margin-top: 14px; padding: 12px 16px; border-radius: 10px; background: var(--teal-pale); color: var(--navy); font-size: 0.93rem; max-width: 62ch; }
+.stageSms strong { font-weight: 600; }
+@media (max-width: 560px) { .stage { padding-left: 56px; } .stage::before { width: 38px; height: 38px; } .stage:not(:last-child)::after { left: 18px; top: 44px; } }
