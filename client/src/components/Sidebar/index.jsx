@@ -28,6 +28,15 @@ const userNavItems = [
         ),
     },
     {
+        to: "/bluetooth",
+        label: "Bluetooth control",
+        icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
+            </svg>
+        ),
+    },
+    {
         to: "/settings",
         label: "Settings",
         icon: (
@@ -131,6 +140,15 @@ const adminNavItems = [
                 <path d="M3 9h18" />
                 <path d="M3 15h18" />
                 <path d="M9 3v18" />
+            </svg>
+        ),
+    },
+    {
+        to: "/bluetooth",
+        label: "Bluetooth control",
+        icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
             </svg>
         ),
     },

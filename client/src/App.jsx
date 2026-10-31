@@ -18,6 +18,7 @@ import { Login } from "./pages/LoginSystem/login";
 import { Activate } from "./pages/Activate/index";
 import { Orders } from "./pages/Admin/Orders/index";
 import { Inquiries } from "./pages/Admin/Inquiries/index";
+import { BluetoothControl } from "./pages/Bluetooth/index";
 import { Records } from "./pages/Admin/Records/index";
 import { ForgotPassword } from "./pages/LoginSystem/forgotPassword";
 import { AdminDashboard } from "./pages/Admin/Dashboard/index";
@@ -61,6 +62,7 @@ function App() {
                             <Route path="/settings" element={<Settings />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/notifications" element={<Notifications />} />
+                            <Route path="/bluetooth" element={<BluetoothControl />} />
                         </Route>
 
                         {/* Routes requiring the user to be an admin */}
