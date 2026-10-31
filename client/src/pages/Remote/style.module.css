@@ -1,0 +1,23 @@
+.page { background: var(--teal-pale); min-height: 100vh; padding: 28px 16px 56px; }
+.wrap { max-width: 640px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; color: var(--navy); }
+.brand img { border-radius: 10px; }
+.title { font-size: clamp(1.7rem, 6vw, 2.2rem); margin-top: 18px; }
+.intro { color: var(--muted); margin-top: 10px; }
+.card { background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-top: 20px; display: grid; gap: 14px; }
+.card p { color: var(--muted); }
+.form { display: grid; gap: 12px; }
+.form label { display: grid; gap: 6px; font-size: 0.9rem; font-weight: 600; }
+.form input { font: inherit; padding: 12px 14px; border: 1px solid #c9d8da; border-radius: 10px; width: 100%; }
+.form input:focus { border-color: var(--teal-deep); outline: 2px solid rgba(23, 103, 107, 0.25); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.tile { background: var(--teal-pale); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.tile small { color: var(--muted); font-size: 0.78rem; }
+.tile b { font-family: var(--display); font-size: 1.6rem; color: var(--navy); }
+.bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 6px; }
+.bar div { height: 6px; border-radius: 3px; background: var(--teal-deep); }
+.note { margin-top: 14px; padding: 12px 16px; border-radius: 12px; background: var(--white); border: 1px solid var(--line); color: var(--muted); font-size: 0.92rem; }
+.warn { background: #fdf3e0; border-color: #f0d9a8; color: #7a5200; }
+.bad { background: #fbe9e5; border-color: #f0c5bb; color: #8f3321; }
+.good { background: #e6f5ee; border-color: #b9e0cb; color: #1f6b46; }

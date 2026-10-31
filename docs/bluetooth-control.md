@@ -38,6 +38,29 @@ The `.ino` differs from the original sketch only by these changes: the `#include
 
 The page must be opened with **https://** at the start of the address. Browsers block Bluetooth on plain `http://` pages. If the InfinityFree address does not open with https, turn on its free SSL certificate in the InfinityFree panel.
 
+## Using it with no internet: the offline remote
+
+The dashboard needs the internet and a login, so it cannot open when there is no internet at all. For that case there is a separate page that needs **no login and no internet** once it has been saved:
+
+**https://hydrolift-shop.vercel.app/remote**
+
+1. **Once, while you have internet:** open that address in Chrome (laptop or Android) or Bluefy (iPhone). The page says **"Saved on this device"** when it has copied itself. In Chrome you can also install it: browser menu, **Install app** (or **Add to Home screen** on a phone).
+2. **From then on, with no internet:** open the same page (or the installed app). It opens from the saved copy. Tap Connect, enter the PIN, and use the controls. Bluetooth talks to the unit directly, so neither the internet nor WiFi is involved.
+
+The unit's PIN is what protects it, since the page has no login. An admin and a customer use the same page with the same PIN. If you want them to have different access, tell me and we can give each person their own PIN.
+
+If the saved copy is ever cleared (clearing the browser's site data does it), open the page once with internet again.
+
+### Laptop and iPhone
+
+| Who | Browser | Works offline? |
+|---|---|---|
+| Admin on a laptop | Chrome or Edge | Yes. Open the page once online, then it works with no internet. |
+| Customer on an Android phone | Chrome | Yes, the same way. |
+| Customer on an iPhone | **Bluefy** (Safari and Chrome on iPhone have no Bluetooth) | The page and Bluetooth work. Whether Bluefy keeps the saved copy for offline use is **not confirmed**: test it by switching the phone to airplane mode (then turning Bluetooth back on) and opening the page. |
+
+Apple does not allow Bluetooth for web pages in Safari, so an iPhone needs a Bluetooth-capable browser such as Bluefy, or a native app. If Bluefy does not keep the page offline, the alternatives are a native iPhone app (needs an Apple developer account and a Mac) or a local page served by the unit itself over its own WiFi hotspot (no app, but it is WiFi, not Bluetooth).
+
 ## How it keeps strangers out
 
 - Nothing moves until the PIN has been sent. A phone that disconnects must send it again.

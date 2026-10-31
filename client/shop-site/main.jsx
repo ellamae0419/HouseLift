@@ -10,6 +10,7 @@ import ErrorBoundary from '../src/components/ErrorBoundary/index';
 import { Landing, About, Product, HowItWorks, Specifications, Faq, Contact } from '../src/pages/Landing/index';
 
 import { Inquire } from '../src/pages/Shop/index';
+import { Remote } from '../src/pages/Remote/index';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
@@ -23,6 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/inquire" element={<Inquire />} />
+                <Route path="/remote" element={<Remote />} />
                 <Route path="/buy" element={<Navigate to="/inquire" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
