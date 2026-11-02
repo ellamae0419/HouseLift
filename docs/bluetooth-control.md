@@ -20,7 +20,7 @@ The `.ino` differs from the original sketch only by these changes: the `#include
 4. **Tools > Partition Scheme > "Huge APP (3MB No OTA/1MB SPIFFS)".** This is needed. WiFi, TLS and Bluetooth together do not fit the default partition (the sketch was about 1.13 MB before Bluetooth, and the default limit is about 1.31 MB).
 5. Upload. In the Serial Monitor you should see `[BLE] Control ready as HydroLift-xxxx`.
 
-> I could not compile or run this on the ESP32 from my computer. It was written for the ESP32 Arduino core 3.x (your README says 3.3.12) and uses the Bluetooth library that comes with that core, but it has not been built. If the Arduino IDE shows an error, send me the full message and I will fix it.
+> **Compiled, not yet run on a board.** The sketch compiles for the ESP32 Arduino core 3.3.12 with the Huge APP partition (1,882,091 bytes, 59% of the space) and your ArduinoJson and WebSockets libraries. It is **too big for the default partition** (about 1.31 MB), so the Huge APP setting is required. I could not run it on a real ESP32 from my computer, so connecting from a real phone is still to be tested. If the Arduino IDE shows an error, send me the full message.
 
 ## Use it
 
@@ -37,6 +37,14 @@ The `.ino` differs from the original sketch only by these changes: the `#include
 | iPhone | Safari and Chrome on iPhone **cannot** do Bluetooth. Use a browser app that supports Web Bluetooth, such as **Bluefy** (free in the App Store), and open the dashboard in it. |
 
 The page must be opened with **https://** at the start of the address. Browsers block Bluetooth on plain `http://` pages. If the InfinityFree address does not open with https, turn on its free SSL certificate in the InfinityFree panel.
+
+## When the WiFi is weak or down
+
+Bluetooth control does not use WiFi at all, and lifting itself never depended on it. A weak WiFi can still get in the way, because the unit keeps trying to reach the cloud: it scans for the WiFi and makes blocking connection attempts, and those share the one radio with Bluetooth and hold up the loop that runs the phone's commands.
+
+So the Bluetooth sketch gives Bluetooth priority. **While a phone is connected over Bluetooth and the WiFi is not up**, the unit pauses its WiFi retries and cloud reconnects (the Serial Monitor shows `[BLE] Phone connected and WiFi is down: WiFi retries paused`). When the phone disconnects, or the WiFi is up, it resumes by itself (`[BLE] WiFi retries resumed`). If the WiFi is connected, nothing is paused.
+
+To test it: turn the router off (or give the unit a wrong WiFi password), power the unit, connect from the remote page, and lift and lower. It should respond within about a second each time.
 
 ## Using it with no internet: the offline remote
 
@@ -79,6 +87,8 @@ The PIN is a shared secret, not strong encryption. For a demo and for a home uni
 - **WiFi got worse after adding Bluetooth:** WiFi and Bluetooth share the same radio. Tell me, and we will check memory and timing.
 - **Commands do nothing:** the unit ignores commands while the motor is moving. Wait for "Resting".
 
-## Not tested yet
+## Tested, and not tested yet
 
-These need the real board and are not covered by my tests: compiling the sketch, advertising and connecting from a real phone, the phone's long read of the status text, and how WiFi and Bluetooth behave together on your unit. The dashboard page was tested in Chrome against a stand-in unit that follows the same PIN rules, commands and status format.
+- **Compiled:** the sketch builds for the ESP32 (core 3.3.12, Huge APP partition).
+- **Tested in Chrome against a stand-in unit:** the dashboard page, and the offline remote (saved on the device, then opened with the web server stopped). The stand-in follows the same PIN rules, commands and status text as the firmware.
+- **Not tested, needs the real board and a real phone:** advertising and connecting from a phone, the phone's long read of the status text, the weak-WiFi priority above, and how WiFi and Bluetooth behave together on your unit.
