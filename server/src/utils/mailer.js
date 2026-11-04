@@ -10,7 +10,7 @@ const DEFAULT_FROM_NAME = 'HydroLift';
 
 const isConfigured = () => Boolean(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY);
 
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, replyTo }) => {
     const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString('base64');
 
     const response = await fetch(MAILJET_URL, {
@@ -26,6 +26,7 @@ const sendEmail = async ({ to, subject, html }) => {
                     Name: DEFAULT_FROM_NAME,
                 },
                 To: [{ Email: to }],
+                ...(replyTo ? { ReplyTo: { Email: replyTo } } : {}),
                 Subject: subject,
                 HTMLPart: html,
             }],
@@ -119,4 +120,44 @@ const sendOtpEmail = async ({ to, otp }) => {
     console.log('\x1b[32m%s\x1b[0m', `[mailer] OTP email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
 };
 
-module.exports = { sendApprovalEmail, sendOrderApprovedEmail, sendOtpEmail };
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Tells the shop's own inbox that someone used Contact us or Schedule a meeting on the website.
+// It goes only to the shop (SHOP_NOTIFY_EMAIL, or the HydroLift Gmail), never to the visitor, so the form
+// cannot be used to send mail to strangers. Replying to the email answers the visitor.
+const sendShopMessageEmail = async ({ isMeeting, name, email, mobile, sizeLabel, when, message }) => {
+    const to = process.env.SHOP_NOTIFY_EMAIL || DEFAULT_FROM_EMAIL;
+    const who = name || email || 'A visitor';
+
+    if (!isConfigured()) {
+        console.log('\x1b[33m%s\x1b[0m', '[mailer] MAILJET_API_KEY/MAILJET_SECRET_KEY not configured — skipping the shop message email.');
+        console.log('\x1b[36m%s\x1b[0m', `[mailer] ${isMeeting ? 'Meeting request' : 'Message'} from ${who} (${email || mobile}) would be emailed to ${to}.`);
+        return;
+    }
+
+    const rows = [
+        name && ['Name', name],
+        email && ['Email', email],
+        mobile && ['Contact number', mobile],
+        isMeeting && when && ['Wants to meet', when],
+        sizeLabel && ['Size', sizeLabel],
+        message && ['Message', message],
+    ].filter(Boolean);
+
+    const data = await sendEmail({
+        to,
+        replyTo: email || undefined,
+        subject: isMeeting ? `HydroLift meeting request from ${who}` : `HydroLift website message from ${who}`,
+        html: `
+            <p>${isMeeting ? 'Someone asked to meet you' : 'Someone sent you a message'} through the HydroLift website.</p>
+            <table cellpadding="6" style="border-collapse: collapse;">
+                ${rows.map(([k, v]) => `<tr><td style="color:#555;vertical-align:top;"><b>${escapeHtml(k)}</b></td><td>${escapeHtml(v)}</td></tr>`).join('')}
+            </table>
+            <p>${email ? 'Press Reply to answer them. ' : ''}It is also saved in Inquiries on the dashboard.</p>
+        `,
+    });
+
+    console.log('\x1b[32m%s\x1b[0m', `[mailer] Shop message email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
+};
+
+module.exports = { sendApprovalEmail, sendOrderApprovedEmail, sendOtpEmail, sendShopMessageEmail };

@@ -1,4 +1,5 @@
 const { SIZES, EMAIL_REGEX, NAME_REGEX, MOBILE_REGEX } = require('./shopController');
+const { sendShopMessageEmail } = require('../utils/mailer');
 
 // An inquiry is only a question from someone who may or may not buy. It creates no account:
 // an admin registers the buyer in person once they pay (see registerBuyer in ordersController).
@@ -74,6 +75,12 @@ const createInquiry = async (req, res) => {
         } catch (notifyErr) {
             console.error('[createInquiry] Failed to create notification:', notifyErr.message);
         }
+
+        // Email the shop's inbox too. It must never make the visitor wait or fail, so it runs on the side.
+        sendShopMessageEmail({
+            isMeeting, name, email: mail, mobile: savedMobile, sizeLabel: size ? SIZES[size] : '',
+            when: isMeeting ? meetingWhen(date, time) : '', message: note,
+        }).catch((mailErr) => console.error('[createInquiry] Could not email the shop:', mailErr.message));
 
         res.status(201).json({ inquiryId: Number(result.insertId), message: isMeeting ? 'Meeting request received.' : 'Message received.' });
     } catch (err) {
