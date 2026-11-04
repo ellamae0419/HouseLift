@@ -2,6 +2,7 @@ import styles from './style.module.css';
 import { setTitle } from '../../utils/generalFunctions';
 import { appBase, appUrl } from '../../utils/siteLinks';
 import { ShopShell } from '../../components/ShopShell/index';
+import { FindUsList, hasFindUs } from '../../components/ShopShell/FindUs';
 import shellStyles from '../../components/ShopShell/shell.module.css';
 import { Link, useSearchParams } from 'react-router-dom';
 import { SIZES, sizeByValue } from '../../config/shopSizes';
@@ -109,6 +110,68 @@ const ContactForm = ({ mode }) => {
                                 <Link to="/" className={shellStyles.btn}>Back to the shop</Link>
                             </div>
                         </div>
+                    </div>
+                </main>
+            </ShopShell>
+        );
+    }
+
+    if (!isMeeting) {
+        return (
+            <ShopShell>
+                <main className={styles.page} id="inquiry-form">
+                    <div className={`${styles.wrap} ${styles.twoCol}`}>
+                        <section aria-label="Find us here">
+                            <h2 className={styles.colTitle}>Find us here</h2>
+                            {hasFindUs
+                                ? <FindUsList />
+                                : <p className={styles.intro}>Send us a message with the form and we will reply by email.</p>}
+                            <p className={styles.hint} style={{ marginTop: 28 }}>HydroLift is sold face to face only. Nothing is paid online.</p>
+                        </section>
+
+                        <form className={`${styles.fields} ${styles.contactCard}`} id="inquiry" onSubmit={handleSubmit} noValidate>
+                            <h1>Contact us</h1>
+                            <label className={`${styles.field} ${email && !validEmail ? styles.invalid : ''}`} htmlFor="email">
+                                Your Email (required)
+                                <input type="email" id="email" autoComplete="email" placeholder="you@email.com"
+                                    value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                <Hint show={email && !validEmail}>Enter a valid email address.</Hint>
+                            </label>
+                            <label className={`${styles.field} ${fullName && !validFullName ? styles.invalid : ''}`} htmlFor="fullName">
+                                Your Name (optional)
+                                <input type="text" id="fullName" autoComplete="name" placeholder="Juan Dela Cruz"
+                                    value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                                <Hint show={fullName && !validFullName}>Use letters only, 2 to 100 characters, or leave it empty.</Hint>
+                            </label>
+                            <label className={`${styles.field} ${!validMessage ? styles.invalid : ''}`} htmlFor="message">
+                                Your Message (optional)
+                                <textarea id="message" rows={4} placeholder="e.g. What size fits my beagle?"
+                                    value={message} onChange={(e) => setMessage(e.target.value)} />
+                                <Hint show={!validMessage}>Keep it under {noteMax} characters.</Hint>
+                            </label>
+                            <fieldset className={styles.sizePills}>
+                                <legend className={styles.groupTitle}>Which size? (optional)</legend>
+                                {SIZES.map((x) => (
+                                    <label key={x.value} htmlFor={`size-${x.value}`} className={`${styles.sizePill} ${size === x.value ? styles.sizePillOn : ''}`}>
+                                        <input type="radio" id={`size-${x.value}`} name="size" value={x.value} checked={size === x.value} onChange={() => setSize(x.value)} />
+                                        {x.name}
+                                    </label>
+                                ))}
+                                {size && <button type="button" className={styles.linkBtn} onClick={() => setSize('')}>Clear</button>}
+                            </fieldset>
+                            <div className={styles.srOnly} aria-hidden="true">
+                                <label htmlFor="website">Leave this empty
+                                    <input type="text" id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                                </label>
+                            </div>
+                            <div className={styles.sendRow}>
+                                <p ref={errRef} tabIndex={-1} className={errMsg ? styles.error : ''} role="alert" hidden={!errMsg}>{errMsg}</p>
+                                <button type="submit" id="sendInquiry" className={`${shellStyles.btn} ${shellStyles.btnWide}`} disabled={!canSubmit}>
+                                    {submitting ? 'Sending…' : 'Send message'}
+                                </button>
+                                {appBase && <p className={styles.foot}>Already bought one? <a href={appUrl('/login?fresh=1')}>Log in</a></p>}
+                            </div>
+                        </form>
                     </div>
                 </main>
             </ShopShell>

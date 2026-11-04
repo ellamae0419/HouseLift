@@ -154,8 +154,4 @@
 /* Find us here: the shop's contact details. Only what is filled in on config/shopContact.js shows. */
 .findUs { padding-top: 64px; padding-bottom: 72px; }
 .findUs h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); }
-.findRow { display: flex; align-items: center; gap: 22px; margin-top: 28px; }
-.findIcon { width: 42px; height: 42px; flex: none; color: var(--muted); }
-.findLabel { display: block; font-weight: 600; color: var(--muted); }
-.findValue { display: block; margin-top: 6px; font-size: 1.05rem; color: var(--navy); text-decoration: none; overflow-wrap: anywhere; }
-.findValue:hover { text-decoration: underline; }
+.findUs h2 { margin-bottom: 28px; }

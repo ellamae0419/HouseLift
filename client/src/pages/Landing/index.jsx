@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import styles from './style.module.css';
 import axios from '../../lib/axios';
 import { setTitle } from '../../utils/generalFunctions';
-import { CONTACT } from '../../config/shopContact';
+import { FindUsList, hasFindUs } from '../../components/ShopShell/FindUs';
 import { SIZES } from '../../config/shopSizes';
 import { ShopShell } from '../../components/ShopShell/index';
 import shellStyles from '../../components/ShopShell/shell.module.css';
@@ -203,19 +203,11 @@ export const Landing = () => {
                     </div>
                 </section>
 
-                {CONTACT.email && (
+                {hasFindUs && (
                     <section className={styles.findUs} aria-label="Find us here">
                         <div className={styles.wrap}>
                             <h2>Find us here</h2>
-                            <div className={styles.findRow}>
-                                <svg className={styles.findIcon} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" />
-                                </svg>
-                                <div>
-                                    <span className={styles.findLabel}>Email:</span>
-                                    <a className={styles.findValue} href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
-                                </div>
-                            </div>
+                            <FindUsList />
                         </div>
                     </section>
                 )}

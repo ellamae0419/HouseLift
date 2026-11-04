@@ -95,3 +95,23 @@
     .row2, .sizes { grid-template-columns: 1fr; }
     .done { padding: 28px 20px; }
 }
+
+/* Contact us page: Find us here on the left, the message form on the right */
+.twoCol { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: start; }
+.twoCol h1, .twoCol h2.colTitle { font-size: clamp(1.7rem, 3.2vw, 2.2rem); margin: 0 0 26px; }
+.contactCard { background: var(--white); border: 1px solid var(--line); border-radius: 20px; }
+.contactCard h1 { margin-bottom: 4px; }
+.sizePills { display: flex; flex-wrap: wrap; gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.sizePill { position: relative; padding: 9px 16px; border: 1.5px solid #c9d8da; border-radius: 999px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--navy); background: var(--white); }
+.sizePill:hover { border-color: var(--teal-deep); }
+.sizePill input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.sizePill:focus-within { outline: 3px solid var(--amber); outline-offset: 2px; }
+.sizePillOn { border-color: var(--teal-deep); background: var(--teal-pale); box-shadow: inset 0 0 0 1px var(--teal-deep); }
+.sendRow { display: grid; gap: 12px; }
+.sendRow .foot { text-align: center; }
+@media (max-width: 900px) {
+    .twoCol { grid-template-columns: 1fr; gap: 36px; }
+}
+.sizePills .groupTitle { border-top: 0; padding: 0 0 10px; }
+.contactCard .foot { color: var(--muted); }
+.contactCard .foot a { color: var(--teal-deep); font-weight: 600; }

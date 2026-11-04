@@ -76,3 +76,13 @@
     .cols { grid-template-columns: 1fr; }
     .topbar .wrap { justify-content: center; text-align: center; }
 }
+
+/* Find us here: the address and contact details, used on the home page and the Contact us page */
+.findList { display: grid; gap: 26px; }
+.findRow { display: flex; align-items: flex-start; gap: 22px; }
+.findIcon { width: 38px; height: 38px; flex: none; color: var(--muted); }
+.findLabel { display: block; font-weight: 600; color: var(--muted); }
+.findValue { display: block; margin-top: 6px; font-size: 1.05rem; color: var(--navy); text-decoration: none; overflow-wrap: anywhere; }
+a.findValue:hover { text-decoration: underline; }
+.findHours { color: var(--navy); }
+.findHours .findLabel { margin-bottom: 6px; }
