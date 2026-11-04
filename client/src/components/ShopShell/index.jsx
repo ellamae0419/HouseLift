@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import styles from './shell.module.css';
 import { appBase, appUrl } from '../../utils/siteLinks';
@@ -18,11 +18,39 @@ export const LogoMark = ({ light = false }) => (
 const PAGES = [
     { to: '/about', label: 'About' },
     { to: '/product', label: 'Product' },
-    { to: '/how-it-works', label: 'How it works' },
     { to: '/specifications', label: 'Specifications' },
     { to: '/faq', label: 'FAQ' },
-    { to: '/contact', label: 'Contact' },
 ];
+
+// The header's call to action: one button that opens a short list, so a visitor can either send us a
+// message or ask to meet. It closes when a choice is made, on Escape, or on a click anywhere else.
+const ContactMenu = () => {
+    const [open, setOpen] = useState(false);
+    const box = useRef(null);
+    const { pathname } = useLocation();
+
+    useEffect(() => { setOpen(false); }, [pathname]);
+    useEffect(() => {
+        if (!open) return undefined;
+        const away = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+        const esc = (e) => { if (e.key === 'Escape') setOpen(false); };
+        document.addEventListener('mousedown', away);
+        document.addEventListener('keydown', esc);
+        return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc); };
+    }, [open]);
+
+    return (
+        <div className={styles.contactMenu} ref={box}>
+            <button type="button" className={styles.btn} aria-haspopup="true" aria-expanded={open} aria-controls="contact-list" onClick={() => setOpen((v) => !v)}>
+                Contact us <span className={styles.caret} aria-hidden="true" />
+            </button>
+            <ul id="contact-list" className={styles.contactList} hidden={!open}>
+                <li><Link to="/contact">Contact us<small>Send a message. Only your email is needed.</small></Link></li>
+                <li><Link to="/schedule">Schedule a meeting<small>Pick a day and leave your contact number.</small></Link></li>
+            </ul>
+        </div>
+    );
+};
 
 const Brand = ({ light }) => (
     <Link className={styles.logo} to="/" aria-label="HydroLift home">
@@ -48,7 +76,7 @@ export const ShopShell = ({ children }) => {
         <>
             <div className={styles.topbar}>
                 <div className={styles.wrap}>
-                    <span>Sold face to face only. Send an inquiry, then pay and pick up in person.</span>
+                    <span>Sold face to face only. Contact us or schedule a meeting, then pay and pick up in person.</span>
                     {CONTACT.phone
                         ? <span>Call or Viber <b>{CONTACT.phone}</b></span>
                         : appBase && <span>Already a customer? <a href={appUrl('/login?fresh=1')}>Log in</a></span>}
@@ -63,7 +91,7 @@ export const ShopShell = ({ children }) => {
                             {PAGES.map((p) => <NavLink key={p.to} to={p.to} className={linkClass}>{p.label}</NavLink>)}
                             {appBase && <a href={appUrl('/login?fresh=1')}>Log in</a>}
                         </nav>
-                        <Link to="/inquire" className={styles.btn}>Inquire now</Link>
+                        <ContactMenu />
                         <button
                             type="button" className={styles.menuBtn} aria-expanded={open} aria-controls="site-menu"
                             onClick={() => setOpen((v) => !v)}
@@ -87,8 +115,8 @@ export const ShopShell = ({ children }) => {
                         <ul>
                             <li><Link to="/product">Product</Link></li>
                             <li><Link to="/specifications">Specifications</Link></li>
-                            <li><Link to="/how-it-works">How to buy</Link></li>
-                            <li><Link to="/inquire">Ask a question</Link></li>
+                            <li><Link to="/contact">Contact us</Link></li>
+                            <li><Link to="/schedule">Schedule a meeting</Link></li>
                         </ul>
                     </div>
                     <div>
@@ -98,7 +126,7 @@ export const ShopShell = ({ children }) => {
                             {CONTACT.facebook && <li>Facebook<br /><b>{CONTACT.facebook}</b></li>}
                             {CONTACT.email && <li>Email<br /><b>{CONTACT.email}</b></li>}
                             {!CONTACT.phone && !CONTACT.facebook && !CONTACT.email && (
-                                <li>Send an inquiry and we will contact you on the mobile number you give.</li>
+                                <li>Use Contact us in the menu to send a message, or Schedule a meeting to pick a day.</li>
                             )}
                         </ul>
                     </div>

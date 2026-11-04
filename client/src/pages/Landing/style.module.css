@@ -102,7 +102,7 @@
 .needs { list-style: none; margin: 0; padding: 20px; display: grid; gap: 10px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; font-size: 0.97rem; color: #e5edf2; }
 .needs li { display: flex; gap: 10px; align-items: flex-start; }
 .needs svg { width: 18px; height: 18px; flex: none; margin-top: 3px; }
-.orderAction { margin-top: 8px; }
+.orderAction { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 10px; }
 
 /* FAQ */
 .faqGrid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 56px; }

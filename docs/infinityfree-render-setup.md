@@ -41,7 +41,7 @@ its own hosting and its own build:
 
 | | Dashboard site | Shop site |
 |---|---|---|
-| Opens | login, dashboard, activation, admin | the selling pages (`/`, `/about`, `/product`, `/how-it-works`, `/specifications`, `/faq`, `/contact`) and the inquiry form `/inquire` |
+| Opens | login, dashboard, activation, admin | the selling pages (`/`, `/about`, `/product`, `/specifications`, `/faq`) and the two forms `/contact` and `/schedule` |
 | Build | `npm run build` in `client` -> `client/dist` | `npm run build:shop` in `client` -> `client/dist-shop` |
 | Lives at | `https://houselift.free.nf` | its own address, e.g. `https://your-shop-domain.com` |
 
