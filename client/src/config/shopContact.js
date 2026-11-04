@@ -3,7 +3,7 @@
 export const CONTACT = {
     phone: '',     // mobile or Viber number, e.g. '0917 123 4567'
     facebook: '',  // page address without https://, e.g. 'facebook.com/yourpage'
-    email: '',     // e.g. 'hello@yourshop.com'
+    email: 'houselift18@gmail.com',     // e.g. 'hello@yourshop.com'
     location: '',  // e.g. 'Antipolo City, Rizal'
     hours: '',     // e.g. 'Open daily, 9:00 AM to 7:00 PM'
 };
