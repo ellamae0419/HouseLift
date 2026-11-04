@@ -37,6 +37,7 @@ const getAllHouses = async (req, res) => {
 
 const bcrypt = require('bcrypt');
 const { generateUserID } = require('../utils/functions');
+const { createSerial } = require('./ordersController');
 const { sendApprovalEmail } = require('../utils/mailer');
 const { smsRoute, sendTestSms } = require('../utils/sms');
 
@@ -148,31 +149,40 @@ const createUser = async (req, res) => {
         const id = generateUserID(15);
         const roleStr = roles && Array.isArray(roles) ? roles.join(',') : (roles || 'user');
 
-        // Accounts an admin creates directly are already vouched for — no separate approval step needed.
-        await global.db.query(
-            'INSERT INTO users (id, username, email, password, roles, fullName, address, mobileNumber, isVerified) VALUES (?,?,?,?,?,?,?,?,1)',
-            [id, username, email, hashed, roleStr, fullName.trim(), address.trim(), mobileNumber]
-        );
+        const isAdmin = roleStr.includes('admin');
 
-        console.log(`[usersController] inserted user id=${id}`);
-
-        // Every house owner gets their own pet-house device slot right away, so
-        // Flood Monitoring can list them immediately (shows "no data yet" until
-        // a real ESP32 provisioned with this ID actually connects).
-        if (!roleStr.includes('admin')) {
+        // Accounts an admin creates directly are already vouched for, so no separate approval step is needed.
+        // A house owner also gets a serial code right away, like Register buyer: a paid order, a unit and the
+        // code are made together with the account, or none of them. The owner logs in and enters the code to
+        // link the unit to their account.
+        let serial = null;
+        if (isAdmin) {
+            await global.db.query(
+                'INSERT INTO users (id, username, email, password, roles, fullName, address, mobileNumber, isVerified) VALUES (?,?,?,?,?,?,?,?,1)',
+                [id, username, email, hashed, roleStr, fullName.trim(), address.trim(), mobileNumber]
+            );
+        } else {
+            const conn = await global.db.getConnection();
             try {
-                await global.db.query(
-                    'INSERT INTO esp32 (esp32_id, threshold, wifi_ssid, wifi_pass, userId) VALUES (?, ?, ?, ?, ?)',
-                    [`esp32-${id}`, 2, '', '', id]
+                await conn.beginTransaction();
+                await conn.query(
+                    'INSERT INTO users (id, username, email, password, roles, fullName, address, mobileNumber, isVerified, isActivated) VALUES (?,?,?,?,?,?,?,?,1,0)',
+                    [id, username, email, hashed, roleStr, fullName.trim(), address.trim(), mobileNumber]
                 );
-            } catch (deviceErr) {
-                // Don't leave an account behind that has no house attached.
-                await global.db.query('DELETE FROM users WHERE id = ?', [id]);
-                throw deviceErr;
+                const order = await conn.query("INSERT INTO orders (userId, status, reviewedAt, paidAt) VALUES (?, 'approved', NOW(), NOW())", [id]);
+                serial = await createSerial(conn, { orderId: Number(order.insertId), userId: id, requestedUnit: null });
+                await conn.commit();
+            } catch (txErr) {
+                await conn.rollback();
+                throw txErr;
+            } finally {
+                conn.release();
             }
         }
 
-        res.status(201).json({ message: 'User created', id, username, email, roles: roleStr });
+        console.log(`[usersController] inserted user id=${id}`);
+
+        res.status(201).json({ message: 'User created', id, username, email, roles: roleStr, ...(serial ? { serial } : {}) });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

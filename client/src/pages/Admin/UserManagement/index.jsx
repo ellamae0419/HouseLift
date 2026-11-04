@@ -26,6 +26,28 @@ const mobileRegex = /^09\d{9}$/;
 
 const EMPTY_FORM = { fullName: '', username: '', email: '', password: '', address: '', mobileNumber: '', roles: 'user' };
 
+const outlineBtn = { color: 'var(--hl-accent)', borderColor: 'var(--hl-accent)', border: '1px solid', backgroundColor: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none' };
+const solidBtn = { backgroundColor: 'var(--hl-accent)', color: '#fff', fontWeight: 600, borderRadius: '9px', textTransform: 'none', '&:hover': { backgroundColor: 'var(--hl-secondary-dark)' } };
+const mono = { fontFamily: 'var(--font-mono)' };
+
+const CopyButton = ({ text }) => {
+    const [state, setState] = React.useState('');
+    return (
+        <Button
+            size="small"
+            onClick={async () => {
+                let ok = true;
+                try { await navigator.clipboard.writeText(text); } catch { ok = false; }
+                setState(ok ? 'Copied' : 'Select and copy it by hand');
+                setTimeout(() => setState(''), 2000);
+            }}
+            sx={{ ...outlineBtn, py: 0.25, px: 1.25 }}
+        >
+            {state || 'Copy'}
+        </Button>
+    );
+};
+
 const fieldSx = { '& .MuiInputBase-input': { color: 'var(--heading)' }, '& .MuiInputLabel-root': { color: 'var(--text)' }, '& .MuiOutlinedInput-root': { backgroundColor: 'var(--background)' } };
 
 export const UserManagement = () => {
@@ -37,6 +59,8 @@ export const UserManagement = () => {
     const [editingUser, setEditingUser] = React.useState(null);
     const [form, setForm] = React.useState(EMPTY_FORM);
     const [error, setError] = React.useState('');
+    // What a new house owner needs, shown once after the account is made: their login and serial code.
+    const [created, setCreated] = React.useState(null);
 
     // "Send test text": checks that flood alert texts can really go out.
     const [smsOpen, setSmsOpen] = React.useState(false);
@@ -139,7 +163,10 @@ export const UserManagement = () => {
             if (editingUser) {
                 await axiosPrivate.put(`/users/${editingUser.id}`, { username: form.username, email: form.email, roles: form.roles, ...details });
             } else {
-                await axiosPrivate.post('/users', { username: form.username, email: form.email, password: form.password, roles: form.roles, ...details });
+                const res = await axiosPrivate.post('/users', { username: form.username, email: form.email, password: form.password, roles: form.roles, ...details });
+                if (res.data?.serial) {
+                    setCreated({ fullName: form.fullName.trim(), username: form.username, password: form.password, code: res.data.serial.code, unit: res.data.serial.unit });
+                }
             }
 
             setDialogOpen(false);
@@ -327,6 +354,39 @@ export const UserManagement = () => {
                 </CardContent>
             </Card>
 
+            <Dialog open={Boolean(created)} onClose={() => setCreated(null)} fullWidth maxWidth="sm" sx={{ '& .MuiPaper-root': { backgroundColor: 'var(--background-card)', color: 'var(--heading)' } }}>
+                {created && (
+                    <>
+                        <DialogTitle sx={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{created.fullName}&apos;s account is ready</DialogTitle>
+                        <DialogContent>
+                            <Typography sx={{ color: 'var(--hl-ink-secondary)' }}>
+                                Give the user these three things. They log in with the username and password, then enter the serial code to link their unit to their account.
+                            </Typography>
+                            <div style={{ margin: '14px 0', display: 'grid', gridTemplateColumns: 'max-content 1fr auto', gap: '8px 12px', alignItems: 'center' }}>
+                                <span>Username</span><span style={{ ...mono, fontWeight: 600 }}>{created.username}</span><CopyButton text={created.username} />
+                                <span>Password</span><span style={{ ...mono, fontWeight: 600 }}>{created.password}</span><CopyButton text={created.password} />
+                                <span>Serial code</span><span style={{ ...mono, fontWeight: 600, fontSize: 18, letterSpacing: '0.05em' }}>{created.code}</span><CopyButton text={created.code} />
+                            </div>
+                            <Typography variant="body2" sx={{ color: 'var(--hl-ink-secondary)', mb: 1.5 }}>
+                                The password is not shown again. The serial code stays in the Serial code column of the table.
+                            </Typography>
+                            {created.unit?.deviceKey && (
+                                <div style={{ padding: 14, borderRadius: 10, background: 'var(--hl-warning-bg)', color: 'var(--hl-warning-ink)', fontSize: 13 }}>
+                                    <strong>Flash these into the ESP32. The key is shown only this once.</strong>
+                                    <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'max-content 1fr auto', gap: '6px 10px', alignItems: 'center' }}>
+                                        <span>Device ID</span><span style={{ ...mono, wordBreak: 'break-all' }}>{created.unit.esp32_id}</span><CopyButton text={created.unit.esp32_id} />
+                                        <span>Device key</span><span style={{ ...mono, wordBreak: 'break-all' }}>{created.unit.deviceKey}</span><CopyButton text={created.unit.deviceKey} />
+                                    </div>
+                                </div>
+                            )}
+                        </DialogContent>
+                        <DialogActions sx={{ px: 3, pb: 2 }}>
+                            <Button onClick={() => setCreated(null)} sx={solidBtn}>Done</Button>
+                        </DialogActions>
+                    </>
+                )}
+            </Dialog>
+
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm" sx={{ '& .MuiPaper-root': { backgroundColor: 'var(--background-card)', color: 'var(--heading)' } }}>
                 <DialogTitle sx={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>{editingUser ? 'Edit user' : 'Create account'}</DialogTitle>
                 <DialogContent>
@@ -387,7 +447,7 @@ export const UserManagement = () => {
                     />
                     {!editingUser && (
                         <Typography variant="body2" sx={{ color: 'var(--text-low)', mt: 1 }}>
-                            The user's pet-house device is set up automatically with this account.
+                            A serial code is made automatically with this account. The user logs in and enters it to link their pet house.
                         </Typography>
                     )}
                     <Select fullWidth value={form.roles} onChange={(e) => setForm((state) => ({ ...state, roles: e.target.value }))} sx={{ mt: 2 }}>

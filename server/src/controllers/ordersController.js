@@ -263,4 +263,4 @@ const registerBuyer = async (req, res) => {
     }
 };
 
-module.exports = { listOrders, getIdImage, approveOrder, rejectOrder, listFreeUnits, issueSerial, registerBuyer };
+module.exports = { listOrders, getIdImage, approveOrder, rejectOrder, listFreeUnits, issueSerial, registerBuyer, createSerial };
