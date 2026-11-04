@@ -67,8 +67,8 @@ const HOUSE = [
 
 const FAQS = [
     { q: 'Can I buy online?', a: 'No. HydroLift is sold face to face only. There is no online payment and no delivery. You pay and pick up your unit in person. The website only takes your message or meeting request.' },
-    { q: 'How do I buy one?', a: 'Choose Schedule a meeting under Contact us, and give your name, contact number and the day you would like to meet. We confirm the day and place with you, and answer your questions. You pay and pick up your unit in person, and we register you and give you your login and serial code.' },
-    { q: 'Do I need an account to ask?', a: 'No. To send us a message, only your email is needed. To schedule a meeting, we ask for your name, a contact number and a day. No account is made, and nothing is paid online.' },
+    { q: 'How do I buy one?', a: 'Choose Schedule a meeting under Contact us, and give your name, email and the day you would like to meet. We confirm the day and place with you, and answer your questions. You pay and pick up your unit in person, and we register you and give you your login and serial code.' },
+    { q: 'Do I need an account to ask?', a: 'No. To send us a message, only your email is needed. To schedule a meeting, we ask for your name, email and a day. No account is made, and nothing is paid online.' },
     { q: 'How much does it cost?', a: 'The price depends on the size, and we confirm it when we contact you. You pay it in person. There is nothing to pay online.' },
     { q: 'Which size should I choose?', a: 'Choose the size where your pet can stand, turn around and lie fully stretched out. If your pet is between sizes, choose the larger one. Small suits cats, puppies and toy breeds up to 7 kg. Medium suits aspins, beagles and shih tzu up to 18 kg. Large suits Labradors, huskies and large aspins up to 40 kg. Not sure? Tell us your pet’s breed and weight in your message and we will help you choose.' },
     { q: 'What do I get when I buy?', a: 'The pet house on its lifting platform, with the four actuators, the WiFi controller and the water level sensor, plus the toggle switch for lifting by hand. You also get your login to the dashboard and a serial code that links the unit to your account. The Specifications page lists everything.' },
@@ -195,7 +195,7 @@ export const Landing = () => {
                             </div>
                             <ul className={styles.needs} aria-label="What you need">
                                 <li><Tick fill="#7fd1cc" />To contact us: just your email</li>
-                                <li><Tick fill="#7fd1cc" />To meet: your name, contact number and a day</li>
+                                <li><Tick fill="#7fd1cc" />To meet: your name, email and a day</li>
                                 <li><Tick fill="#7fd1cc" />The size you are thinking of (optional)</li>
                                 <li><Tick fill="#7fd1cc" />A valid ID when you meet us to buy</li>
                             </ul>

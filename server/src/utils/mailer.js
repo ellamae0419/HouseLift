@@ -125,20 +125,19 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ 
 // Tells the shop's own inbox that someone used Contact us or Schedule a meeting on the website.
 // It goes only to the shop (SHOP_NOTIFY_EMAIL, or the HydroLift Gmail), never to the visitor, so the form
 // cannot be used to send mail to strangers. Replying to the email answers the visitor.
-const sendShopMessageEmail = async ({ isMeeting, name, email, mobile, sizeLabel, when, message }) => {
+const sendShopMessageEmail = async ({ isMeeting, name, email, sizeLabel, when, message }) => {
     const to = process.env.SHOP_NOTIFY_EMAIL || DEFAULT_FROM_EMAIL;
     const who = name || email || 'A visitor';
 
     if (!isConfigured()) {
         console.log('\x1b[33m%s\x1b[0m', '[mailer] MAILJET_API_KEY/MAILJET_SECRET_KEY not configured — skipping the shop message email.');
-        console.log('\x1b[36m%s\x1b[0m', `[mailer] ${isMeeting ? 'Meeting request' : 'Message'} from ${who} (${email || mobile}) would be emailed to ${to}.`);
+        console.log('\x1b[36m%s\x1b[0m', `[mailer] ${isMeeting ? 'Meeting request' : 'Message'} from ${who} (${email}) would be emailed to ${to}.`);
         return;
     }
 
     const rows = [
         name && ['Name', name],
         email && ['Email', email],
-        mobile && ['Contact number', mobile],
         isMeeting && when && ['Wants to meet', when],
         sizeLabel && ['Size', sizeLabel],
         message && ['Message', message],

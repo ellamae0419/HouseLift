@@ -11,7 +11,6 @@ import axios from '../../lib/axios';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const fullNameRegex = /^[A-Za-zÀ-ÿ' -]{2,100}$/;
-const mobileRegex = /^09\d{9}$/;
 
 const Hint = ({ show, children }) => (show ? <span className={`${styles.hint} ${styles.hintBad}`}>{children}</span> : null);
 
@@ -23,7 +22,7 @@ const todayIso = () => {
 // HydroLift is sold face to face only. These forms only reach us: they make no account and take no ID.
 // An admin registers the buyer, and gives them their login and serial code, once they have paid in person.
 //  - "contact": a message to us. Only the email is required, so we can reply.
-//  - "meeting": a request to meet. It needs a name, a contact number and a day.
+//  - "meeting": a request to meet. It needs a name, an email and a day.
 const ContactForm = ({ mode }) => {
     const isMeeting = mode === 'meeting';
     setTitle(isMeeting ? 'Schedule a meeting' : 'Contact HydroLift');
@@ -34,7 +33,6 @@ const ContactForm = ({ mode }) => {
     const [searchParams] = useSearchParams();
     const [size, setSize] = useState(() => (sizeByValue(searchParams.get('size')) ? searchParams.get('size') : ''));
     const [fullName, setFullName] = useState('');
-    const [mobileNumber, setMobileNumber] = useState('');
     const [email, setEmail] = useState('');
     const [meetingDate, setMeetingDate] = useState('');
     const [meetingTime, setMeetingTime] = useState('');
@@ -51,13 +49,12 @@ const ContactForm = ({ mode }) => {
             .catch(() => { /* the form still works without the price */ });
     }, []);
 
-    useEffect(() => { setErrMsg(''); }, [size, fullName, mobileNumber, email, meetingDate, meetingTime, message]);
+    useEffect(() => { setErrMsg(''); }, [size, fullName, email, meetingDate, meetingTime, message]);
 
     const noteMax = isMeeting ? 400 : 500;
-    // A contact message needs only an email. A meeting needs a name, a number and a day.
+    // Both forms need an email so we can reply. A meeting also needs a name and a day.
     const validFullName = isMeeting ? fullNameRegex.test(fullName.trim()) : (!fullName.trim() || fullNameRegex.test(fullName.trim()));
-    const validMobile = mobileRegex.test(mobileNumber);
-    const validEmail = isMeeting ? (!email || emailRegex.test(email)) : emailRegex.test(email.trim());
+    const validEmail = emailRegex.test(email.trim());
     const validDate = meetingDate >= todayIso();
     const validMessage = message.length <= noteMax;
 
@@ -65,7 +62,7 @@ const ContactForm = ({ mode }) => {
     // A price set for this size wins, then the one price for every size, then none.
     const price = product.sizes?.find((x) => x.value === size)?.price ?? product.price;
 
-    const canSubmit = validFullName && validEmail && validMessage && (!isMeeting || (validMobile && validDate)) && !submitting;
+    const canSubmit = validFullName && validEmail && validMessage && (!isMeeting || validDate) && !submitting;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -73,7 +70,7 @@ const ContactForm = ({ mode }) => {
         setSubmitting(true);
         try {
             await axios.post('/shop/inquiries', isMeeting
-                ? { type: 'meeting', fullName: fullName.trim(), mobileNumber, email: email.trim(), size, meetingDate, meetingTime, message: message.trim(), website }
+                ? { type: 'meeting', fullName: fullName.trim(), email: email.trim(), size, meetingDate, meetingTime, message: message.trim(), website }
                 : { type: 'contact', fullName: fullName.trim(), email: email.trim(), size, message: message.trim(), website });
             setSent(true);
         } catch (err) {
@@ -98,7 +95,7 @@ const ContactForm = ({ mode }) => {
                             <p>
                                 Thank you{fullName.trim() ? `, ${fullName.trim().split(' ')[0]}` : ''}.{' '}
                                 {isMeeting
-                                    ? `We will call or text ${mobileNumber} to confirm the day and the place.`
+                                    ? `We will email ${email.trim()} to confirm the day and the place.`
                                     : `We will reply to ${email.trim()}.`}
                                 {' '}You do not need an account, and there is nothing to pay online.
                             </p>
@@ -126,7 +123,7 @@ const ContactForm = ({ mode }) => {
                     <h1 className={styles.title}>{isMeeting ? 'Schedule a meeting' : 'Contact us'}</h1>
                     <p className={styles.intro}>
                         {isMeeting
-                            ? 'HydroLift is sold face to face only. Tell us the day you would like to meet and the number to reach you on, and we will confirm. You do not need an account, and nothing is paid online.'
+                            ? 'HydroLift is sold face to face only. Tell us the day you would like to meet and your email, and we will confirm. You do not need an account, and nothing is paid online.'
                             : 'Send us a message and we will reply by email. Only your email is needed. HydroLift is sold face to face only, so nothing is paid online.'}
                     </p>
 
@@ -162,20 +159,12 @@ const ContactForm = ({ mode }) => {
                                                 value={fullName} onChange={(e) => setFullName(e.target.value)} required />
                                             <Hint show={fullName && !validFullName}>Use letters only, 2 to 100 characters.</Hint>
                                         </label>
-                                        <div className={styles.row2}>
-                                            <label className={`${styles.field} ${mobileNumber && !validMobile ? styles.invalid : ''}`} htmlFor="mobileNumber">
-                                                Contact number
-                                                <input type="tel" id="mobileNumber" autoComplete="tel" placeholder="09XXXXXXXXX"
-                                                    value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} required />
-                                                <Hint show={mobileNumber && !validMobile}>11 digits starting with 09.</Hint>
-                                            </label>
-                                            <label className={`${styles.field} ${email && !validEmail ? styles.invalid : ''}`} htmlFor="email">
-                                                Email (optional)
-                                                <input type="email" id="email" autoComplete="email" placeholder="you@email.com"
-                                                    value={email} onChange={(e) => setEmail(e.target.value)} />
-                                                <Hint show={email && !validEmail}>Enter a valid email address, or leave it empty.</Hint>
-                                            </label>
-                                        </div>
+                                        <label className={`${styles.field} ${email && !validEmail ? styles.invalid : ''}`} htmlFor="email">
+                                            Email
+                                            <input type="email" id="email" autoComplete="email" placeholder="you@email.com"
+                                                value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                            <Hint show={email && !validEmail}>Enter a valid email address.</Hint>
+                                        </label>
                                         <div className={styles.row2}>
                                             <label className={`${styles.field} ${meetingDate && !validDate ? styles.invalid : ''}`} htmlFor="meetingDate">
                                                 Day you would like to meet

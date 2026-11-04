@@ -46,7 +46,7 @@ const ContactMenu = () => {
             </button>
             <ul id="contact-list" className={styles.contactList} hidden={!open}>
                 <li><Link to="/contact">Contact us<small>Send a message. Only your email is needed.</small></Link></li>
-                <li><Link to="/schedule">Schedule a meeting<small>Pick a day and leave your contact number.</small></Link></li>
+                <li><Link to="/schedule">Schedule a meeting<small>Pick a day and leave your email.</small></Link></li>
             </ul>
         </div>
     );

@@ -1,4 +1,4 @@
-const { SIZES, EMAIL_REGEX, NAME_REGEX, MOBILE_REGEX } = require('./shopController');
+const { SIZES, EMAIL_REGEX, NAME_REGEX } = require('./shopController');
 const { sendShopMessageEmail } = require('../utils/mailer');
 
 // An inquiry is only a question from someone who may or may not buy. It creates no account:
@@ -7,9 +7,9 @@ const STATUSES = ['new', 'contacted', 'bought', 'closed'];
 
 // Two kinds of message come from the shop:
 //  - "contact": a message to us. Only the email is required, so we can reply.
-//  - "meeting": a request to meet in person. It needs a name, a contact number and a day.
-// Both go into the same table, so no database change is needed: a message with no name or number
-// is saved with a placeholder name and an empty number, and a meeting's day and time are written
+//  - "meeting": a request to meet in person. It needs a name, an email and a day.
+// Both go into the same table, so no database change is needed: a message with no name is saved
+// with a placeholder name, the phone-number column is left empty, and a meeting's day and time are written
 // at the start of its message.
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -24,7 +24,7 @@ const meetingWhen = (date, time) => {
 };
 
 const createInquiry = async (req, res) => {
-    const { fullName, mobileNumber, email, size, message, website, type, meetingDate, meetingTime } = req.body || {};
+    const { fullName, email, size, message, website, type, meetingDate, meetingTime } = req.body || {};
 
     // A hidden box real visitors never see. A bot that fills it gets a normal-looking
     // answer and nothing is saved.
@@ -34,13 +34,12 @@ const createInquiry = async (req, res) => {
     const name = String(fullName || '').trim();
     const note = String(message || '').trim();
     const mail = String(email || '').trim();
-    const mobile = String(mobileNumber || '').trim();
     const date = String(meetingDate || '').trim();
     const time = String(meetingTime || '').trim();
 
     if (isMeeting) {
         if (!NAME_REGEX.test(name)) return res.status(400).json({ message: 'Enter your full name (letters only).' });
-        if (!MOBILE_REGEX.test(mobile)) return res.status(400).json({ message: 'Contact number must be 11 digits starting with 09.' });
+        if (!mail) return res.status(400).json({ message: 'Enter your email address so we can confirm the meeting.' });
         if (!DATE_REGEX.test(date) || Number.isNaN(new Date(`${date}T00:00:00`).getTime())) return res.status(400).json({ message: 'Choose the day you would like to meet.' });
         const today = new Date(); today.setHours(0, 0, 0, 0);
         if (new Date(`${date}T00:00:00`) < today) return res.status(400).json({ message: 'Choose a day that has not passed.' });
@@ -55,7 +54,7 @@ const createInquiry = async (req, res) => {
     if (size && !Object.prototype.hasOwnProperty.call(SIZES, size)) return res.status(400).json({ message: 'Choose Small, Medium or Large, or leave the size empty.' });
 
     const savedName = name || NO_NAME;
-    const savedMobile = isMeeting ? mobile : '';
+    const savedMobile = '';   // the shop takes no phone numbers: replies go by email
     const savedMessage = isMeeting ? `MEETING REQUEST for ${meetingWhen(date, time)}.${note ? ` ${note}` : ''}` : note;
 
     try {
@@ -65,7 +64,7 @@ const createInquiry = async (req, res) => {
         );
 
         try {
-            const who = isMeeting ? `${name} (${mobile})` : (name ? `${name} (${mail})` : mail);
+            const who = name ? `${name} (${mail})` : mail;
             await global.db.query(
                 'INSERT INTO notifications (title, description, isRead) VALUES (?, ?, 0)',
                 isMeeting
@@ -78,7 +77,7 @@ const createInquiry = async (req, res) => {
 
         // Email the shop's inbox too. It must never make the visitor wait or fail, so it runs on the side.
         sendShopMessageEmail({
-            isMeeting, name, email: mail, mobile: savedMobile, sizeLabel: size ? SIZES[size] : '',
+            isMeeting, name, email: mail, sizeLabel: size ? SIZES[size] : '',
             when: isMeeting ? meetingWhen(date, time) : '', message: note,
         }).catch((mailErr) => console.error('[createInquiry] Could not email the shop:', mailErr.message));
 
