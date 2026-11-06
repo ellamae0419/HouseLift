@@ -16,6 +16,7 @@ export const LogoMark = ({ light = false }) => (
 
 // Every page of the shop is its own address, so the menu opens one page at a time.
 const PAGES = [
+    { to: '/', label: 'Home' },
     { to: '/about', label: 'About' },
     { to: '/product', label: 'Product' },
     { to: '/specifications', label: 'Specifications' },
@@ -88,7 +89,7 @@ export const ShopShell = ({ children }) => {
                     <Brand />
                     <div className={styles.right}>
                         <nav id="site-menu" className={`${styles.menu} ${open ? styles.menuOpen : ''}`} aria-label="Main">
-                            {PAGES.map((p) => <NavLink key={p.to} to={p.to} className={linkClass}>{p.label}</NavLink>)}
+                            {PAGES.map((p) => <NavLink key={p.to} to={p.to} end={p.to === '/'} className={linkClass}>{p.label}</NavLink>)}
                             {appBase && <a href={appUrl('/login?fresh=1')}>Log in</a>}
                         </nav>
                         <ContactMenu />

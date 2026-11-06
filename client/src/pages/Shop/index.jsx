@@ -273,7 +273,7 @@ const ContactForm = ({ mode }) => {
 
                         <aside className={styles.panel} aria-label="How buying works">
                             <div className={styles.panelInner}>
-                                <span className={styles.eyebrow}>{isMeeting ? 'Your meeting' : 'Your message'}</span>
+                                <span className={styles.eyebrow}>{isMeeting ? 'Request meeting' : 'Your message'}</span>
                                 <div>
                                     <div className={styles.panelName}>{product.name}{chosen ? ` · ${chosen.name}` : ''}</div>
                                     {price

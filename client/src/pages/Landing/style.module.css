@@ -155,3 +155,11 @@
 .findUs { padding-top: 64px; padding-bottom: 72px; }
 .findUs h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); }
 .findUs h2 { margin-bottom: 28px; }
+
+/* Product page: what comes with every unit */
+.included { list-style: none; margin: 32px 0 28px; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 40px; }
+.included li { display: flex; gap: 14px; align-items: flex-start; }
+.included svg { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.included b { display: block; color: var(--navy); }
+.included span { display: block; color: var(--muted); font-size: 0.95rem; margin-top: 2px; }
+@media (max-width: 700px) { .included { grid-template-columns: 1fr; } }

@@ -57,6 +57,18 @@ const SPECS = [
     ['By hand', 'Toggle switch on the unit'],
 ];
 
+// What the buyer gets with every unit, in the words used on the specifications.
+const INCLUDED = [
+    ['The pet house', 'Treated wood frame, waterproofed roof, removable floor and a side window'],
+    ['4 linear actuators', '12 V, they lift the whole platform in about 10 seconds'],
+    ['Water level sensor', 'Reads the flood level on a 0 to 4 scale'],
+    ['ESP32 controller', 'With WiFi, it decides when to lift and lower'],
+    ['12 V battery and 5 V supply', 'Powers the actuators and the controller'],
+    ['Toggle switch', 'Raise or lower it by hand on the unit'],
+    ['Text alert', 'A text message to you when it lifts on its own'],
+    ['Your own dashboard', 'A login and a serial code that links the unit to your account'],
+];
+
 // The house itself, as described on the product page.
 const HOUSE = [
     ['Frame', 'Treated wood, sanded and sealed'],
@@ -284,6 +296,28 @@ export const Product = () => {
                         <p className={styles.note}>
                             <strong>Every HydroLift comes with its sensor, controller, battery and your own dashboard.</strong> Full travel is about 10 seconds, and you get a text when it lifts on its own.
                         </p>
+                    </div>
+                </section>
+
+                <section className={`${styles.section} ${styles.tint}`} aria-label="What comes with your HydroLift">
+                    <div className={styles.wrap}>
+                        <div className={styles.head}>
+                            <span className={styles.eyebrow}>In every HydroLift</span>
+                            <h2>What comes with your HydroLift</h2>
+                            <p>Whichever size you choose, you get the same system.</p>
+                        </div>
+                        <ul className={styles.included}>
+                            {INCLUDED.map(([name, detail]) => (
+                                <li key={name}>
+                                    <Tick />
+                                    <div><b>{name}</b><span>{detail}</span></div>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className={styles.orderAction}>
+                            <Link to="/schedule" className={shellStyles.btn}>Schedule a meeting</Link>
+                            <Link to="/contact" className={`${shellStyles.btn} ${shellStyles.btnOutline}`}>Contact us</Link>
+                        </div>
                     </div>
                 </section>
             </main>
