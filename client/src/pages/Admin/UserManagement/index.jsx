@@ -113,7 +113,7 @@ export const UserManagement = () => {
         }
         if (!editingUser) {
             if (!form.fullName.trim() || !form.address.trim() || !form.mobileNumber) {
-                setError('Full name, address and mobile number are required — the mobile number is where flood texts are sent');
+                setError('Full name, address and mobile number are required');
                 return;
             }
             if (!passwordRegex.test(form.password)) {
@@ -390,7 +390,7 @@ export const UserManagement = () => {
                         margin="normal"
                         value={form.mobileNumber}
                         onChange={(e) => setForm((state) => ({ ...state, mobileNumber: e.target.value }))}
-                        helperText="Flood alert texts are sent to this number."
+                        helperText="We use this number to reach the owner."
                         sx={fieldSx}
                     />
                     <TextField

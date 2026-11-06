@@ -109,7 +109,7 @@ export const ShopShell = ({ children }) => {
                 <div className={`${styles.wrap} ${styles.cols}`}>
                     <div>
                         <Brand light />
-                        <p className={styles.about}>A pet house that lifts itself above floodwater, with text alerts and a dashboard for the owner.</p>
+                        <p className={styles.about}>A pet house that lifts itself above floodwater, with email alerts and a dashboard for the owner.</p>
                     </div>
                     <div>
                         <h4>Shop</h4>

@@ -39,7 +39,6 @@ const bcrypt = require('bcrypt');
 const { generateUserID } = require('../utils/functions');
 const { createSerial } = require('./ordersController');
 const { sendApprovalEmail } = require('../utils/mailer');
-const { smsRoute, sendTestSms } = require('../utils/sms');
 
 const approveUser = async (req, res) => {
     const id = req.params.id;
@@ -296,38 +295,4 @@ const activateDevice = async (req, res) => {
     }
 };
 
-// Tells an admin whether flood texts can actually go out, and by which route.
-const getSmsStatus = (req, res) => {
-    res.json({ route: smsRoute() });
-};
-
-// Sends one test text so an admin can see that the phone setup works before a real flood.
-// It goes only to the mobile number a user registered with: the admin picks the person, never
-// types a number, so this can't be used to text anyone who isn't on an account.
-const sendTestText = async (req, res) => {
-    const userId = String(req.body?.userId || '').trim();
-    if (!userId) return res.status(400).json({ message: 'Choose which registered user to send the test text to.' });
-
-    try {
-        const rows = await global.db.query('SELECT username, fullName, mobileNumber FROM users WHERE id = ?', [userId]);
-        const user = rows[0];
-        if (!user) return res.status(404).json({ message: 'That user was not found.' });
-
-        const who = user.fullName || user.username;
-        if (!MOBILE_REGEX.test(user.mobileNumber || '')) {
-            return res.status(400).json({ message: `${who} has no valid mobile number registered. Add one with Edit first.` });
-        }
-
-        const route = await sendTestSms(user.mobileNumber);
-        const masked = `${user.mobileNumber.slice(0, 2)}•••••${user.mobileNumber.slice(-4)}`;
-        res.json({ message: `Test text sent to ${who} (${masked}) through the ${route}. It should arrive within a few seconds.` });
-    } catch (err) {
-        if (err.code === 'NOT_CONFIGURED') {
-            return res.status(409).json({ message: 'Text sending is not set up yet. Add SMS_GATEWAY_USER and SMS_GATEWAY_PASSWORD in Render and redeploy.' });
-        }
-        console.error('[sendTestText]', err.message);
-        res.status(502).json({ message: `The text could not be sent: ${err.message}` });
-    }
-};
-
-module.exports = { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser, activateDevice, getSmsStatus, sendTestText };
+module.exports = { getAllUsers, getAllHouses, createUser, updateUser, deleteUser, getOwnProfile, updateOwnProfile, approveUser, activateDevice };

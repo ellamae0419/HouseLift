@@ -159,4 +159,49 @@ const sendShopMessageEmail = async ({ isMeeting, name, email, sizeLabel, when, m
     console.log('\x1b[32m%s\x1b[0m', `[mailer] Shop message email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
 };
 
-module.exports = { sendApprovalEmail, sendOrderApprovedEmail, sendOtpEmail, sendShopMessageEmail };
+// The firmware raises the platform in small steps as water rises, and each step reports as an automatic lift.
+// One flood would otherwise email the owner once per step, so each address gets at most one email per alert
+// kind per cooldown window.
+const ALERT_COOLDOWN_MS = 10 * 60 * 1000;
+const lastAlertAt = new Map();
+
+// Emails one flood or unit alert to a house owner. `key` names the kind of alert (for example "critical"),
+// so a repeat of the same alert is held back while a different alert still goes out. `cooldownMs` is how long
+// a repeat is held back (10 minutes unless the alert says otherwise, e.g. the critical alert repeats every 5).
+const sendAlertEmail = async ({ to, name, title, message, key = 'alert', cooldownMs = ALERT_COOLDOWN_MS }) => {
+    if (!to) return;
+
+    if (!isConfigured()) {
+        console.log('\x1b[33m%s\x1b[0m', `[mailer] MAILJET_API_KEY/MAILJET_SECRET_KEY not configured — skipping "${key}" alert email for ${to}.`);
+        return;
+    }
+
+    const slot = `${to}|${key}`;
+    if (Date.now() - (lastAlertAt.get(slot) || 0) < cooldownMs) {
+        console.log('\x1b[33m%s\x1b[0m', `[mailer] "${key}" alert email for ${to} skipped — one was already sent recently.`);
+        return;
+    }
+    // Claimed before sending so two alerts landing together can't both send.
+    lastAlertAt.set(slot, Date.now());
+
+    let data;
+    try {
+        data = await sendEmail({
+            to,
+            subject: `HydroLift: ${title}`,
+            html: `
+                <p>Hi ${escapeHtml(name)},</p>
+                <p style="font-size: 16px;">${escapeHtml(message)}</p>
+                <p style="color:#555;">You can also see this on the Alerts page of your HydroLift dashboard.</p>
+            `,
+        });
+    } catch (err) {
+        // A failed send shouldn't silence the next attempt.
+        lastAlertAt.delete(slot);
+        throw err;
+    }
+
+    console.log('\x1b[32m%s\x1b[0m', `[mailer] "${key}" alert email accepted for ${to}. id=${data?.Messages?.[0]?.To?.[0]?.MessageID}`);
+};
+
+module.exports = { sendApprovalEmail, sendOrderApprovedEmail, sendOtpEmail, sendShopMessageEmail, sendAlertEmail };

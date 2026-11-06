@@ -225,7 +225,7 @@ global.wss.on('connection', async (ws, req) => {
 
                     // The unit's own automatic moves are the flood alerts: a lift is the WARNING,
                     // and the lowering that follows is the ALL CLEAR. Each is saved for the
-                    // dashboard and texted to the owner's registered number.
+                    // dashboard and emailed to the owner's registered address.
                     if (device.userId) await onLift(device, { direction, trigger });
                 }
             } catch (err) {

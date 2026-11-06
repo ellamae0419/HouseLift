@@ -41,7 +41,7 @@ const Icon = ({ name }) => (
 
 const FEATURES = [
     { icon: 'steps', title: 'Lifts in proportion', text: 'The house rises as the water rises, so there is no sudden jump at the flood line.' },
-    { icon: 'text', title: 'Flood text alerts', text: 'You get a text when the platform lifts, again if the water reaches the critical level, and when it is all clear.' },
+    { icon: 'text', title: 'Flood email alerts', text: 'You get an email when the platform lifts, again if the water reaches the critical level, and when it is all clear.' },
     { icon: 'chart', title: 'Live water level', text: 'See the water level and whether your unit is online, from your phone or computer.' },
     { icon: 'updown', title: 'Lift from your phone', text: 'Raise or lower the house from the dashboard when you want to, not only during a flood.' },
     { icon: 'toggle', title: 'Manual switch', text: 'A toggle switch on the unit lifts or lowers the house by hand.' },
@@ -65,7 +65,7 @@ const INCLUDED = [
     ['ESP32 controller', 'With WiFi, it decides when to lift and lower'],
     ['12 V battery and 5 V supply', 'Powers the actuators and the controller'],
     ['Toggle switch', 'Raise or lower it by hand on the unit'],
-    ['Text alert', 'A text message to you when it lifts on its own'],
+    ['Email alert', 'An email to you when it lifts on its own'],
     ['Your own dashboard', 'A login and a serial code that links the unit to your account'],
 ];
 
@@ -88,11 +88,11 @@ const FAQS = [
     { q: 'When do I get my account?', a: 'When you pay and pick up your HydroLift. We check your ID and register you, then give you your username, password and serial code. You cannot log in before that.' },
     { q: 'Why do you need my ID?', a: 'So we know who owns each unit and can link it to the right account. We check your ID with you in person when you buy and keep a photo of it. Only HydroLift administrators can see it.' },
     { q: 'What is the serial code?', a: 'A code like HL-7QK2-M9XD-4PWH that we give you when you pay and pick up your unit. After you log in, you type it in once. That links the unit to your account and opens your dashboard. It works only for your account.' },
-    { q: 'What does HydroLift do in a flood?', a: 'It senses the water rising and lifts your pet’s house on its own, in step with the water, so the house stays above it. It texts you as the flood grows and again when it has passed, and lowers the house when the water has gone down.' },
-    { q: 'What if the flood rises higher than the lift?', a: 'The platform can only rise as far as its lift can travel. If the water goes past that, the house can no longer be kept dry by lifting. You get a CRITICAL text right away and again every 5 minutes while the water stays that high, telling you to get your pet to safety. HydroLift is a protection, not a guarantee. In a strong typhoon or a very deep flood, follow local advice and bring your pet and your family to safety.' },
-    { q: 'Will it still lift if my WiFi goes down?', a: 'Yes. Sensing and lifting run on the unit itself, so a dropped connection does not stop it from lifting. While the WiFi is down you will not see the dashboard or get text alerts, because those need the internet.' },
-    { q: 'What texts will I get?', a: 'A warning when the platform lifts, a CRITICAL text if the water reaches the critical level (repeated every 5 minutes while it stays that high), and an ALL CLEAR when the water has gone down. You also get a text if the unit reports a problem or its battery is low. To avoid filling your phone, the other alerts are limited to one every 10 minutes or longer. A lift or lowering you start yourself never sends a flood text.' },
-    { q: 'Who receives the texts, and do they cost me anything?', a: 'The texts go only to the mobile number registered on your account, and nobody else gets them. They cost you nothing. You only need a phone that can receive ordinary text messages, with no app to install.' },
+    { q: 'What does HydroLift do in a flood?', a: 'It senses the water rising and lifts your pet’s house on its own, in step with the water, so the house stays above it. It emails you as the flood grows and again when it has passed, and lowers the house when the water has gone down.' },
+    { q: 'What if the flood rises higher than the lift?', a: 'The platform can only rise as far as its lift can travel. If the water goes past that, the house can no longer be kept dry by lifting. You get a CRITICAL email right away and again every 5 minutes while the water stays that high, telling you to get your pet to safety. HydroLift is a protection, not a guarantee. In a strong typhoon or a very deep flood, follow local advice and bring your pet and your family to safety.' },
+    { q: 'Will it still lift if my WiFi goes down?', a: 'Yes. Sensing and lifting run on the unit itself, so a dropped connection does not stop it from lifting. While the WiFi is down you will not see the dashboard or get email alerts, because those need the internet.' },
+    { q: 'What emails will I get?', a: 'A warning when the platform lifts, a CRITICAL email if the water reaches the critical level (repeated every 5 minutes while it stays that high), and an ALL CLEAR when the water has gone down. You also get an email if the unit reports a problem or its battery is low. To avoid filling your inbox, the other alerts are limited to one every 10 minutes or longer. A lift or lowering you start yourself never sends a flood email.' },
+    { q: 'Who receives the emails, and do they cost me anything?', a: 'The emails go only to the email address registered on your account, and nobody else gets them. They cost you nothing. You only need to be able to read your email on your phone or computer, with no app to install.' },
     { q: 'Can I raise or lower the house myself?', a: 'Yes. You can do it from the dashboard on your phone or computer, or with the toggle switch on the unit.' },
     { q: 'What if I forget my password?', a: 'On the login page, choose Forgot password? A code is sent to your email so you can set a new one.' },
 ];
@@ -155,7 +155,7 @@ export const Landing = () => {
                             <span className={styles.eyebrow}>Flood-ready pet house</span>
                             <h1 className={styles.heroTitle}>A pet house that <span>rises with the flood.</span></h1>
                             <p className={styles.lead}>
-                                HydroLift senses rising water and lifts your pet&apos;s house on its own. You get a text when it lifts, and you can watch the water level from your phone.
+                                HydroLift senses rising water and lifts your pet&apos;s house on its own. You get an email when it lifts, and you can watch the water level from your phone.
                             </p>
                             <div className={styles.ctas}>
                                 <Link to="/schedule" className={shellStyles.btn}>Schedule a meeting</Link>
@@ -164,7 +164,7 @@ export const Landing = () => {
                             <ul className={styles.checks}>
                                 <li><Tick />Buy in person</li>
                                 <li><Tick />Lifts on its own</li>
-                                <li><Tick />Text alerts</li>
+                                <li><Tick />Email alerts</li>
                             </ul>
                         </div>
                         <div className={styles.art}>
@@ -179,7 +179,7 @@ export const Landing = () => {
                                     value={level} onChange={(e) => setLevel(parseFloat(e.target.value))}
                                 />
                                 <p className={styles.state} aria-live="polite">{state}</p>
-                                <p className={styles.stateNote}>This follows the real device. You get a text when an automatic lift happens.</p>
+                                <p className={styles.stateNote}>This follows the real device. You get an email when an automatic lift happens.</p>
                             </div>
                         </div>
                     </div>
@@ -189,7 +189,7 @@ export const Landing = () => {
                     <div className={`${styles.wrap} ${styles.statsGrid}`}>
                         <div className={styles.stat}><b>4 actuators</b><span>lift the platform</span></div>
                         <div className={styles.stat}><b>About 10 seconds</b><span>from low to fully raised</span></div>
-                        <div className={styles.stat}><b>Text alert</b><span>when it lifts</span></div>
+                        <div className={styles.stat}><b>Email alert</b><span>when it lifts</span></div>
                         <div className={styles.stat}><b>Face to face</b><span>no online selling</span></div>
                     </div>
                 </div>
@@ -294,7 +294,7 @@ export const Product = () => {
                             ))}
                         </div>
                         <p className={styles.note}>
-                            <strong>Every HydroLift comes with its sensor, controller, battery and your own dashboard.</strong> Full travel is about 10 seconds, and you get a text when it lifts on its own.
+                            <strong>Every HydroLift comes with its sensor, controller, battery and your own dashboard.</strong> Full travel is about 10 seconds, and you get an email when it lifts on its own.
                         </p>
                     </div>
                 </section>

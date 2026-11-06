@@ -48,7 +48,4 @@ const activateLimiter = rateLimit({
     keyGenerator: (req) => (req.username ? `activate:${req.username}` : ipKeyGenerator(req.headers['x-real-ip'] || req.ip)),
 });
 
-// Every test text costs the phone's load, so even an admin can only send a few in a short time.
-const testSmsLimiter = makeLimiter(5, 'Too many test texts. Please wait a few minutes.');
-
-module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter, inquiryLimiter, reviewLimiter, activateLimiter, testSmsLimiter };
+module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter, inquiryLimiter, reviewLimiter, activateLimiter };

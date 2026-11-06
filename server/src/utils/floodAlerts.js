@@ -7,7 +7,7 @@ const { createAlert } = require('./alerts');
 //   all-clear  Recovery the water went down and the platform was lowered
 //   fault      Fault    the unit reported a problem (sensors disagree, a lift timed out, ...)
 //   battery-low         the unit's battery is low
-//   heartbeat           the daily "I am alive" check (dashboard only, never texted)
+//   heartbeat           the daily "I am alive" check (dashboard only, never emailed)
 // The server works out warning, critical and all-clear from what the unit already reports. The
 // others arrive as a "device-alert" message from the firmware (see docs/alerts.md).
 
@@ -29,44 +29,44 @@ const KINDS = {
     warning: {
         title: 'Flood warning',
         description: () => 'Water reached the warning level. The platform was raised automatically.',
-        sms: () => (name) => `HydroLift WARNING: Hi ${name}, water has reached the warning level at your house. Your platform was raised automatically.`,
+        email: () => (name) => `WARNING: Hi ${name}, water has reached the warning level at your house. Your platform was raised automatically.`,
         dedupeMs: 10 * MINUTE,
     },
     floating: {
         title: 'House is floating',
         description: () => 'The water is still rising and your house is riding on it. It is protected for now.',
-        sms: () => (name) => `HydroLift: Hi ${name}, the water at your house is still rising and your house is floating on it. It is protected for now. Please stay alert.`,
+        email: () => (name) => `Hi ${name}, the water at your house is still rising and your house is floating on it. It is protected for now. Please stay alert.`,
         dedupeMs: 10 * MINUTE,
     },
     critical: {
         title: 'CRITICAL flood level',
         description: () => 'Floodwater is at the critical level. Move your pet to safety now.',
-        sms: () => (name) => `HydroLift CRITICAL: Hi ${name}, floodwater at your house is at the critical level. Please get your pet to safety now.`,
+        email: () => (name) => `CRITICAL: Hi ${name}, floodwater at your house is at the critical level. Please get your pet to safety now.`,
         dedupeMs: () => criticalRepeatMs(),
         cooldownMs: () => criticalRepeatMs(),
     },
     'all-clear': {
         title: 'All clear',
         description: () => 'The water has gone down and the platform was lowered.',
-        sms: () => (name) => `HydroLift: ALL CLEAR. Hi ${name}, the water at your house has gone down and your platform was lowered.`,
+        email: () => (name) => `ALL CLEAR. Hi ${name}, the water at your house has gone down and your platform was lowered.`,
         dedupeMs: 10 * MINUTE,
     },
     fault: {
         title: 'Unit fault',
         description: (detail) => `Your HydroLift reported a problem${detail ? `: ${detail}` : ''}. Please check the unit.`,
-        sms: (detail) => (name) => `HydroLift FAULT: Hi ${name}, your unit reported a problem${detail ? ` (${detail})` : ''}. Please check it.`,
+        email: (detail) => (name) => `FAULT: Hi ${name}, your unit reported a problem${detail ? ` (${detail})` : ''}. Please check it.`,
         dedupeMs: 30 * MINUTE,
     },
     'battery-low': {
         title: 'Battery low',
         description: () => 'The battery in your HydroLift is low. Please charge or replace it.',
-        sms: () => (name) => `HydroLift: Hi ${name}, the battery in your unit is low. Please charge or replace it so it can keep protecting your pet.`,
+        email: () => (name) => `Hi ${name}, the battery in your unit is low. Please charge or replace it so it can keep protecting your pet.`,
         dedupeMs: 6 * 60 * MINUTE,
     },
     heartbeat: {
         title: 'HydroLift is online',
         description: () => 'Daily check: your unit is working and connected.',
-        sms: null,                       // shown on the dashboard only; a daily text would cost the phone's load for nothing
+        email: null,                     // shown on the dashboard only; a daily email would just fill the inbox
         dedupeMs: 12 * 60 * MINUTE,
     },
 };
@@ -84,8 +84,8 @@ const raiseAlert = async ({ device, kind, detail = '' }) => {
         userId: device.userId,
         title: def.title,
         description: def.description(cleanDetail),
-        sms: def.sms !== null,
-        smsText: def.sms ? def.sms(cleanDetail) : undefined,
+        email: def.email !== null,
+        emailText: def.email ? def.email(cleanDetail) : undefined,
         key: kind,
         cooldownMs: value(def.cooldownMs),
         dedupeMs: value(def.dedupeMs),

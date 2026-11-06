@@ -175,7 +175,7 @@ export const RegisterBuyerDialog = ({ open, onClose, prefill = null }) => {
                         <TextField label="Full name (as on the ID)" fullWidth margin="dense" value={form.fullName} onChange={set('fullName')}
                             onBlur={() => setForm((f) => (f.username ? f : { ...f, username: suggestUsername(f.fullName) }))}
                             error={bad('fullName')} helperText={bad('fullName') ? 'Letters only, 2 to 100 characters.' : ''} sx={fieldSx} />
-                        <TextField label="Mobile number (flood texts go here)" fullWidth margin="dense" value={form.mobileNumber} onChange={set('mobileNumber')}
+                        <TextField label="Mobile number" fullWidth margin="dense" value={form.mobileNumber} onChange={set('mobileNumber')}
                             placeholder="09XXXXXXXXX" error={bad('mobileNumber')} helperText={bad('mobileNumber') ? '11 digits starting with 09.' : ''} sx={fieldSx} />
                         <TextField label="Email" fullWidth margin="dense" value={form.email} onChange={set('email')}
                             error={bad('email')} helperText={bad('email') ? 'Enter a valid email address.' : ''} sx={fieldSx} />
