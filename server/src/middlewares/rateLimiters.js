@@ -32,6 +32,9 @@ const resetPasswordLimiter = makeLimiter(10, 'Too many attempts. Please try agai
 // filling the database with fake ones.
 const inquiryLimiter = makeLimiter(8, 'Too many inquiries from this connection. Please try again later.');
 
+// Writing a review needs a real serial code, so this also stops anyone guessing codes through the review form.
+const reviewLimiter = makeLimiter(8, 'Too many tries from this connection. Please try again later.');
+
 // Guards guessing serial codes. Keyed on the signed-in user (not the IP) and
 // counting only wrong tries, so a customer who enters the right code first time
 // is never blocked, but anyone guessing is stopped after five misses.
@@ -48,4 +51,4 @@ const activateLimiter = rateLimit({
 // Every test text costs the phone's load, so even an admin can only send a few in a short time.
 const testSmsLimiter = makeLimiter(5, 'Too many test texts. Please wait a few minutes.');
 
-module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter, inquiryLimiter, activateLimiter, testSmsLimiter };
+module.exports = { loginLimiter, forgotPasswordLimiter, resetPasswordLimiter, inquiryLimiter, reviewLimiter, activateLimiter, testSmsLimiter };

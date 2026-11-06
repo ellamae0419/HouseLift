@@ -10,6 +10,7 @@ import ErrorBoundary from '../src/components/ErrorBoundary/index';
 import { Landing, About, Product, Specifications, Faq } from '../src/pages/Landing/index';
 
 import { Contact, Schedule } from '../src/pages/Shop/index';
+import { WriteReview } from '../src/pages/Shop/Reviews';
 import { Remote } from '../src/pages/Remote/index';
 
 // The old inquiry address (kept for saved links and the product page's size choice) now opens Contact us.
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/schedule" element={<Schedule />} />
+                <Route path="/review" element={<WriteReview />} />
                 <Route path="/remote" element={<Remote />} />
                 <Route path="/inquire" element={<OldInquiryLink />} />
                 <Route path="/buy" element={<Navigate to="/contact" replace />} />

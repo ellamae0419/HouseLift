@@ -117,6 +117,7 @@ export const ShopShell = ({ children }) => {
                             <li><Link to="/specifications">Specifications</Link></li>
                             <li><Link to="/contact">Contact us</Link></li>
                             <li><Link to="/schedule">Schedule a meeting</Link></li>
+                            <li><Link to="/review">Write a review</Link></li>
                         </ul>
                     </div>
                     <div>

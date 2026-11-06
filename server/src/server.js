@@ -289,7 +289,7 @@ const isLocalNetworkOrigin = (origin) => {
     }
 };
 
-// The shop is a public website that can live at any address, and its two endpoints use
+// The shop is a public website that can live at any address, and its endpoints use
 // no cookies or logins, so any website may call them. They are mounted before the CORS
 // rule below, which only admits the dashboard site. Neither needs more than a
 // small body, but the limit stays generous.
@@ -333,6 +333,7 @@ app.use(verifyJWT);
 app.use('/users', require('./routes/users'));
 app.use('/orders', require('./routes/orders'));
 app.use('/inquiries', require('./routes/inquiries'));
+app.use('/reviews', require('./routes/reviews'));
 app.use('/records', require('./routes/records'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/reports', require('./routes/reports'));

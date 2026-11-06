@@ -141,3 +141,16 @@ JOIN users u ON u.id = s.userId
 JOIN orders o ON o.id = s.orderId
 LEFT JOIN id_verifications v ON v.orderId = o.id
 LEFT JOIN esp32 e ON e.id = s.esp32Id;
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    serialCodeId INT          NOT NULL,                       -- the serial code that proves the buyer; one review per code
+    displayName  VARCHAR(60)  NOT NULL,                       -- shown on the shop ("Verified buyer" if they gave no name)
+    rating       TINYINT      NOT NULL,                       -- 1 to 5 stars
+    comment      VARCHAR(500) DEFAULT NULL,
+    status       VARCHAR(10)  NOT NULL DEFAULT 'pending',     -- 'pending', 'approved' (shown on the shop) or 'hidden'
+    createdAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_review_serial (serialCodeId),
+    KEY idx_reviews_status_time (status, createdAt),
+    CONSTRAINT fk_review_serial FOREIGN KEY (serialCodeId) REFERENCES serial_codes (id) ON DELETE CASCADE
+);

@@ -18,6 +18,7 @@ import { Login } from "./pages/LoginSystem/login";
 import { Activate } from "./pages/Activate/index";
 import { Orders } from "./pages/Admin/Orders/index";
 import { Inquiries } from "./pages/Admin/Inquiries/index";
+import { Reviews } from "./pages/Admin/Reviews/index";
 import { BluetoothControl } from "./pages/Bluetooth/index";
 import { Records } from "./pages/Admin/Records/index";
 import { ForgotPassword } from "./pages/LoginSystem/forgotPassword";
@@ -75,6 +76,7 @@ function App() {
                             <Route path="/admin/users" element={<UserManagement />} />
                             <Route path="/admin/orders" element={<Orders />} />
                             <Route path="/admin/inquiries" element={<Inquiries />} />
+                            <Route path="/admin/reviews" element={<Reviews />} />
                             <Route path="/admin/records" element={<Records />} />
                         </Route>
 

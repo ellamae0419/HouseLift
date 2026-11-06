@@ -6,6 +6,7 @@ import { setTitle } from '../../utils/generalFunctions';
 import { FindUsList, hasFindUs } from '../../components/ShopShell/FindUs';
 import { SIZES } from '../../config/shopSizes';
 import { ShopShell } from '../../components/ShopShell/index';
+import { ReviewsSection } from '../Shop/Reviews';
 import shellStyles from '../../components/ShopShell/shell.module.css';
 import { houseSvg, VIEW_BOX } from '../../components/ShopShell/isometric';
 
@@ -202,6 +203,8 @@ export const Landing = () => {
                         </div>
                     </div>
                 </section>
+
+                <ReviewsSection />
 
                 {hasFindUs && (
                     <section className={styles.findUs} aria-label="Find us here">
