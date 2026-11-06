@@ -11,10 +11,6 @@ export default function useServerSocket() {
     const [wlValue, setWlValue] = useState(null);
     const [connected, setConnected] = useState(false);
     const [readingsById, setReadingsById] = useState({});
-    // When each device's latest reading arrived (browser clock, ms), and its latest lift or lowering, so a
-    // live view can say how fresh a reading is and whether the platform is up.
-    const [readingAtById, setReadingAtById] = useState({});
-    const [liftById, setLiftById] = useState({});
     // Real device online/offline, pushed by the server the instant a device
     // socket connects or disconnects — not just "is my own browser tab open".
     const [deviceStatusById, setDeviceStatusById] = useState({});
@@ -79,11 +75,8 @@ export default function useServerSocket() {
                                 setWlValue(v);
                                 if (msg.esp32_id) {
                                     setReadingsById((prev) => ({ ...prev, [msg.esp32_id]: v }));
-                                    setReadingAtById((prev) => ({ ...prev, [msg.esp32_id]: Date.now() }));
                                 }
                             }
-                        } else if (msg?.type === 'lift-status' && msg.esp32_id) {
-                            setLiftById((prev) => ({ ...prev, [msg.esp32_id]: { isLifted: !!msg.isLifted, direction: msg.direction, trigger: msg.trigger, at: Date.now() } }));
                         } else if (msg?.type === 'device-status' && msg.esp32_id) {
                             setDeviceStatusById((prev) => ({ ...prev, [msg.esp32_id]: !!msg.online }));
                         }
@@ -132,5 +125,5 @@ export default function useServerSocket() {
         };
     }, [accessToken]);
 
-    return { wlValue, connected, readingsById, readingAtById, liftById, deviceStatusById };
+    return { wlValue, connected, readingsById, deviceStatusById };
 }

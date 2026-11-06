@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { setTitle } from '../../../utils/generalFunctions';
 import { DataCard } from '../../../components/Datacard/index';
-import { LiveMonitor } from '../../../components/LiveMonitor/index';
 import useServerSocket from '../../../hooks/useServerSocket';
 import useAxiosPrivate from '../../../hooks/auth/useAxiosPrivate';
 
@@ -13,7 +12,7 @@ export const AdminDashboard = () => {
     setTitle('Admin Dashboard');
     // Admins get device-status pushes for every house, so a device coming or
     // going updates this page instantly between refreshes.
-    const { deviceStatusById, readingsById, readingAtById, liftById, connected } = useServerSocket();
+    const { deviceStatusById } = useServerSocket();
     const axiosPrivate = useAxiosPrivate();
     const [users, setUsers] = useState([]);
     const [houses, setHouses] = useState([]);
@@ -55,11 +54,10 @@ export const AdminDashboard = () => {
     // An admin owns no device, so "online" here means how many of the
     // monitored houses are currently reporting in.
     const withDevices = houses.filter((h) => h.esp32_id);
-    const isOnline = (h) => {
+    const onlineCount = withDevices.filter((h) => {
         const pushed = deviceStatusById[h.esp32_id];
         return pushed !== undefined ? pushed : !!h.online;
-    };
-    const onlineCount = withDevices.filter(isOnline).length;
+    }).length;
     const anyOnline = onlineCount > 0;
 
     return (
@@ -108,15 +106,6 @@ export const AdminDashboard = () => {
                         />
                     </Link>
                 </div>
-
-                <LiveMonitor
-                    houses={withDevices}
-                    readingsById={readingsById}
-                    readingAtById={readingAtById}
-                    liftById={liftById}
-                    isOnline={isOnline}
-                    connected={connected}
-                />
             </div>
         </>
     );
