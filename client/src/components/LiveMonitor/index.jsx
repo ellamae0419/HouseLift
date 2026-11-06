@@ -3,8 +3,26 @@ import { Link } from 'react-router-dom';
 import './index.css';
 
 const MAX_LEVEL = 4;           // the water sensor reads 0 to 4
-const KEEP = 90;               // readings kept for the trend line (about 3 minutes at one every 2 seconds)
+const KEEP = 600;              // readings kept per house for the graph (about 20 minutes at one every 2 seconds)
 const STALE_SECONDS = 15;      // an online house that has not reported for this long is called out
+const GAP_MS = 15000;          // a longer silence than this breaks the line instead of drawing across it
+const MAX_LINES = 8;           // the colour palette has eight validated hues
+
+const WINDOWS = [
+    { sec: 60, label: '1 min', step: 15 },
+    { sec: 300, label: '5 min', step: 60 },
+    { sec: 900, label: '15 min', step: 180 },
+];
+
+// the plot area inside the SVG's own coordinate space
+const VBW = 760;
+const VBH = 300;
+const ML = 40;
+const MR = 16;
+const MT = 14;
+const MB = 30;
+const PW = VBW - ML - MR;
+const PH = VBH - MT - MB;
 
 const ago = (ms, now) => {
     if (!ms) return 'no reading yet';
@@ -14,18 +32,155 @@ const ago = (ms, now) => {
     return `${Math.floor(s / 60)} min ago`;
 };
 
-// A small line of the last readings, with the lift level drawn as a dashed line.
-const Trend = ({ points, threshold, name }) => {
-    const W = 220;
-    const H = 44;
-    const x = (i) => (points.length < 2 ? W : (i / (points.length - 1)) * W);
-    const y = (v) => H - 3 - (Math.min(Math.max(v, 0), MAX_LEVEL) / MAX_LEVEL) * (H - 6);
+const tick = (sec) => (sec === 0 ? 'now' : sec % 60 === 0 ? `-${sec / 60}m` : `-${sec}s`);
+
+// The live graph: water level (0 to 4) of every house against time, scrolling to the left as time passes.
+const LiveChart = ({ rows, history, now }) => {
+    const [windowSec, setWindowSec] = useState(300);
+    const [hidden, setHidden] = useState({});
+    const [hoverX, setHoverX] = useState(null);
+
+    // Colour follows the house, not its position in the list: sorted by device id, so a house keeps its hue.
+    const charted = [...rows].sort((a, b) => String(a.h.esp32_id).localeCompare(String(b.h.esp32_id))).slice(0, MAX_LINES);
+    const visible = charted.filter((r) => !hidden[r.h.esp32_id]);
+    const win = WINDOWS.find((w) => w.sec === windowSec) || WINDOWS[1];
+
+    const spanMs = windowSec * 1000;
+    const start = now - spanMs;
+    const x = (t) => ML + ((t - start) / spanMs) * PW;
+    const y = (v) => MT + PH - (Math.min(Math.max(v, 0), MAX_LEVEL) / MAX_LEVEL) * PH;
+
+    const series = visible.map((r) => {
+        const i = charted.indexOf(r);
+        const pts = (history[r.h.esp32_id] || []).filter((p) => p.t >= start - GAP_MS);
+        const segments = [];
+        pts.forEach((p, k) => {
+            if (k === 0 || p.t - pts[k - 1].t > GAP_MS) segments.push([]);
+            segments[segments.length - 1].push(p);
+        });
+        return { r, i, pts, segments };
+    });
+    const anyPoints = series.some((s) => s.pts.some((p) => p.t >= start));
+    const thresholds = [...new Set(visible.map((r) => r.threshold).filter((v) => v != null))];
+
+    // what the pointer is over, snapped to the nearest reading of each house
+    let hover = null;
+    if (hoverX != null) {
+        const t = start + ((hoverX - ML) / PW) * spanMs;
+        const rowsAt = series
+            .map((s) => {
+                let best = null;
+                s.pts.forEach((p) => { if (!best || Math.abs(p.t - t) < Math.abs(best.t - t)) best = p; });
+                return best && Math.abs(best.t - t) <= 6000 ? { s, p: best } : null;
+            })
+            .filter(Boolean);
+        hover = { t, x: hoverX, rowsAt };
+    }
+
+    const onMove = (e) => {
+        const box = e.currentTarget.getBoundingClientRect();
+        const vx = ((e.clientX - box.left) / box.width) * VBW;
+        setHoverX(vx >= ML && vx <= ML + PW ? vx : null);
+    };
+
+    const ticks = [];
+    for (let s = windowSec; s >= 0; s -= win.step) ticks.push(s);
+
+    const nearestX = hover && hover.rowsAt.length ? x(hover.rowsAt.reduce((m, q) => (Math.abs(q.p.t - hover.t) < Math.abs(m.p.t - hover.t) ? q : m)).p.t) : null;
+
     return (
-        <svg className="lm-trend" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={`Recent water level for ${name}`}>
-            {threshold != null && <line x1="0" x2={W} y1={y(threshold)} y2={y(threshold)} className="lm-trend-limit" />}
-            {points.length >= 2 && <polyline points={points.map((p, i) => `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')} className="lm-trend-line" />}
-            {points.length === 1 && <circle cx={W - 2} cy={y(points[0].v)} r="2.5" className="lm-trend-dot" />}
-        </svg>
+        <div className="lm-chart">
+            <div className="lm-toolbar">
+                <div className="lm-legend" role="group" aria-label="Houses on the graph">
+                    {charted.map((r, i) => {
+                        const off = !!hidden[r.h.esp32_id];
+                        return (
+                            <button
+                                type="button" key={r.h.esp32_id} className={`lm-key ${off ? 'lm-key-off' : ''}`} aria-pressed={!off}
+                                onClick={() => setHidden((o) => ({ ...o, [r.h.esp32_id]: !o[r.h.esp32_id] }))}
+                                title={off ? 'Show on the graph' : 'Hide from the graph'}
+                            >
+                                <span className="lm-swatch" style={{ background: `var(--lm-s${i + 1})` }} aria-hidden="true" />
+                                <span className="lm-key-name">{r.h.username}</span>
+                                <span className="lm-key-val">{r.hasReading ? r.level.toFixed(1) : '—'}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <div className="lm-range" role="group" aria-label="Time shown">
+                    {WINDOWS.map((w) => (
+                        <button type="button" key={w.sec} className={windowSec === w.sec ? 'lm-range-on' : ''} aria-pressed={windowSec === w.sec} onClick={() => setWindowSec(w.sec)}>{w.label}</button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="lm-plot">
+                <svg
+                    viewBox={`0 0 ${VBW} ${VBH}`} className="lm-svg" role="img"
+                    aria-label={`Live water level graph for the last ${win.label}. Current levels are listed on the house cards below.`}
+                    onPointerMove={onMove} onPointerLeave={() => setHoverX(null)}
+                >
+                    <defs>
+                        <clipPath id="lm-clip"><rect x={ML} y={MT - 4} width={PW} height={PH + 8} /></clipPath>
+                    </defs>
+
+                    {[0, 1, 2, 3, 4].map((v) => (
+                        <g key={v}>
+                            <line x1={ML} x2={ML + PW} y1={y(v)} y2={y(v)} className="lm-grid" />
+                            <text x={ML - 8} y={y(v) + 4} textAnchor="end" className="lm-axis">{v}</text>
+                        </g>
+                    ))}
+                    {ticks.map((s) => (
+                        <text key={s} x={x(now - s * 1000)} y={VBH - 8} textAnchor={s === 0 ? 'end' : s === windowSec ? 'start' : 'middle'} className="lm-axis">{tick(s)}</text>
+                    ))}
+
+                    {thresholds.map((v) => (
+                        <g key={v}>
+                            <line x1={ML} x2={ML + PW} y1={y(v)} y2={y(v)} className="lm-limit" />
+                            <text x={ML + PW - 4} y={y(v) - 5} textAnchor="end" className="lm-limit-label">Lifts at {v}</text>
+                        </g>
+                    ))}
+
+                    <g clipPath="url(#lm-clip)">
+                        {series.map(({ i, segments }) => segments.map((seg, k) => (
+                            seg.length > 1 && (
+                                <polyline key={`${i}-${k}`} className="lm-line" style={{ stroke: `var(--lm-s${i + 1})` }}
+                                    points={seg.map((p) => `${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')} />
+                            )
+                        )))}
+                    </g>
+
+                    {series.map(({ i, pts }) => {
+                        const last = pts[pts.length - 1];
+                        if (!last || last.t < start) return null;
+                        return <circle key={`dot-${i}`} cx={x(last.t)} cy={y(last.v)} r="4" className="lm-end" style={{ fill: `var(--lm-s${i + 1})` }} />;
+                    })}
+
+                    {hover && nearestX != null && <line x1={nearestX} x2={nearestX} y1={MT} y2={MT + PH} className="lm-cross" />}
+                    {hover && hover.rowsAt.map(({ s, p }) => (
+                        <circle key={`h-${s.i}`} cx={x(p.t)} cy={y(p.v)} r="4" className="lm-end" style={{ fill: `var(--lm-s${s.i + 1})` }} />
+                    ))}
+                </svg>
+
+                {charted.length === 0 && <div className="lm-empty">Waiting for a house to connect.</div>}
+                {charted.length > 0 && visible.length === 0 && <div className="lm-empty">Every house is hidden. Click a name above to show it.</div>}
+                {visible.length > 0 && !anyPoints && <div className="lm-empty">Waiting for readings. The line starts when a house sends its first reading.</div>}
+
+                {hover && hover.rowsAt.length > 0 && (
+                    <div className={`lm-tip ${hover.x > ML + PW * 0.6 ? 'lm-tip-left' : ''}`} style={{ left: `${((nearestX ?? hover.x) / VBW) * 100}%` }} role="status">
+                        <div className="lm-tip-time">{new Date(hover.t).toLocaleTimeString()}</div>
+                        {hover.rowsAt.map(({ s, p }) => (
+                            <div className="lm-tip-row" key={s.i}>
+                                <span className="lm-tip-key" style={{ background: `var(--lm-s${s.i + 1})` }} aria-hidden="true" />
+                                <b>{p.v.toFixed(1)}</b>
+                                <span>{s.r.h.username}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+            {rows.length > MAX_LINES && <div className="lm-note">The graph shows the first {MAX_LINES} houses. Every house is on the cards below.</div>}
+        </div>
     );
 };
 
@@ -36,13 +191,13 @@ export const LiveMonitor = ({ houses, readingsById, readingAtById, liftById, isO
     const lastAt = useRef({});
     const [now, setNow] = useState(() => Date.now());
 
-    // "3s ago" has to keep counting even when no reading arrives.
+    // The graph scrolls and "3s ago" keeps counting even when no reading arrives.
     useEffect(() => {
         const timer = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(timer);
     }, []);
 
-    // Remember the last readings of each house for its trend line.
+    // Remember the last readings of each house for the graph.
     useEffect(() => {
         const fresh = Object.keys(readingAtById).filter((id) => readingAtById[id] !== lastAt.current[id]);
         if (!fresh.length) return;
@@ -90,6 +245,8 @@ export const LiveMonitor = ({ houses, readingsById, readingAtById, liftById, isO
                 </div>
             </div>
 
+            <LiveChart rows={rows} history={history} now={now} />
+
             {rows.length > 0 && (
                 <div className="lm-grid">
                     {rows.map(({ h, level, hasReading, threshold, online, lifted, seenAt, stale, lift }) => {
@@ -114,8 +271,6 @@ export const LiveMonitor = ({ houses, readingsById, readingAtById, liftById, isO
                                     <div className="lm-bar-fill" style={{ width: `${pct}%` }} />
                                     {threshold != null && <div className="lm-bar-mark" style={{ left: `${Math.min(100, (threshold / MAX_LEVEL) * 100)}%` }} title={`Lifts at ${threshold}`} />}
                                 </div>
-
-                                <Trend points={history[h.esp32_id] || []} threshold={threshold} name={h.username} />
 
                                 <div className="lm-foot">
                                     <span className={stale ? 'lm-stale' : ''}>
