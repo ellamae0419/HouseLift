@@ -130,6 +130,11 @@ global.wss.on('connection', async (ws, req) => {
     }
 
     if (ws._role === 'device') {
+        ws._lastDeviceMessageAt = Date.now();
+        // A unit that rebooted or reconnected replaces its old socket, which may still look open.
+        global.wss.clients.forEach((other) => {
+            if (other !== ws && other._role === 'device' && other._esp32Id === ws._esp32Id) other.terminate();
+        });
         console.log('✓ Device socket connected:', ws._esp32Id, remoteAddr);
         broadcastToDeviceAudience(ws._esp32Id, { type: 'device-status', esp32_id: ws._esp32Id, online: true });
     } else {
@@ -137,6 +142,7 @@ global.wss.on('connection', async (ws, req) => {
     }
 
     ws.on('message', async (message) => {
+        if (ws._role === 'device') ws._lastDeviceMessageAt = Date.now();
         let msg;
         try {
             msg = JSON.parse(message.toString());
@@ -256,7 +262,13 @@ global.wss.on('connection', async (ws, req) => {
         console.log('✗ WebSocket client disconnected', code, r, ws._role || 'unauthenticated');
 
         if (ws._role === 'device') {
-            broadcastToDeviceAudience(ws._esp32Id, { type: 'device-status', esp32_id: ws._esp32Id, online: false });
+            // If the same unit already reconnected on a newer socket, it is still online.
+            const stillConnected = Array.from(global.wss.clients).some(
+                (other) => other !== ws && other._role === 'device' && other._esp32Id === ws._esp32Id && other.readyState === WebSocket.OPEN
+            );
+            if (!stillConnected) {
+                broadcastToDeviceAudience(ws._esp32Id, { type: 'device-status', esp32_id: ws._esp32Id, online: false });
+            }
         }
     });
 
@@ -282,6 +294,23 @@ const interval = setInterval(() => {
 }, PING_EVERY_MS);
 
 global.wss.on('close', () => clearInterval(interval));
+
+// Pings are not enough on their own: behind a hosting proxy (such as Render) the proxy can answer
+// them even after the unit lost power, so the server would think the unit is still there. The unit
+// sends a reading every 2 seconds, so readings that stop for DEVICE_SILENT_MS mean it is gone.
+// 15 seconds is longer than the longest lift move (about 5 seconds, when it sends nothing) plus
+// the normal gap, so a unit that is busy lifting is never marked offline by mistake.
+const DEVICE_SILENT_MS = 15000;
+const silenceCheck = setInterval(() => {
+    const now = Date.now();
+    global.wss.clients.forEach((ws) => {
+        if (ws._role === 'device' && ws._lastDeviceMessageAt && now - ws._lastDeviceMessageAt > DEVICE_SILENT_MS) {
+            console.log('Terminating silent device socket:', ws._esp32Id);
+            ws.terminate();
+        }
+    });
+}, 5000);
+global.wss.on('close', () => clearInterval(silenceCheck));
 
 // Accept the configured origin plus any device on the local network (so a
 // phone on the same Wi-Fi, hitting this computer's LAN IP instead of
