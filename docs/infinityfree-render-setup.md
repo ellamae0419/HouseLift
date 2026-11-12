@@ -45,12 +45,11 @@ its own hosting and its own build:
 | Build | `npm run build` in `client` -> `client/dist` | `npm run build:shop` in `client` -> `client/dist-shop` |
 | Lives at | `https://houselift.free.nf` | its own address, e.g. `https://your-shop-domain.com` |
 
-**Where the shop is published now:** https://hydrolift-shop.vercel.app (the Vercel project
-`hydrolift-shop`, under the same Vercel account as the old `hydrolift` project). It is a
-free `.vercel.app` address; a custom domain can be added to that project later. To publish a
-new version: run `npm run build:shop` in `client`, copy the contents of `client/dist-shop`
-into a folder named `hydrolift-shop`, and run `vercel deploy --prod --yes` inside it (the
-folder name is what ties it to the right project, so it never replaces the dashboard site).
+**Where the shop is published now:** https://hydrolift-shop.free.nf, a second InfinityFree
+hosting account (separate from the dashboard's). To publish a new version: run `npm run build:shop`
+in `client`, copy the contents of `client/dist-shop` (leave out `_redirects` and `vercel.json`, which
+are only for Vercel) into that account's `htdocs` folder, keeping `.htaccess`. It was on Vercel
+(`hydrolift-shop.vercel.app`) until 2026-11-12, when it moved to put both websites on InfinityFree.
 The shop's two server endpoints (`/shop/product` and `/shop/inquiries`) are open to any website, because they use no logins or cookies, so the shop works from this address (or any other) without changing Render's settings.
 
 The two sites link to each other: the shop's "Log in" goes to the dashboard site

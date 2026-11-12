@@ -50,7 +50,7 @@ To test it: turn the router off (or give the unit a wrong WiFi password), power 
 
 The dashboard needs the internet and a login, so it cannot open when there is no internet at all. For that case there is a separate page that needs **no login and no internet** once it has been saved:
 
-**https://hydrolift-shop.vercel.app/remote**
+**https://hydrolift-shop.free.nf/remote**
 
 1. **Once, while you have internet:** open that address in Chrome (laptop or Android) or Bluefy (iPhone). The page says **"Saved on this device"** when it has copied itself. In Chrome you can also install it: browser menu, **Install app** (or **Add to Home screen** on a phone).
 2. **From then on, with no internet:** open the same page (or the installed app). It opens from the saved copy. Tap Connect, enter the PIN, and use the controls. Bluetooth talks to the unit directly, so neither the internet nor WiFi is involved.
