@@ -70,7 +70,7 @@ const useHydroLiftBluetooth = () => {
             setPhase('pin');
         } else {
             setPhase('ready');
-            setState({ wl: Number(status.wl), pos: Number(status.pos), auto: !!status.auto, moving: !!status.moving });
+            setState({ wl: Number(status.wl), pos: Number(status.pos), auto: !!status.auto, moving: !!status.moving, manual: status.sw === 'manual' });
         }
         return status;
     };

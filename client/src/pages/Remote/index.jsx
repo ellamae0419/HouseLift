@@ -106,6 +106,9 @@ export const Remote = () => {
                                 </div>
                                 <div className={styles.tile}><small>Status</small><b>{moving ? 'Moving…' : 'Resting'}</b><small>Auto lift is {state.auto ? 'on' : 'off'}</small></div>
                             </div>
+                            {state.manual && (
+                                <p className={styles.note} role="alert"><strong>The unit is in MANUAL mode.</strong> It will ignore these buttons until you flip its switch to AUTO.</p>
+                            )}
                             <div className={styles.row}>
                                 <button type="button" className={shellStyles.btn} onClick={() => send('FULL_UP', 'Lift')} disabled={busy || moving}>Lift fully</button>
                                 <button type="button" className={shellStyles.btn} onClick={() => send('FULL_DOWN', 'Lower')} disabled={busy || moving}>Lower fully</button>

@@ -100,6 +100,11 @@ export const BluetoothControl = () => {
                                 </div>
                             </div>
 
+                            {state.manual && (
+                                <p role="alert" style={{ margin: '0 0 12px', padding: 12, borderRadius: 10, background: 'var(--hl-warning-bg)', color: 'var(--hl-warning-ink)', fontSize: 14 }}>
+                                    <strong>The unit is in MANUAL mode.</strong> It will ignore these buttons until you flip its switch to AUTO.
+                                </p>
+                            )}
                             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                                 <Button onClick={() => send('FULL_UP', 'Lift')} disabled={busy || moving} sx={{ ...solidBtn, px: 3 }}>Lift fully</Button>
                                 <Button onClick={() => send('FULL_DOWN', 'Lower')} disabled={busy || moving} sx={{ ...solidBtn, px: 3 }}>Lower fully</Button>

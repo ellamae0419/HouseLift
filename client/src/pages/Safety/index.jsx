@@ -52,9 +52,10 @@ export const HouseMonitoring = () => {
             setLiftMsg(`Lift command sent to ${h.username}'s pet house.`);
         } catch (err) {
             const status = err?.response?.status;
-            setLiftMsg(status === 409
+            const serverMsg = err?.response?.data?.message;
+            setLiftMsg(status === 409 && serverMsg === 'Device offline'
                 ? `${h.username}'s device is offline — it has to be powered on first.`
-                : err?.response?.data?.message || 'Could not send the lift command.');
+                : serverMsg || 'Could not send the lift command.');
         } finally {
             setLiftingId(null);
             setTimeout(() => setLiftMsg(''), 5000);
@@ -118,6 +119,9 @@ export const HouseMonitoring = () => {
                                 </div>
                                 <span style={{ fontSize: '13px', color: 'var(--hl-ink-secondary)' }}>
                                     {threshold != null ? `Triggers at ${threshold} cm` : 'Threshold not set'}
+                                </span>
+                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--hl-ink-tertiary)', wordBreak: 'break-all' }}>
+                                    Device ID: {h.esp32_id || 'none linked'}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: '#E7ECEB', overflow: 'hidden' }}>

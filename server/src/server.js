@@ -182,11 +182,19 @@ global.wss.on('connection', async (ws, req) => {
                 console.log('[WS] Failed to save sensor reading:', err.message);
             }
 
+            // Remember whether the unit's switch is on AUTO or MANUAL. In MANUAL the unit ignores
+            // lift commands, so the lift route uses this to say so instead of pretending it worked.
+            if (msg.mode === 'auto' || msg.mode === 'manual') {
+                global.deviceModes = global.deviceModes || new Map();
+                global.deviceModes.set(esp32Id, msg.mode);
+            }
+
             broadcastToDeviceAudience(esp32Id, {
                 type: 'sensor-reading',
                 esp32_id: esp32Id,
                 wlValue: msg.wlValue,
-                wl_value: msg.wl_value ?? msg.wlValue
+                wl_value: msg.wl_value ?? msg.wlValue,
+                mode: msg.mode
             });
         }
         else if (msg && msg.type === 'device-alert') {
@@ -257,7 +265,11 @@ global.wss.on('connection', async (ws, req) => {
     });
 });
 
-// ping clients periodically and terminate dead ones
+// Ping clients and drop the ones that stop answering. A unit that is unplugged never says goodbye,
+// so this is how the dashboard learns it went offline: it is noticed after one to two rounds,
+// which is 10 to 20 seconds. That is still longer than the longest lift move (5 seconds),
+// during which the unit cannot answer.
+const PING_EVERY_MS = 10000;
 const interval = setInterval(() => {
     global.wss.clients.forEach((ws) => {
         if (ws.isAlive === false) {
@@ -267,7 +279,7 @@ const interval = setInterval(() => {
         ws.isAlive = false;
         try { ws.ping(noop); } catch (e) { console.warn('Ping failed', e && e.message); }
     });
-}, 30000);
+}, PING_EVERY_MS);
 
 global.wss.on('close', () => clearInterval(interval));
 

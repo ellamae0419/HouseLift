@@ -45,6 +45,10 @@ const postLift = async (req, res) => {
         const device = await resolveDevice(req);
         if (!device) return res.status(404).json({ message: 'No device found for this account' });
 
+        if (global.deviceModes?.get(device.esp32_id) === 'manual') {
+            return res.status(409).json({ message: 'The unit is in MANUAL mode. Flip its switch to AUTO, then try again.' });
+        }
+
         const sent = typeof global.sendToDeviceSocket === 'function'
             ? global.sendToDeviceSocket(device.esp32_id, { type: 'lift-command', esp32_id: device.esp32_id, mode: 'step', direction })
             : false;

@@ -68,9 +68,10 @@ export const Home = () => {
             setLiftMsg(direction === 'down' ? 'Lowering your pet house a little.' : 'Raising your pet house a little.');
         } catch (err) {
             const status = err?.response?.status;
-            setLiftMsg(status === 409
+            const serverMsg = err?.response?.data?.message;
+            setLiftMsg(status === 409 && serverMsg === 'Device offline'
                 ? 'Device offline — it has to be powered on and connected first.'
-                : err?.response?.data?.message || 'Could not send the lift command.');
+                : serverMsg || 'Could not send the lift command.');
         } finally {
             setLifting(false);
             setTimeout(() => setLiftMsg(''), 5000);
