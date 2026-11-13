@@ -33,6 +33,12 @@ const RootRedirect = () => {
     return <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} replace />;
 };
 
+// The pet-house page is for customers. An admin who opens it (a bookmark, an old link) goes to the admin dashboard.
+const CustomerHome = () => {
+    const { auth } = useAuth();
+    return hasAnyRole(auth, ["admin"]) ? <Navigate to="/admin/dashboard" replace /> : <Home />;
+};
+
 function App() {
     return (
         <Router>
@@ -58,7 +64,7 @@ function App() {
                         {/* Routes requiring the user to be logged in */}
                         <Route element={<RequireAuth allowedRoles={['user', 'app', 'admin']} />}>
                             <Route path="/home" element={<Navigate to="/dashboard" replace />} />
-                            <Route path="/dashboard" element={<Home />} />
+                            <Route path="/dashboard" element={<CustomerHome />} />
                             <Route path="/history" element={<History />} />
                             <Route path="/settings" element={<Settings />} />
                             <Route path="/profile" element={<Profile />} />

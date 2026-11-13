@@ -8,6 +8,7 @@ import { getLoginErrorMessage } from '../../lib/loginError';
 import { shopBase, shopUrl } from '../../utils/siteLinks';
 import { IDLE_MINUTES, markActive, takeIdleNotice } from '../../utils/idleSession';
 import useAuth from '../../hooks/auth/useAuth';
+import { hasAnyRole } from '../../utils/roles';
 import { faUser } from "@fortawesome/free-regular-svg-icons";
 import { faUnlockKeyhole, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -63,7 +64,14 @@ export const Login = () => {
 
             setUsernameOrEmail('');
             setPassword('');
-            navigate(redirection, { replace: true }); // We redirect to the previous page
+            // Go back to the page they were on, but an admin always starts on the admin dashboard
+            // (never the customer's pet-house page) and a customer never lands on an admin page.
+            const isAdmin = hasAnyRole({ accessToken }, ['admin']);
+            const wasAdminPage = redirection.startsWith('/admin');
+            const target = isAdmin
+                ? (wasAdminPage ? redirection : '/admin/dashboard')
+                : (wasAdminPage ? '/' : redirection);
+            navigate(target, { replace: true });
         } catch (err) {
             setErrMsg(getLoginErrorMessage(err));
             setTimeout(() => { setErrMsg(''); }, 4000);
