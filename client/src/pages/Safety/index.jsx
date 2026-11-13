@@ -3,8 +3,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { setTitle } from '../../utils/generalFunctions';
 import useServerSocket from '../../hooks/useServerSocket';
 import useAxiosPrivate from '../../hooks/auth/useAxiosPrivate';
+import { getWaterLevel, LEVEL_TEXT } from '../../utils/waterLevel';
 
 const MAX_LEVEL_CM = 4;
+
+// Colours for the Safe / Caution / Danger badge and the water bar.
+const LEVEL_COLORS = {
+    safe: { ink: 'var(--hl-success-ink)', bg: 'var(--hl-success-bg)', bar: 'var(--hl-accent)' },
+    caution: { ink: 'var(--hl-warning-ink)', bg: 'var(--hl-warning-bg)', bar: 'var(--hl-warning)' },
+    danger: { ink: '#fff', bg: 'var(--hl-danger)', bar: 'var(--hl-danger)' },
+};
 
 const REFRESH_MS = 20000;
 
@@ -93,7 +101,8 @@ export const HouseMonitoring = () => {
                         const waterLevel = h.esp32_id ? readingsById[h.esp32_id] : undefined;
                         const hasReading = waterLevel != null;
                         const threshold = h.threshold != null ? Number(h.threshold) : null;
-                        const lifted = hasReading && threshold != null && waterLevel >= threshold;
+                        const level = hasReading ? getWaterLevel(waterLevel, threshold, h.criticalLevel) : null;
+                        const colors = LEVEL_COLORS[level] || null;
                         const pct = hasReading ? Math.min(100, Math.round((waterLevel / MAX_LEVEL_CM) * 100)) : 0;
                         const online = h.esp32_id ? isOnline(h) : false;
 
@@ -112,9 +121,9 @@ export const HouseMonitoring = () => {
                                             fontWeight: 600,
                                             padding: '3px 10px',
                                             borderRadius: '999px',
-                                            color: !hasReading ? 'var(--hl-ink-tertiary)' : lifted ? 'var(--hl-warning-ink)' : 'var(--hl-success-ink)',
-                                            background: !hasReading ? 'var(--hl-page-bg)' : lifted ? 'var(--hl-warning-bg)' : 'var(--hl-success-bg)',
-                                        }}>{!hasReading ? 'no data' : lifted ? 'lifted' : 'normal'}</span>
+                                            color: colors ? colors.ink : 'var(--hl-ink-tertiary)',
+                                            background: colors ? colors.bg : 'var(--hl-page-bg)',
+                                        }}>{level ? LEVEL_TEXT[level].label : 'no data'}</span>
                                     </div>
                                 </div>
                                 <span style={{ fontSize: '13px', color: 'var(--hl-ink-secondary)' }}>
@@ -128,7 +137,7 @@ export const HouseMonitoring = () => {
                                         <div style={{
                                             width: `${pct}%`,
                                             height: '100%',
-                                            background: lifted ? 'var(--hl-warning)' : 'var(--hl-accent)',
+                                            background: colors ? colors.bar : 'var(--hl-accent)',
                                         }} />
                                     </div>
                                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--hl-ink-secondary)', whiteSpace: 'nowrap' }}>

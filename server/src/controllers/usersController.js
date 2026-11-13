@@ -1,4 +1,5 @@
 require('dotenv').config()
+const { criticalLevel } = require('../utils/floodAlerts');
 
 const getAllUsers = async (req, res) => {
     const users = await global.db.query(`
@@ -29,7 +30,8 @@ const getAllHouses = async (req, res) => {
         `);
         // The driver returns the boolean expression as a BigInt, which
         // res.json() refuses to serialize — coerce it before sending.
-        res.json(rows.map((r) => ({ ...r, online: Number(r.online) === 1 })));
+        const critical = criticalLevel();
+        res.json(rows.map((r) => ({ ...r, online: Number(r.online) === 1, criticalLevel: critical })));
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

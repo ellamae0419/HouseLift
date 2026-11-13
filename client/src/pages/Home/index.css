@@ -125,6 +125,15 @@
     opacity: 1;
 }
 
+/* Caution water is orange and lower; Danger water is red and higher. */
+.house-illustration__water.is-caution {
+    height: 26%;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--hl-warning) 45%, transparent), color-mix(in srgb, var(--hl-warning) 65%, transparent));
+}
+.house-illustration__water.is-danger {
+    height: 44%;
+}
+
 .hl-status-row {
     display: flex;
     align-items: center;
@@ -139,7 +148,26 @@
     color: var(--heading);
     line-height: 1.25;
 }
-.hl-status-title[data-flooded="true"] { color: var(--red); }
+.hl-status-title[data-level="caution"] { color: var(--hl-warning-ink); }
+.hl-status-title[data-level="danger"] { color: var(--red); }
+
+/* The status row takes its colour from the level: green Safe, orange Caution, red Danger. */
+.hl-status-row[data-level="caution"] { color: var(--hl-warning); }
+.hl-status-row[data-level="danger"] { color: var(--red); }
+
+.hl-level-pill {
+    margin-left: auto;
+    flex: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    padding: 4px 12px;
+    border-radius: 999px;
+    color: var(--hl-success-ink);
+    background: var(--hl-success-bg);
+}
+.hl-level-pill[data-level="caution"] { color: var(--hl-warning-ink); background: var(--hl-warning-bg); }
+.hl-level-pill[data-level="danger"] { color: #fff; background: var(--hl-danger); }
 
 .hl-status-subtitle {
     font-size: 12.5px;

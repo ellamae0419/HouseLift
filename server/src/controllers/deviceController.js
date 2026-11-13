@@ -1,4 +1,5 @@
 const { getOwnDevice, getDeviceByEsp32Id, setDeviceThreshold } = require('../utils/devices');
+const { criticalLevel } = require('../utils/floodAlerts');
 
 const isAdmin = (req) => Array.isArray(req.roles) && req.roles.includes('admin');
 
@@ -15,7 +16,8 @@ const getThreshold = async (req, res) => {
     try {
         const device = await resolveDevice(req);
         if (!device) return res.status(404).json({ message: 'No device found for this account' });
-        res.json({ threshold: device.threshold });
+        // criticalLevel lets the app show Safe / Caution / Danger from the same number the alerts use.
+        res.json({ threshold: device.threshold, criticalLevel: criticalLevel() });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

@@ -132,4 +132,4 @@ const onLift = async (device, { direction, trigger }) => {
     if (recent[0]) await raiseAlert({ device, kind: 'all-clear' });
 };
 
-module.exports = { ALERT_KINDS, KINDS, raiseAlert, onReading, onLift };
+module.exports = { ALERT_KINDS, KINDS, raiseAlert, onReading, onLift, criticalLevel };

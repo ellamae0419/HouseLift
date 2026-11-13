@@ -8,6 +8,7 @@ import useServerSocket from '../../hooks/useServerSocket';
 import useDeviceStatus from '../../hooks/useDeviceStatus';
 import useAuth from '../../hooks/auth/useAuth';
 import useAxiosPrivate from '../../hooks/auth/useAxiosPrivate';
+import { getWaterLevel, LEVEL_TEXT, DEFAULT_CRITICAL_CM } from '../../utils/waterLevel';
 import './index.css';
 
 const ShieldCheckIcon = ({ size = 18 }) => (
@@ -56,6 +57,7 @@ export const Home = () => {
     const { online: deviceOnline } = useDeviceStatus();
     const axiosPrivate = useAxiosPrivate();
     const [threshold, setThreshold] = useState(null);
+    const [criticalLevel, setCriticalLevel] = useState(DEFAULT_CRITICAL_CM);
     const [demoLevel, setDemoLevel] = useState(0);
     const [lifting, setLifting] = useState(false);
     const [liftMsg, setLiftMsg] = useState('');
@@ -85,6 +87,8 @@ export const Home = () => {
                 const res = await axiosPrivate.get('/users/esp32-threshold');
                 const t = Number(res?.data?.threshold);
                 if (mounted && !Number.isNaN(t)) setThreshold(t);
+                const c = Number(res?.data?.criticalLevel);
+                if (mounted && c > 0) setCriticalLevel(c);
             } catch (err) {
                 console.error('Error loading flood threshold:', err?.response?.data?.message || err.message);
             }
@@ -95,7 +99,9 @@ export const Home = () => {
     // Use the live sensor reading once one arrives; until then let the stepper
     // below drive a demo value, so the dashboard is still usable without hardware.
     const waterLevel = wlValue ?? demoLevel;
-    const flooded = threshold != null && waterLevel >= threshold;
+    // Safe / Caution / Danger. "Flooded" (the platform is up and the water is showing) is anything but Safe.
+    const level = getWaterLevel(waterLevel, threshold, criticalLevel) || 'safe';
+    const flooded = level !== 'safe';
     const firstName = auth?.username || 'there';
 
     return (
@@ -118,17 +124,18 @@ export const Home = () => {
                 </div>
 
                 <div className="hl-status-card">
-                    <HouseIllustration flooded={flooded} />
-                    <div className="hl-status-row">
+                    <HouseIllustration flooded={flooded} level={level} />
+                    <div className="hl-status-row" data-level={level}>
                         {flooded ? <AlertTriangleIcon /> : <ShieldCheckIcon />}
                         <div>
-                            <div className="hl-status-title" data-flooded={flooded}>
-                                {flooded ? 'Flood detected' : 'All clear'}
+                            <div className="hl-status-title" data-level={level}>
+                                {LEVEL_TEXT[level].title}
                             </div>
                             <div className="hl-status-subtitle">
-                                {flooded ? 'Platform raised automatically' : 'Platform lowered, resting on ground'}
+                                {LEVEL_TEXT[level].detail}
                             </div>
                         </div>
+                        <span className="hl-level-pill" data-level={level}>{LEVEL_TEXT[level].label}</span>
                     </div>
                 </div>
 
